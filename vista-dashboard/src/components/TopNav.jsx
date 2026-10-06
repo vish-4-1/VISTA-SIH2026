@@ -113,41 +113,48 @@ export default function TopNav({
           </span>
         </div>
 
-        {/* Scenario Injection Selector */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--text-dim)', textTransform: 'uppercase' }}>
+        {/* Minimal Scenario Selector Dropdown */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
             Scenario:
           </span>
-          <div style={{ display: 'flex', gap: '4px' }}>
-            {scenarios.map((sc) => {
-              const Icon = sc.icon;
-              const isActive = currentScenario.id === sc.id;
-              return (
-                <button
-                  key={sc.id}
-                  onClick={() => onSelectScenario(ATTACK_SCENARIOS[sc.id])}
-                  style={{
-                    padding: '3px 8px',
-                    borderRadius: '4px',
-                    border: isActive 
-                      ? `1px solid ${sc.color}` 
-                      : '1px solid var(--border-subtle)',
-                    background: isActive ? 'rgba(255, 255, 255, 0.08)' : 'rgba(10, 16, 29, 0.6)',
-                    color: isActive ? '#fff' : 'var(--text-muted)',
-                    fontSize: '11px',
-                    fontFamily: 'var(--font-mono)',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '5px',
-                    transition: 'all 0.14s ease'
-                  }}
-                >
-                  <Icon size={11} color={isActive ? sc.color : 'var(--text-dim)'} />
-                  <span>{sc.label}</span>
-                </button>
-              );
-            })}
+          <div style={{ position: 'relative' }}>
+            <select
+              value={currentScenario.id}
+              onChange={(e) => onSelectScenario(ATTACK_SCENARIOS[e.target.value] || ATTACK_SCENARIOS.NORMAL)}
+              style={{
+                appearance: 'none',
+                WebkitAppearance: 'none',
+                background: 'rgba(10, 16, 29, 0.85)',
+                border: `1px solid ${isDanger ? 'rgba(239, 68, 68, 0.5)' : (isWarning ? 'rgba(245, 158, 11, 0.5)' : 'var(--border-subtle)')}`,
+                borderRadius: '5px',
+                padding: '4px 28px 4px 10px',
+                fontSize: '11px',
+                fontFamily: 'var(--font-mono)',
+                fontWeight: '600',
+                color: isDanger ? 'var(--danger)' : (isWarning ? 'var(--amber)' : '#fff'),
+                cursor: 'pointer',
+                outline: 'none',
+                transition: 'border-color 0.15s ease'
+              }}
+            >
+              {scenarios.map((sc) => (
+                <option key={sc.id} value={sc.id} style={{ background: '#0a101d', color: '#fff' }}>
+                  {sc.label}
+                </option>
+              ))}
+            </select>
+            <div style={{
+              position: 'absolute',
+              right: '8px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              pointerEvents: 'none',
+              fontSize: '9px',
+              color: 'var(--text-muted)'
+            }}>
+              ▼
+            </div>
           </div>
         </div>
       </div>

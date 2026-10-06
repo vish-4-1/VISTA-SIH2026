@@ -130,15 +130,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
                   }
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <span style={{
-                    fontSize: '10px',
-                    fontFamily: 'var(--font-mono)',
-                    color: isActive ? 'var(--cyan)' : 'var(--text-dim)',
-                    minWidth: '16px'
-                  }}>
-                    {item.number}
-                  </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '11px' }}>
                   <Icon 
                     size={16} 
                     color={isActive ? 'var(--cyan)' : 'var(--text-muted)'} 

@@ -141,10 +141,12 @@ export default function OverviewView({
           </div>
         </div>
 
-        {/* System Status Strip */}
-        <div className="soc-card" style={{
-          padding: '10px 18px',
-          background: 'rgba(10, 16, 29, 0.75)',
+        {/* Minimal System Status Strip */}
+        <div style={{
+          padding: '8px 16px',
+          background: 'rgba(10, 16, 29, 0.6)',
+          border: '1px solid var(--border-subtle)',
+          borderRadius: '6px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -154,81 +156,47 @@ export default function OverviewView({
           fontSize: '11px'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ color: 'var(--text-muted)' }}>IPsec Tunnel:</span>
+            <span style={{ color: 'var(--text-muted)' }}>Status:</span>
             <span style={{ color: isDanger ? 'var(--danger)' : 'var(--green)', fontWeight: '700' }}>
-              {isDanger ? 'COMPROMISED' : 'ACTIVE'}
+              {isDanger ? 'COMPROMISED' : 'ACTIVE (Proto 50)'}
             </span>
           </div>
 
-          <div style={{ width: '1px', height: '14px', background: 'var(--border-subtle)' }} />
-
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ color: 'var(--text-muted)' }}>IKE Version:</span>
-            <span style={{ color: '#fff', fontWeight: '600' }}>IKEv2</span>
+            <span style={{ color: 'var(--text-muted)' }}>Suite:</span>
+            <span style={{ color: '#fff', fontWeight: '600' }}>AES-256-GCM · DH 19 · PFS</span>
           </div>
 
-          <div style={{ width: '1px', height: '14px', background: 'var(--border-subtle)' }} />
-
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ color: 'var(--text-muted)' }}>ESP:</span>
-            <span style={{ color: 'var(--cyan)', fontWeight: '600' }}>ACTIVE (Proto 50)</span>
+            <span style={{ color: 'var(--text-muted)' }}>eBPF Probes:</span>
+            <span style={{ color: 'var(--cyan)', fontWeight: '600' }}>3 Active</span>
           </div>
 
-          <div style={{ width: '1px', height: '14px', background: 'var(--border-subtle)' }} />
-
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ color: 'var(--text-muted)' }}>Encryption:</span>
-            <span style={{ color: '#fff', fontWeight: '600' }}>AES-256-GCM</span>
-          </div>
-
-          <div style={{ width: '1px', height: '14px', background: 'var(--border-subtle)' }} />
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ color: 'var(--text-muted)' }}>PFS:</span>
-            <span style={{ color: 'var(--green)', fontWeight: '600' }}>ENABLED</span>
-          </div>
-
-          <div style={{ width: '1px', height: '14px', background: 'var(--border-subtle)' }} />
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ color: 'var(--text-muted)' }}>eBPF telemetry:</span>
-            <span style={{ color: 'var(--cyan)', fontWeight: '600' }}>3 probes running</span>
-          </div>
-
-          <div style={{ width: '1px', height: '14px', background: 'var(--border-subtle)' }} />
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ color: 'var(--text-muted)' }}>AI Engine:</span>
-            <span style={{ color: 'var(--green)', fontWeight: '600' }}>ONLINE</span>
-          </div>
-
-          <div style={{ width: '1px', height: '14px', background: 'var(--border-subtle)' }} />
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ color: 'var(--text-muted)' }}>Last analysis:</span>
-            <span style={{ color: 'var(--text-secondary)' }}>Just now</span>
+            <span style={{ color: 'var(--text-muted)' }}>AI Inference:</span>
+            <span style={{ color: 'var(--green)', fontWeight: '600' }}>ONLINE (1.2ms)</span>
           </div>
         </div>
       </div>
 
-      {/* 2. KEY METRIC CARDS (6 CARDS) */}
+      {/* 2. KEY METRIC CARDS (4 CLEAN, MINIMAL CARDS) */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(6, 1fr)',
+        gridTemplateColumns: 'repeat(4, 1fr)',
         gap: '16px'
       }}>
         {/* Card 1: SECURITY SCORE */}
         <div 
           className="soc-card" 
           onClick={() => onNavigateToTab('security')}
-          style={{ padding: '16px', cursor: 'pointer' }}
+          style={{ padding: '18px 20px', cursor: 'pointer' }}
         >
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>
-            1. SECURITY SCORE
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginBottom: '8px', letterSpacing: '0.4px' }}>
+            SECURITY SCORE
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
             <span style={{
-              fontSize: '28px',
+              fontSize: '30px',
               fontWeight: '800',
               fontFamily: 'var(--font-mono)',
               color: isDanger ? 'var(--danger)' : 'var(--green)'
@@ -241,30 +209,30 @@ export default function OverviewView({
             fontSize: '11px',
             color: isDanger ? 'var(--danger)' : 'var(--green)',
             fontWeight: '600',
-            marginTop: '4px',
+            marginTop: '6px',
             display: 'flex',
             alignItems: 'center',
             gap: '4px'
           }}>
             <CheckCircle2 size={12} />
-            <span>{isDanger ? 'Critical Risk' : 'Evaluated Posture'}</span>
+            <span>{isDanger ? 'Critical Risk' : 'NIST SP 800-77 Evaluated'}</span>
           </div>
         </div>
 
-        {/* Card 2: ACTIVE VPN TUNNELS */}
+        {/* Card 2: ACTIVE PEERS */}
         <div 
           className="soc-card" 
           onClick={() => onNavigateToTab('traffic')}
-          style={{ padding: '16px', cursor: 'pointer' }}
+          style={{ padding: '18px 20px', cursor: 'pointer' }}
         >
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>
-            2. ACTIVE VPN TUNNELS
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginBottom: '8px', letterSpacing: '0.4px' }}>
+            ACTIVE PEERS & TUNNELS
           </div>
-          <div style={{ fontSize: '28px', fontWeight: '800', fontFamily: 'var(--font-mono)', color: '#fff' }}>
-            {socMetrics.activeTunnelsCount || 2}
+          <div style={{ fontSize: '30px', fontWeight: '800', fontFamily: 'var(--font-mono)', color: '#fff' }}>
+            2 Tunnels
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--green)', fontWeight: '600', marginTop: '4px' }}>
-            Healthy (IKEv2 SA)
+          <div style={{ fontSize: '11px', color: 'var(--green)', fontWeight: '600', marginTop: '6px' }}>
+            Mode B Duplex Active
           </div>
         </div>
 
@@ -272,84 +240,39 @@ export default function OverviewView({
         <div 
           className="soc-card" 
           onClick={() => onNavigateToTab('traffic')}
-          style={{ padding: '16px', cursor: 'pointer' }}
+          style={{ padding: '18px 20px', cursor: 'pointer' }}
         >
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>
-            3. PACKETS ANALYZED
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginBottom: '8px', letterSpacing: '0.4px' }}>
+            PACKETS ANALYZED
           </div>
-          <div style={{ fontSize: '28px', fontWeight: '800', fontFamily: 'var(--font-mono)', color: '#fff' }}>
+          <div style={{ fontSize: '30px', fontWeight: '800', fontFamily: 'var(--font-mono)', color: '#fff' }}>
             {socMetrics.packetsAnalyzed}
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--cyan)', fontWeight: '600', marginTop: '4px' }}>
-            {socMetrics.packetsAnalyzedGrowth || '+12.4%'} (Flow Dataset)
+          <div style={{ fontSize: '11px', color: 'var(--cyan)', fontWeight: '600', marginTop: '6px' }}>
+            5,531 Verified Flows
           </div>
         </div>
 
-        {/* Card 4: THREATS DETECTED */}
-        <div 
-          className="soc-card" 
-          onClick={() => onNavigateToTab('threats')}
-          style={{ padding: '16px', cursor: 'pointer' }}
-        >
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>
-            4. THREATS DETECTED
-          </div>
-          <div style={{
-            fontSize: '28px',
-            fontWeight: '800',
-            fontFamily: 'var(--font-mono)',
-            color: isDanger ? 'var(--danger)' : 'var(--amber)'
-          }}>
-            {isDanger ? '1,368' : socMetrics.threatsDetectedCount}
-          </div>
-          <div style={{ fontSize: '11px', color: isDanger ? 'var(--danger)' : 'var(--amber)', fontWeight: '600', marginTop: '4px' }}>
-            {isDanger ? 'Critical Volumetric Attack' : socMetrics.threatsBreakdown || 'Attacks Classified'}
-          </div>
-        </div>
-
-        {/* Card 5: AI CONFIDENCE */}
+        {/* Card 4: AI CLASSIFICATION */}
         <div 
           className="soc-card" 
           onClick={() => onNavigateToTab('ai')}
-          style={{ padding: '16px', cursor: 'pointer' }}
+          style={{ padding: '18px 20px', cursor: 'pointer' }}
         >
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>
-            5. AI CONFIDENCE
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginBottom: '8px', letterSpacing: '0.4px' }}>
+            AI ATTRIBUTION
           </div>
-          <div style={{ fontSize: '28px', fontWeight: '800', fontFamily: 'var(--font-mono)', color: 'var(--cyan)' }}>
-            {socMetrics.aiConfidence}
+          <div style={{ fontSize: '30px', fontWeight: '800', fontFamily: 'var(--font-mono)', color: isDanger ? 'var(--danger)' : 'var(--cyan)' }}>
+            {isDanger ? 'ATTACK' : socMetrics.aiConfidence}
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px', fontFamily: 'var(--font-mono)' }}>
-            XGBoost (Real Proba)
-          </div>
-        </div>
-
-        {/* Card 6: METADATA RISK */}
-        <div 
-          className="soc-card" 
-          onClick={() => onNavigateToTab('security')}
-          style={{ padding: '16px', cursor: 'pointer' }}
-        >
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>
-            6. METADATA RISK
-          </div>
-          <div style={{
-            fontSize: '24px',
-            fontWeight: '800',
-            fontFamily: 'var(--font-mono)',
-            color: isDanger ? 'var(--danger)' : 'var(--green)',
-            marginTop: '4px'
-          }}>
-            {isDanger ? 'HIGH' : 'LOW'}
-          </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '6px', fontFamily: 'var(--font-mono)' }}>
-            Side-Channel Safe
+          <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '6px', fontFamily: 'var(--font-mono)' }}>
+            {isDanger ? 'Volumetric Flood' : 'XGBoost & Random Forest'}
           </div>
         </div>
       </div>
 
-      {/* 3. ROW: SECURITY POSTURE CARD + 3D TESTBED PREVIEW (30-40%) */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 420px', gap: '20px' }}>
+      {/* 3. ROW: SECURITY POSTURE + CRYPTO COMPLIANCE CARD */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '20px' }}>
 
         {/* Security Posture Breakdown Card */}
         <div className="soc-card" style={{ padding: '20px' }}>
@@ -360,21 +283,21 @@ export default function OverviewView({
                 <span>Security Posture & Compliance Evaluation</span>
               </div>
               <div className="soc-card-subtitle" style={{ marginTop: '2px' }}>
-                Evaluated against NIST SP 800-77 Rev. 1 & BSI TR-02102-3 IPsec Standards
+                Evaluated against NIST SP 800-77 Rev. 1 & BSI TR-02102-3 Standards
               </div>
             </div>
             <div style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '10px',
-              padding: '6px 14px',
+              gap: '8px',
+              padding: '5px 12px',
               background: 'rgba(16, 185, 129, 0.1)',
               border: '1px solid rgba(16, 185, 129, 0.3)',
               borderRadius: '6px'
             }}>
               <span className="status-pulse green"></span>
-              <span style={{ fontSize: '13px', fontFamily: 'var(--font-mono)', fontWeight: '700', color: 'var(--green)' }}>
-                {socMetrics.securityScore}/100 POSTURE SCORE
+              <span style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', fontWeight: '700', color: 'var(--green)' }}>
+                {socMetrics.securityScore}/100 SCORE
               </span>
             </div>
           </div>
@@ -395,7 +318,7 @@ export default function OverviewView({
                     </span>
                   </div>
                 </div>
-                <div style={{ height: '6px', background: 'rgba(255, 255, 255, 0.06)', borderRadius: '3px', overflow: 'hidden' }}>
+                <div style={{ height: '5px', background: 'rgba(255, 255, 255, 0.06)', borderRadius: '3px', overflow: 'hidden' }}>
                   <div style={{
                     width: `${item.score}%`,
                     height: '100%',
@@ -410,112 +333,55 @@ export default function OverviewView({
           </div>
         </div>
 
-        {/* 3D TESTBED PREVIEW (30-40% WIDTH) */}
-        <div className="soc-card" style={{
-          padding: '18px',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          background: 'linear-gradient(180deg, #0d1524 0%, #080d17 100%)'
-        }}>
+        {/* Cryptographic Compliance Summary Card */}
+        <div className="soc-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-              <div className="soc-card-title">
-                <Box size={16} color="var(--cyan)" />
-                <span>3D IPsec Testbed</span>
-              </div>
-              <span className="soc-badge info">PREVIEW</span>
+            <div className="soc-card-title" style={{ marginBottom: '4px' }}>
+              <Lock size={16} color="var(--cyan)" />
+              <span>Cryptographic Profile</span>
+            </div>
+            <div className="soc-card-subtitle" style={{ marginBottom: '16px' }}>
+              Active cipher suite and key exchange validation
             </div>
 
-            {/* Visual simulation mock frame */}
-            <div style={{
-              height: '190px',
-              borderRadius: '8px',
-              border: '1px solid var(--border-medium)',
-              background: '#04070d',
-              position: 'relative',
-              overflow: 'hidden',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              {/* Perspective 3D Grid mockup */}
-              <div style={{
-                position: 'absolute',
-                top: 0, left: 0, right: 0, bottom: 0,
-                backgroundImage: 'radial-gradient(circle at 50% 50%, rgba(0, 240, 255, 0.15) 0%, transparent 60%)',
-                pointerEvents: 'none'
-              }} />
-
-              {/* Mock Topology Nodes */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '32px', zIndex: 2 }}>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{
-                    width: '36px', height: '36px', borderRadius: '8px',
-                    background: 'rgba(0, 240, 255, 0.15)', border: '1px solid var(--cyan)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto'
-                  }}>
-                    🖥️
-                  </div>
-                  <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--cyan)', marginTop: '4px' }}>PC-1</div>
-                </div>
-
-                {/* Glowing Tunnel Beam */}
-                <div style={{ position: 'relative', width: '100px', height: '4px', background: isDanger ? 'var(--danger)' : 'var(--cyan)', borderRadius: '2px', boxShadow: '0 0 12px var(--cyan)' }}>
-                  <div style={{
-                    position: 'absolute', top: '-4px', left: '45%',
-                    width: '12px', height: '12px', borderRadius: '50%', background: '#fff',
-                    boxShadow: '0 0 10px #fff'
-                  }} />
-                </div>
-
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{
-                    width: '36px', height: '36px', borderRadius: '8px',
-                    background: 'rgba(16, 185, 129, 0.15)', border: '1px solid var(--green)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto'
-                  }}>
-                    🛡️
-                  </div>
-                  <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--green)', marginTop: '4px' }}>GW</div>
-                </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontFamily: 'var(--font-mono)', fontSize: '11px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 10px', background: 'rgba(255, 255, 255, 0.02)', borderRadius: '4px', border: '1px solid var(--border-subtle)' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Cipher Algorithm</span>
+                <span style={{ color: '#fff', fontWeight: '600' }}>AES-256-GCM (AEAD)</span>
               </div>
-
-              {/* Overlay Indicators */}
-              <div style={{ position: 'absolute', top: '8px', left: '8px', display: 'flex', gap: '5px' }}>
-                <span className="soc-badge success" style={{ fontSize: '9px', padding: '1px 5px' }}>LIVE</span>
-                <span className="soc-badge info" style={{ fontSize: '9px', padding: '1px 5px' }}>ESP</span>
-                <span className="soc-badge medium" style={{ fontSize: '9px', padding: '1px 5px' }}>eBPF</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 10px', background: 'rgba(255, 255, 255, 0.02)', borderRadius: '4px', border: '1px solid var(--border-subtle)' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Diffie-Hellman</span>
+                <span style={{ color: 'var(--green)', fontWeight: '600' }}>Group 19 (ECP-256)</span>
               </div>
-
-              <div style={{ position: 'absolute', bottom: '8px', right: '8px' }}>
-                <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--cyan)', background: 'rgba(7, 11, 20, 0.8)', padding: '2px 6px', borderRadius: '4px' }}>
-                  {scenario.packetRate || '48 packets/sec'}
-                </span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 10px', background: 'rgba(255, 255, 255, 0.02)', borderRadius: '4px', border: '1px solid var(--border-subtle)' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Forward Secrecy</span>
+                <span style={{ color: 'var(--green)', fontWeight: '600' }}>PFS Enabled</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 10px', background: 'rgba(255, 255, 255, 0.02)', borderRadius: '4px', border: '1px solid var(--border-subtle)' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Anti-Replay Window</span>
+                <span style={{ color: 'var(--cyan)', fontWeight: '600' }}>64-Packet (RFC 4303)</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 10px', background: 'rgba(255, 255, 255, 0.02)', borderRadius: '4px', border: '1px solid var(--border-subtle)' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Rekey Lifetime</span>
+                <span style={{ color: '#fff', fontWeight: '600' }}>28,800s Compliant</span>
               </div>
             </div>
-
-            <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '10px', lineHeight: '1.4' }}>
-              Interactive network simulation and VPN configuration laboratory
-            </p>
           </div>
 
-          <div style={{ display: 'flex', gap: '8px', marginTop: '14px' }}>
-            <button 
-              className="soc-btn soc-btn-primary" 
-              onClick={() => onNavigateToTab('testbed')}
-              style={{ flex: 1 }}
-            >
-              <Play size={13} />
-              <span>OPEN TESTBED</span>
-            </button>
-            <button 
-              className="soc-btn" 
-              onClick={() => onNavigateToTab('testbed')}
-              style={{ flex: 1 }}
-            >
-              <span>CONFIGURE SCENARIO</span>
-            </button>
+          <div style={{
+            marginTop: '16px',
+            padding: '10px 12px',
+            background: 'rgba(16, 185, 129, 0.06)',
+            border: '1px solid rgba(16, 185, 129, 0.2)',
+            borderRadius: '6px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            fontSize: '11px',
+            fontFamily: 'var(--font-mono)'
+          }}>
+            <span style={{ color: 'var(--text-muted)' }}>NIST SP 800-77 Status:</span>
+            <span style={{ color: 'var(--green)', fontWeight: '700' }}>COMPLIANT</span>
           </div>
         </div>
 
