@@ -39,12 +39,10 @@ graph TD
         Analyzer --> ISO
     end
 
-    subgraph Testbed ["IPsec Lab Testbed (topology/)"]
-        Client[vista-client: 172.20.0.2]
-        GW[vista-gateway: 172.20.0.10 / 172.22.0.2]
-        Server[vista-server: 172.22.0.10]
-        Client -- "IKEv2 / ESP Tunnel (172.20.0.0/24)" --> GW
-        GW -- "Internal Plaintext Subnet (172.22.0.0/24)" --> Server
+    subgraph Testbed ["Mode B IPsec Host-to-Host Testbed (topology/)"]
+        PC1[PC 1 / Workstation A: 172.20.0.2]
+        PC2[PC 2 / Workstation B: 172.20.0.10]
+        PC1 <-- "Full-Duplex IPsec Transport Mode (ESP Proto 50 / AES-256-GCM / DH 19)" --> PC2
     end
 
     subgraph Kernel_eBPF ["eBPF Subsystem (ebpf/)"]
@@ -90,13 +88,13 @@ graph TD
 - **`vista_ebpf_agent.py`:** Userspace agent that reads the BPF ring buffer (native Linux BCC/libbpf mode) with an automatic testbed kernel bridge fallback for non-Linux host platforms.
 
 ### 2.4 Testbed Environment (`topology/` & `configs/`)
-- **Network Topology:**
-  - `vista-net` (`172.20.0.0/24`): Outer untrusted network carrying encrypted ESP / IKE packets.
-  - `vista-internal` (`172.22.0.0/24`): Inner protected network hosting `vista-server` (`172.22.0.10`).
-- **Configuration Variants:**
-  - Transport Mode: `client-swanctl.conf` / `gateway-swanctl.conf` (AES-256-GCM)
-  - Tunnel Mode: `client-tunnel-swanctl.conf` / `gateway-tunnel-swanctl.conf` (AES-256-GCM with subnet selectors)
-  - CBC Variant: `client-cbc-swanctl.conf` / `gateway-cbc-swanctl.conf` (AES-256-CBC + HMAC-SHA256)
+- **Network Topology (Mode B Host-to-Host Peering):**
+  - `vista-net` (`172.20.0.0/24`): Untrusted subnet carrying encrypted full-duplex ESP transport packets.
+  - `vista-pc1` / Workstation A (`172.20.0.2`): IPsec Initiator Workstation with active eBPF output telemetry.
+  - `vista-pc2` / Workstation B (`172.20.0.10`): IPsec Responder Workstation with active eBPF input telemetry.
+- **Cryptographic Suites:**
+  - Transport Mode: `client-swanctl.conf` / `gateway-swanctl.conf` (AES-256-GCM AEAD, DH Group 19 / ECP-256, PFS enabled)
+  - CBC Comparison: `client-cbc-swanctl.conf` / `gateway-cbc-swanctl.conf` (AES-256-CBC + HMAC-SHA256)
 
 ### 2.5 Cyber SOC Dashboard (`vista-dashboard/`)
 - Built with React, Vite, Three.js, Lucide Icons, and Vanilla CSS.

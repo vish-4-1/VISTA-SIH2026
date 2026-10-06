@@ -16,7 +16,7 @@ VISTA is an end-to-end cybersecurity intelligence platform designed to analyze I
 The VISTA SOC platform provides a unified operations console for defense analysts, SOC operators, and cryptographic auditors.
 
 ### 2.1 IPsec Security Overview & Posture Dashboard
-> Real-time protocol status (IKEv2, ESP Proto 50, AES-256-GCM), active tunnel topology, NIST SP 800-77 compliance scores, side-channel metadata risk, and live eBPF stream status.
+> Real-time protocol status (IKEv2, ESP Proto 50, AES-256-GCM), Mode B host-to-host duplex peering topology (Workstation A ↔ Workstation B), NIST SP 800-77 compliance scores, side-channel metadata risk, and live eBPF stream status.
 
 ![IPsec Security Overview](docs/screenshots/01_overview.png)
 
@@ -75,23 +75,24 @@ The VISTA SOC platform provides a unified operations console for defense analyst
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
-│                        VISTA ARCHITECTURE MAP                          │
+│                   VISTA MODE B ARCHITECTURE MAP                        │
 │                                                                        │
 │  [ frontend: vista-dashboard/ ] ──(REST / WebSocket)──┐                │
 │    • React + Vite SOC Dashboard                       │                │
 │    • In-browser PCAP & CSV parser (fallback)          ▼                │
-│    • 3D IPsec Tunnel Visualization         [ backend: FastAPI API ]    │
+│    • 3D WebGL Duplex Peering Canvas        [ backend: FastAPI API ]    │
 │    • Dynamic Security Scorecard              • /api/analyze/pcap       │
 │                                              • /api/analyze/csv        │
-│  [ topology: Docker Testbed ]                • /api/audit/sessions     │
-│    • vista-client  (172.20.0.2)              • /api/soc/status         │
-│    • vista-gateway (172.20.0.10)             • /api/ml/metrics         │
-│    • vista-server  (172.22.0.10)                      │                │
-│    • Transport, Tunnel & CBC configs                  ▼                │
+│  [ topology: Mode B IPsec Testbed ]          • /api/audit/sessions     │
+│    • vista-pc1 (Workstation A: 172.20.0.2)   • /api/soc/status         │
+│    • vista-pc2 (Workstation B: 172.20.0.10)  • /api/ml/metrics         │
+│    • Full-Duplex Transport Mode (Proto 50)   • /api/ebpf/events        │
+│    • AES-256-GCM / SHA256 / DH Group 19               │                │
+│                                                       ▼                │
 │                                            [ vista-ml: AI Engine ]     │
 │  [ captures/ ] ──(PCAP Replay)─────────────> • Scapy Packet Decoder    │
 │    • Real StrongSwan ESP & IKE PCAPs         • XGBoost (Attack Class)  │
-│                                              • Random Forest (98.7% F1)│
+│    • eBPF Socket / XFRM Kernel Telemetry     • Random Forest (98.7% F1)│
 │                                              • Isolation Forest (Anom) │
 │                                              • SHAP Explainability     │
 └────────────────────────────────────────────────────────────────────────┘
@@ -160,12 +161,11 @@ Identifies vulnerabilities:
 
 ---
 
-## 6. IPsec Testbed Configuration Matrix
+## 6. Mode B IPsec Testbed Configuration
 
 Located in `configs/`:
-- `client-swanctl.conf` / `gateway-swanctl.conf`: IKEv2 Transport Mode with AES-256-GCM.
-- `client-tunnel-swanctl.conf` / `gateway-tunnel-swanctl.conf`: IKEv2 Tunnel Mode with subnet selectors.
-- `client-cbc-swanctl.conf` / `gateway-cbc-swanctl.conf`: IKEv2 AES-256-CBC with HMAC-SHA256 for cipher comparison.
+- `client-swanctl.conf` / `gateway-swanctl.conf`: Primary Mode B Host-to-Host Full-Duplex Transport Mode between Workstation A (`172.20.0.2`) and Workstation B (`172.20.0.10`) with AES-256-GCM AEAD & Diffie-Hellman Group 19 (ECP-256).
+- `client-cbc-swanctl.conf` / `gateway-cbc-swanctl.conf`: AES-256-CBC cipher baseline for comparative side-channel & padding oracle benchmarking.
 
 ---
 

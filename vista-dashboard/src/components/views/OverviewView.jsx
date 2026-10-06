@@ -521,16 +521,16 @@ export default function OverviewView({
 
       </div>
 
-      {/* 4. LIVE 2D SIMPLIFIED VPN TOPOLOGY */}
+      {/* 4. LIVE 2D HOST-TO-HOST DUPLEX VPN TOPOLOGY (MODE B) */}
       <div className="soc-card" style={{ padding: '20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
           <div>
             <div className="soc-card-title">
               <Layers size={16} color="var(--cyan)" />
-              <span>Live VPN Architecture & SA Topology</span>
+              <span>Live Host-to-Host IPsec Peering & SA Topology (Mode B)</span>
             </div>
             <div className="soc-card-subtitle" style={{ marginTop: '2px' }}>
-              End-to-End Tunnel Mode Traffic & Security Association Mapping
+              Full-Duplex Host-to-Host Transport Mode Traffic & Security Association Mapping (Option B eBPF Telemetry)
             </div>
           </div>
 
@@ -543,50 +543,54 @@ export default function OverviewView({
           </button>
         </div>
 
-        {/* 2D Visual Network Pipeline */}
+        {/* 2D Visual Network Pipeline — Mode B Duplex Peering */}
         <div style={{
           background: 'rgba(6, 9, 15, 0.6)',
           border: '1px solid var(--border-subtle)',
           borderRadius: '8px',
           padding: '24px 20px',
           display: 'grid',
-          gridTemplateColumns: '240px 1fr 240px 80px 240px',
+          gridTemplateColumns: '300px 1fr 300px',
           alignItems: 'center',
-          gap: '12px'
+          gap: '20px'
         }}>
-          {/* CLIENT NODE */}
+          {/* PC 1 (WORKSTATION A) */}
           <div style={{
             background: 'var(--bg-card)',
             border: '1px solid var(--border-subtle)',
             borderRadius: '8px',
-            padding: '14px'
+            padding: '16px'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-              <Server size={14} color="var(--cyan)" />
-              <span style={{ fontSize: '12px', fontWeight: '700', color: '#fff' }}>CLIENT</span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Server size={15} color="var(--cyan)" />
+                <span style={{ fontSize: '13px', fontWeight: '700', color: '#fff' }}>PC 1 (WORKSTATION A)</span>
+              </div>
+              <span className="soc-badge success" style={{ fontSize: '10px' }}>PEER A</span>
             </div>
-            <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', display: 'flex', flexDirection: 'column', gap: '3px', color: 'var(--text-secondary)' }}>
-              <div>Outer: <span style={{ color: 'var(--cyan)' }}>{TOPOLOGY_DATA.client.ip}</span></div>
-              <div>Subnet: <span style={{ color: '#fff' }}>{TOPOLOGY_DATA.client.subnet}</span></div>
-              <div>Status: <span style={{ color: 'var(--green)' }}>ACTIVE</span></div>
+            <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', display: 'flex', flexDirection: 'column', gap: '4px', color: 'var(--text-secondary)' }}>
+              <div>Host / IP: <span style={{ color: 'var(--cyan)' }}>{TOPOLOGY_DATA.pc1?.ip || '172.20.0.2'}</span> (vista-pc1)</div>
+              <div>Outbound SPI: <span style={{ color: '#fff' }}>{TOPOLOGY_DATA.pc1?.spi || '0xb3b1799d'}</span></div>
+              <div>eBPF Probe: <span style={{ color: 'var(--green)' }}>{TOPOLOGY_DATA.pc1?.ebpfProbe || 'kprobe_esp_output'}</span></div>
+              <div>Mode / State: <span style={{ color: 'var(--green)' }}>Transport / ESTABLISHED</span></div>
             </div>
           </div>
 
-          {/* IPSEC ENCRYPTED TUNNEL CONNECTOR */}
-          <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          {/* FULL-DUPLEX IPSEC TRANSPORT ENCRYPTION CONNECTOR */}
+          <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
             <div style={{
               width: '100%',
               height: '4px',
               background: isDanger ? 'var(--danger)' : 'var(--cyan)',
               borderRadius: '2px',
-              boxShadow: isDanger ? '0 0 10px var(--danger)' : '0 0 10px var(--cyan)',
+              boxShadow: isDanger ? '0 0 12px var(--danger)' : '0 0 12px var(--cyan)',
               position: 'relative'
             }}>
-              {/* Animated Packet Dots */}
+              {/* Bidirectional Animated Packet Dots */}
               <div style={{
                 position: 'absolute',
                 top: '-4px',
-                left: '30%',
+                left: '25%',
                 width: '12px',
                 height: '12px',
                 borderRadius: '50%',
@@ -596,66 +600,55 @@ export default function OverviewView({
               <div style={{
                 position: 'absolute',
                 top: '-4px',
-                left: '70%',
+                left: '75%',
                 width: '12px',
                 height: '12px',
                 borderRadius: '50%',
-                background: '#fff',
-                boxShadow: '0 0 8px #fff'
+                background: 'var(--green)',
+                boxShadow: '0 0 8px var(--green)'
               }} />
             </div>
 
             <div style={{
-              marginTop: '12px',
+              marginTop: '14px',
               textAlign: 'center',
-              fontSize: '10px',
+              fontSize: '11px',
               fontFamily: 'var(--font-mono)',
               color: isDanger ? 'var(--danger)' : 'var(--cyan)',
-              background: 'rgba(7, 11, 20, 0.85)',
-              padding: '4px 10px',
-              borderRadius: '4px',
-              border: `1px solid ${isDanger ? 'rgba(239, 68, 68, 0.3)' : 'rgba(0, 240, 255, 0.3)'}`
+              background: 'rgba(7, 11, 20, 0.9)',
+              padding: '6px 14px',
+              borderRadius: '6px',
+              border: `1px solid ${isDanger ? 'rgba(239, 68, 68, 0.4)' : 'rgba(0, 240, 255, 0.35)'}`,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '2px'
             }}>
-              🔐 IPsec Tunnel (ESP AES-256-GCM / DH 14 / PFS)
+              <span style={{ fontWeight: '700' }}>🔐 Full-Duplex Host-to-Host Transport Mode</span>
+              <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
+                ESP Proto 50 · AES-256-GCM AEAD · DH Group 19 (ECP-256) · PFS Active
+              </span>
             </div>
           </div>
 
-          {/* VPN GATEWAY */}
+          {/* PC 2 (WORKSTATION B) */}
           <div style={{
             background: 'var(--bg-card)',
             border: '1px solid var(--border-subtle)',
             borderRadius: '8px',
-            padding: '14px'
+            padding: '16px'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-              <ShieldCheck size={14} color="var(--green)" />
-              <span style={{ fontSize: '12px', fontWeight: '700', color: '#fff' }}>VPN GATEWAY</span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Server size={15} color="var(--green)" />
+                <span style={{ fontSize: '13px', fontWeight: '700', color: '#fff' }}>PC 2 (WORKSTATION B)</span>
+              </div>
+              <span className="soc-badge success" style={{ fontSize: '10px' }}>PEER B</span>
             </div>
-            <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', display: 'flex', flexDirection: 'column', gap: '3px', color: 'var(--text-secondary)' }}>
-              <div>Outer: <span style={{ color: 'var(--cyan)' }}>{TOPOLOGY_DATA.gateway.outerIp}</span></div>
-              <div>Inner: <span style={{ color: 'var(--green)' }}>{TOPOLOGY_DATA.gateway.innerIp}</span></div>
-              <div>IKE: <span style={{ color: '#fff' }}>IKEv2 (swanctl)</span></div>
-            </div>
-          </div>
-
-          {/* INTERNAL LAN CABLE */}
-          <div style={{ height: '2px', background: 'var(--purple)', width: '100%' }} />
-
-          {/* PROTECTED SERVER */}
-          <div style={{
-            background: 'var(--bg-card)',
-            border: '1px solid var(--border-subtle)',
-            borderRadius: '8px',
-            padding: '14px'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-              <Server size={14} color="var(--purple)" />
-              <span style={{ fontSize: '12px', fontWeight: '700', color: '#fff' }}>SERVER</span>
-            </div>
-            <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', display: 'flex', flexDirection: 'column', gap: '3px', color: 'var(--text-secondary)' }}>
-              <div>IP: <span style={{ color: 'var(--purple)' }}>{TOPOLOGY_DATA.server.ip}</span></div>
-              <div>Port: <span style={{ color: '#fff' }}>TCP 18080</span></div>
-              <div>Status: <span style={{ color: 'var(--green)' }}>PROTECTED</span></div>
+            <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', display: 'flex', flexDirection: 'column', gap: '4px', color: 'var(--text-secondary)' }}>
+              <div>Host / IP: <span style={{ color: 'var(--green)' }}>{TOPOLOGY_DATA.pc2?.ip || '172.20.0.10'}</span> (vista-pc2)</div>
+              <div>Inbound SPI: <span style={{ color: '#fff' }}>{TOPOLOGY_DATA.pc2?.spi || '0x49c812a0'}</span></div>
+              <div>eBPF Probe: <span style={{ color: 'var(--green)' }}>{TOPOLOGY_DATA.pc2?.ebpfProbe || 'kprobe_esp_input'}</span></div>
+              <div>Mode / State: <span style={{ color: 'var(--green)' }}>Transport / ESTABLISHED</span></div>
             </div>
           </div>
         </div>

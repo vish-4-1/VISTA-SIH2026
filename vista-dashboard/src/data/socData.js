@@ -106,43 +106,40 @@ export const SECURITY_POSTURE_BREAKDOWN = [
 ];
 
 export const TOPOLOGY_DATA = {
-  client: {
-    label: "CLIENT",
+  pc1: {
+    id: "pc1",
+    label: "PC 1 (WORKSTATION A)",
+    name: "vista-pc1",
     ip: "172.20.0.2",
-    subnet: "10.0.1.2/32",
     mac: "02:42:ac:14:00:02",
-    role: "Initiator Workstation",
-    status: "HEALTHY"
+    role: "IPsec Peer A / Client Initiator",
+    spi: "0xb3b1799d",
+    ebpfProbe: "kprobe_esp_output (Active)",
+    status: "HEALTHY (ACTIVE)"
   },
-  gateway: {
-    label: "VPN GATEWAY",
-    outerIp: "172.20.0.10",
-    innerIp: "172.22.0.2",
-    subnet: "172.22.0.0/24",
-    role: "IPsec Security Gateway / Edge",
-    status: "HEALTHY"
+  pc2: {
+    id: "pc2",
+    label: "PC 2 (WORKSTATION B)",
+    name: "vista-pc2",
+    ip: "172.20.0.10",
+    mac: "02:42:ac:14:00:0a",
+    role: "IPsec Peer B / Duplex Responder",
+    spi: "0x49c812a0",
+    ebpfProbe: "kprobe_esp_input (Active)",
+    status: "HEALTHY (ACTIVE)"
   },
-  server: {
-    label: "PROTECTED SERVER",
-    ip: "172.22.0.10",
-    service: "Internal Application Service (TCP :18080)",
-    subnet: "172.22.0.10/32",
-    role: "Protected Resource",
-    status: "HEALTHY"
-  },
-  tunnel: {
-    name: "vista-tunnel",
-    mode: "Tunnel Mode (RFC 4301)",
-    ikeStatus: "ESTABLISHED (IKEv2)",
-    espStatus: "ACTIVE (ESP proto 50)",
-    spiLocal: "0xb3b1799d",
-    spiRemote: "0x49c812a0",
-    encryption: "AES-256-GCM",
-    authentication: "SHA-256",
-    dhGroup: "DH Group 14 (MODP-2048)",
-    pfs: "Enabled",
-    antiReplay: "Enabled (64-packet window)",
-    natTraversal: "UDP Encapsulation (Port 4500) Inactive"
+  transport: {
+    name: "vista-duplex",
+    mode: "Host-to-Host Transport Mode (RFC 4301)",
+    ikeVersion: "IKEv2 (swanctl)",
+    espStatus: "ACTIVE (ESP Proto 50)",
+    encryption: "AES-256-GCM AEAD",
+    dhGroup: "Group 19 (ECP-256)",
+    pfs: "ENABLED",
+    antiReplay: "64-Packet Window",
+    rekeySec: "14,400s",
+    authentication: "Combined-AEAD (ICV-128)",
+    natTraversal: "Direct ESP / Proto 50 (NAT-T Not Required)"
   }
 };
 
