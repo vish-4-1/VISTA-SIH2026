@@ -13,7 +13,13 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { ATTACK_SCENARIOS } from './data/networkData';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('tab') || 'overview';
+    }
+    return 'overview';
+  });
   const [scenario, setScenario] = useState(ATTACK_SCENARIOS.NORMAL);
 
   const renderActiveView = () => {
