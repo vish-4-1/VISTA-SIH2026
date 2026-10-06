@@ -1,0 +1,31 @@
+# Environments
+.venv/
+*/.venv/
+__pycache__/
+*/__pycache__/
+*.pyc
+*.pyo
+
+# Node / Frontend
+node_modules/
+*/node_modules/
+dist/
+*/dist/
+.DS_Store
+
+# Large ML binary models (regeneratable from datasets)
+vista-ml/models/iscxvpn2016/*.joblib
+vista-ml/models/iscxvpn2016/*.metadata.json
+vista-ml/data/raw/public/**
+*.zip
+*.tar.gz
+*.tar
+
+# Test & Cache
+.pytest_cache/
+*/.pytest_cache/
+*.log
+
+# Scratch scripts
+scratch/
+

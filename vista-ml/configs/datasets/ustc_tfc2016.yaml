@@ -1,0 +1,43 @@
+dataset_name: USTC-TFC2016
+source: USTC-TFC2016
+dataset_path: data/raw/public/ustc_tfc2016
+label_column: label
+group_column: experiment_id
+feature_columns:
+  - packet_count
+  - byte_count
+  - flow_duration
+  - mean_packet_size
+  - std_packet_size
+  - min_packet_size
+  - max_packet_size
+  - mean_inter_arrival_time
+  - std_inter_arrival_time
+  - min_inter_arrival_time
+  - max_inter_arrival_time
+  - packets_per_second
+  - bytes_per_second
+  - forward_packet_count
+  - backward_packet_count
+  - forward_bytes
+  - backward_bytes
+  - direction_ratio
+excluded_columns:
+  - flow_id
+  - timestamp_start
+  - timestamp_end
+  - traffic_type
+  - attack_type
+  - ipsec_mode
+  - ike_version
+  - cipher
+  - integrity_algorithm
+  - dh_group
+  - pfs_enabled
+  - ebpf_event_count
+  - socket_event_count
+  - process_event_count
+  - network_event_count
+  - unique_process_count
+task: classification
+random_seed: 42

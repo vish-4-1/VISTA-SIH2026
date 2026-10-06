@@ -1,0 +1,190 @@
+{
+  "randomForest": {
+    "accuracy": 0.9866666666666667,
+    "precision": 0.989247311827957,
+    "recall": 0.9848484848484849,
+    "f1": 0.9865079365079366,
+    "macro_precision": 0.989247311827957,
+    "macro_recall": 0.9848484848484849,
+    "macro_f1": 0.9865079365079366,
+    "label_report": {
+      "BRUTE_FORCE": {
+        "precision": 0.9354838709677419,
+        "recall": 1.0,
+        "f1-score": 0.9666666666666667,
+        "support": 29.0
+      },
+      "C2_BEACONING": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 30.0
+      },
+      "DATA_EXFILTRATION": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 21.0
+      },
+      "DOS": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 28.0
+      },
+      "NORMAL": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 20.0
+      },
+      "PORT_SCAN": {
+        "precision": 1.0,
+        "recall": 0.9090909090909091,
+        "f1-score": 0.9523809523809523,
+        "support": 22.0
+      },
+      "accuracy": 0.9866666666666667,
+      "macro avg": {
+        "precision": 0.989247311827957,
+        "recall": 0.9848484848484849,
+        "f1-score": 0.9865079365079366,
+        "support": 150.0
+      },
+      "weighted avg": {
+        "precision": 0.9875268817204301,
+        "recall": 0.9866666666666667,
+        "f1-score": 0.9865714285714287,
+        "support": 150.0
+      }
+    },
+    "classes": [
+      "BRUTE_FORCE",
+      "C2_BEACONING",
+      "DATA_EXFILTRATION",
+      "DOS",
+      "NORMAL",
+      "PORT_SCAN"
+    ]
+  },
+  "xgboost": {
+    "accuracy": 0.9733333333333334,
+    "precision": 0.9786278735632185,
+    "recall": 0.9689393939393939,
+    "f1": 0.9724106758556136,
+    "macro_precision": 0.9786278735632185,
+    "macro_recall": 0.9689393939393939,
+    "macro_f1": 0.9724106758556136,
+    "label_report": {
+      "BRUTE_FORCE": {
+        "precision": 0.90625,
+        "recall": 1.0,
+        "f1-score": 0.9508196721311475,
+        "support": 29.0
+      },
+      "C2_BEACONING": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 30.0
+      },
+      "DATA_EXFILTRATION": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 21.0
+      },
+      "DOS": {
+        "precision": 0.9655172413793104,
+        "recall": 1.0,
+        "f1-score": 0.9824561403508771,
+        "support": 28.0
+      },
+      "NORMAL": {
+        "precision": 1.0,
+        "recall": 0.95,
+        "f1-score": 0.9743589743589743,
+        "support": 20.0
+      },
+      "PORT_SCAN": {
+        "precision": 1.0,
+        "recall": 0.8636363636363636,
+        "f1-score": 0.926829268292683,
+        "support": 22.0
+      },
+      "accuracy": 0.9733333333333334,
+      "macro avg": {
+        "precision": 0.9786278735632185,
+        "recall": 0.9689393939393939,
+        "f1-score": 0.9724106758556136,
+        "support": 150.0
+      },
+      "weighted avg": {
+        "precision": 0.9754382183908047,
+        "recall": 0.9733333333333334,
+        "f1-score": 0.9730664387416423,
+        "support": 150.0
+      }
+    },
+    "classes": [
+      "BRUTE_FORCE",
+      "C2_BEACONING",
+      "DATA_EXFILTRATION",
+      "DOS",
+      "NORMAL",
+      "PORT_SCAN"
+    ]
+  },
+  "isolationForest": {
+    "TP": 628,
+    "TN": 13,
+    "FP": 109,
+    "FN": 0,
+    "precision": 0.8521031207598372,
+    "recall": 1.0,
+    "f1": 0.9201465201465201,
+    "false_positive_rate": 0.8934426229508197
+  },
+  "topShapFeatures": [
+    {
+      "feature": "packets_per_second",
+      "shap_value": 0.883441150188446
+    },
+    {
+      "feature": "bytes_per_second",
+      "shap_value": 0.8343694806098938
+    },
+    {
+      "feature": "flow_duration",
+      "shap_value": 0.7935157418251038
+    },
+    {
+      "feature": "backward_packet_count",
+      "shap_value": 0.32399412989616394
+    },
+    {
+      "feature": "packet_count",
+      "shap_value": 0.3017788827419281
+    },
+    {
+      "feature": "backward_bytes",
+      "shap_value": 0.28077736496925354
+    },
+    {
+      "feature": "forward_packet_count",
+      "shap_value": 0.24209055304527283
+    },
+    {
+      "feature": "byte_count",
+      "shap_value": 0.17560045421123505
+    },
+    {
+      "feature": "forward_bytes",
+      "shap_value": 0.15046954154968262
+    },
+    {
+      "feature": "max_packet_size",
+      "shap_value": 0.11107826232910156
+    }
+  ]
+}

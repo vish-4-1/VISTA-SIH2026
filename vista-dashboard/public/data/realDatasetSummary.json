@@ -1,0 +1,107 @@
+{
+  "totalFlows": 5531,
+  "totalSessions": 1000,
+  "benignCount": 4171,
+  "attackCount": 1360,
+  "attackTypes": {
+    "BENIGN": 4171,
+    "BRUTE_FORCE": 300,
+    "C2_BEACONING": 268,
+    "PORT_SCAN": 268,
+    "DATA_EXFILTRATION": 265,
+    "DOS_FLOOD": 259
+  },
+  "trafficTypes": {
+    "Attack": 1360,
+    "Email_IMAP": 735,
+    "WhatsApp": 710,
+    "Video_Streaming": 692,
+    "ICMP": 683,
+    "VoIP": 677,
+    "Web_Browsing": 674
+  },
+  "packetSize": {
+    "meanBytes": 520.2,
+    "stdBytes": 200.1,
+    "bucket_64_200": {
+      "count": 2107,
+      "pct": 38.1
+    },
+    "bucket_200_800": {
+      "count": 1896,
+      "pct": 34.3
+    },
+    "bucket_800_1200": {
+      "count": 760,
+      "pct": 13.7
+    },
+    "bucket_1200_1500": {
+      "count": 768,
+      "pct": 13.9
+    }
+  },
+  "iat": {
+    "medianMs": 374.72,
+    "meanMs": 646.63,
+    "bucket_sub1ms": {
+      "count": 0,
+      "pct": 0.0
+    },
+    "bucket_1_50ms": {
+      "count": 1651,
+      "pct": 29.8
+    },
+    "bucket_50_500ms": {
+      "count": 1473,
+      "pct": 26.6
+    },
+    "bucket_beacon": {
+      "count": 2407,
+      "pct": 43.5
+    }
+  },
+  "directionality": {
+    "meanOutbound": 0.491,
+    "outboundPct": 49.1,
+    "inboundPct": 50.9
+  },
+  "auditSummary": {
+    "compliance": {
+      "Secure_Compliant": 570,
+      "Medium_Risk": 311,
+      "High_Risk": 119
+    },
+    "encryption": {
+      "AES-CBC-256": 313,
+      "AES-CBC-128": 221,
+      "AES-GCM-256": 200,
+      "AES-GCM-128": 191,
+      "3DES": 75
+    },
+    "auth": {
+      "Combined-AEAD": 391,
+      "SHA256": 343,
+      "SHA512": 157,
+      "SHA1": 66,
+      "MD5": 43
+    },
+    "dhGroups": {
+      "14": 408,
+      "20": 219,
+      "19": 194,
+      "5": 97,
+      "2": 82
+    },
+    "vulnerabilities": {
+      "PFS_Disabled_Key_Compromise_Exposure": 290,
+      "Legacy_CBC_Mode_Padding_Oracle_Risk": 221,
+      "Excessive_Key_Lifetime_Rekey_Exposure": 169,
+      "Sub_2048bit_DH_Group_MODP1536": 97,
+      "Sub_2048bit_DH_Group_MODP1024": 82,
+      "Sweet32_Vulnerable_Cipher(3DES)": 75,
+      "Cryptographically_Broken_HMAC(SHA1)": 66,
+      "Anti_Replay_Protection_Disabled": 44,
+      "Cryptographically_Broken_HMAC(MD5)": 43
+    }
+  }
+}

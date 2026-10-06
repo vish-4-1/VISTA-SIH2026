@@ -1,0 +1,12 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^cd /d c:\\\\vista\\\\vista-ml ; python -m pip install -r requirements\\.txt$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^Set-Location 'c:\\\\vista\\\\vista-ml'; \\.\\\\\\.venv\\\\Scripts\\\\python -m pytest tests/test_models\\.py::test_evaluation_writes_thresholded_binary_metrics tests/test_models\\.py::test_multiclass_probabilities_can_be_thresholded_to_binary -q$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

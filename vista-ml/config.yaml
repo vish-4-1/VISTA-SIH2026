@@ -1,0 +1,129 @@
+project:
+  name: VISTA ML
+  version: "0.1.0"
+  random_seed: 42
+  python_version: ">=3.11"
+
+paths:
+  root: .
+  data_dir: data
+  raw_dir: data/raw
+  processed_dir: data/processed
+  sample_dir: data/sample
+  splits_dir: data/splits
+  models_dir: models
+  reports_dir: reports
+  figures_dir: reports/figures
+  metrics_dir: reports/metrics
+  shap_dir: reports/shap
+  iscx_dir: reports/iscxvpn2016
+
+feature_groups:
+  enabled:
+    - NETWORK_BASIC
+    - PACKET_SIZE
+    - TIMING
+    - RATE
+    - DIRECTION
+    - EBPF
+
+  NETWORK_BASIC:
+    - packet_count
+    - byte_count
+    - flow_duration
+
+  PACKET_SIZE:
+    - mean_packet_size
+    - std_packet_size
+    - min_packet_size
+    - max_packet_size
+
+  TIMING:
+    - mean_inter_arrival_time
+    - std_inter_arrival_time
+    - min_inter_arrival_time
+    - max_inter_arrival_time
+
+  RATE:
+    - packets_per_second
+    - bytes_per_second
+
+  DIRECTION:
+    - forward_packet_count
+    - backward_packet_count
+    - forward_bytes
+    - backward_bytes
+    - direction_ratio
+
+  EBPF:
+    - ebpf_event_count
+    - socket_event_count
+    - process_event_count
+    - network_event_count
+    - unique_process_count
+
+correlation:
+  window_ms: 100
+  mode: flow_context
+  fallback_strategy: strongest_available_flow_id
+
+training:
+  test_size: 0.2
+  min_train_experiments: 3
+  metrics:
+    classification:
+      - accuracy
+      - precision
+      - recall
+      - f1
+      - macro_f1
+  anomaly:
+    contamination: 0.1
+    threshold: 0.90
+
+synthetic_dataset:
+  n_experiments: 50
+  flows_per_experiment: 15
+  seed: 42
+  label_categories:
+    - NORMAL
+    - PORT_SCAN
+    - DOS
+    - BRUTE_FORCE
+    - C2_BEACONING
+    - DATA_EXFILTRATION
+  ipsec_modes:
+    - tunnel
+    - transport
+  ciphers:
+    - aes128-cbc
+    - aes256-cbc
+    - aes128-gcm
+    - aes256-gcm
+  dh_groups:
+    - modp1024
+    - modp1536
+    - modp2048
+    - ecp256
+    - curve25519
+  pfs_values:
+    - true
+    - false
+
+public_datasets:
+  iscxvpn2016:
+    dataset_name: ISCXVPN2016
+    source: UNB ISCXVPN2016 / CIC VPN-nonVPN
+    download_url: "https://www.unb.ca/cic/datasets/vpn.html"
+    supported: true
+    task: classification
+  ustc_tfc2016:
+    dataset_name: USTC-TFC2016
+    source: USTC-TFC2016
+    download_url: "https://www.unb.ca/cic/datasets/vpn.html"
+    supported: true
+    task: classification
+
+spec:
+  describe_public_data: "The project supports benchmarking on public datasets before the VISTA StrongSwan dataset is available."
+  synthetic_warning: "The current sample dataset is synthetic and is used only to validate the ML pipeline. It must not be represented as measured IPsec performance."
