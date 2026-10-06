@@ -143,6 +143,7 @@ Open `http://localhost:5173` in your browser.
 - **Attack Classes:** `NORMAL`, `DOS`, `PORT_SCAN`, `BRUTE_FORCE`, `C2_BEACONING`, `DATA_EXFILTRATION`.
 - **Honest Probability Outputs:** Real probability distributions and confidence scores via `predict_proba()`.
 - **Zero-Day Anomaly Detection:** Scored via scikit-learn Isolation Forest (`isolation_forest.joblib`).
+- **ONNX Model Artifacts:** Standalone `.onnx` models in `vista-ml/models/onnx/` (`xgboost_classifier.onnx`, `random_forest_baseline.onnx`, `isolation_forest.onnx`) for cross-platform deployment on ONNX Runtime (C++, Rust, Go, WebAssembly).
 - **Explainability:** SHAP feature attribution metrics generated via TreeExplainer.
 
 ### 5.3 Deterministic NIST Compliance Engine
