@@ -1,0 +1,80 @@
+{
+  "timestamp": "2026-10-09T18:48:15.534612+00:00",
+  "runtime": {
+    "docker": true,
+    "containers": {
+      "pc1": "running",
+      "pc2": "running"
+    },
+    "ipv6": false,
+    "supported_dh_groups": [
+      14,
+      15
+    ],
+    "supported_modes": [
+      "tunnel",
+      "transport"
+    ],
+    "supported_ciphers": [
+      "aes128",
+      "aes256",
+      "aes128gcm16",
+      "aes256gcm16",
+      "aes128gcm",
+      "aes256gcm"
+    ],
+    "algorithms": {
+      "dh": [
+        14,
+        15
+      ],
+      "ciphers": [
+        "aes128",
+        "aes256",
+        "aes128gcm16",
+        "aes256gcm16"
+      ]
+    }
+  },
+  "capabilities": {
+    "tunnel_mode": true,
+    "transport_mode": "configured but not live verified",
+    "aes128": false,
+    "aes256": true,
+    "aes128gcm": false,
+    "aes256gcm": true,
+    "dh_group_modp_2048": true,
+    "dh_group_modp_3072": true,
+    "dh_group_ecp_256": false,
+    "ipv4": true,
+    "ipv6": false,
+    "pfs_enabled": true,
+    "pfs_disabled": "configured but not live verified",
+    "traffic_workloads": [
+      "icmpv4",
+      "udp_rtp",
+      "http",
+      "https",
+      "smtp",
+      "whatsapp",
+      "video",
+      "icmpv6"
+    ],
+    "status": {
+      "tunnel_mode": "PASS",
+      "transport_mode": "PARTIAL",
+      "aes128": "PASS",
+      "aes256": "PASS",
+      "aes128gcm": "PARTIAL",
+      "aes256gcm": "PASS",
+      "dh_group_modp_2048": "PASS",
+      "dh_group_modp_3072": "PASS",
+      "dh_group_ecp_256": "NOT_TESTED",
+      "ipv4": "PASS",
+      "ipv6": "BLOCKED",
+      "pfs_enabled": "PASS",
+      "pfs_disabled": "PARTIAL"
+    }
+  },
+  "status": "PARTIAL"
+}

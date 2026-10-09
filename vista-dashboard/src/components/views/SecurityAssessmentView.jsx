@@ -59,7 +59,7 @@ function escapeCsv(value) {
 }
 
 export default function SecurityAssessmentView() {
-  const { file, analysisResult, status: analysisStatus, error: analysisError } = usePcapAnalysis();
+  const { file, analysisResult, status: analysisStatus, error: analysisError, analysisId } = usePcapAnalysis();
   const [selectedStatus, setSelectedStatus] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -288,11 +288,11 @@ export default function SecurityAssessmentView() {
         <section className="soc-card" style={{ padding: '20px' }}>
           <div style={{ marginBottom: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <ShieldCheck size={18} color="var(--cyan)" />
-              <h2 style={{ margin: 0, fontSize: '16px', color: 'var(--text-primary)' }}>Uploaded capture assessment</h2>
+              <ShieldCheck size={18} className="text-sage" />
+              <h2 style={{ margin: 0, fontSize: '16px', color: 'var(--text-primary)' }}>Uploaded Capture Assessment</h2>
             </div>
             <p style={{ margin: '6px 0 0', fontSize: '12px', color: 'var(--text-secondary)' }}>
-              Source: {file.name} · backend PCAP analysis
+              Source: {file.name} {analysisId ? `(Session: ${analysisId})` : ''} · backend PCAP analysis
             </p>
           </div>
           {analysisStatus === 'analyzing' ? (

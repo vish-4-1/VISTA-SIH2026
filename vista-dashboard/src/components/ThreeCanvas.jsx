@@ -15,7 +15,7 @@ function addWorkstation(scene, x, color, nodeId) {
   const accent = new THREE.Color(color);
   const base = new THREE.Mesh(
     new THREE.BoxGeometry(2.2, 0.12, 1.5),
-    new THREE.MeshStandardMaterial({ color: 0x19232d, roughness: 0.8 }),
+    new THREE.MeshStandardMaterial({ color: 0xE2DDD4, roughness: 0.9 }),
   );
   base.position.y = 0.08;
   group.add(base);
@@ -23,11 +23,11 @@ function addWorkstation(scene, x, color, nodeId) {
   const tower = new THREE.Mesh(
     new THREE.BoxGeometry(0.72, 1.28, 0.82),
     new THREE.MeshStandardMaterial({
-      color: 0x263440,
-      roughness: 0.55,
-      metalness: 0.15,
+      color: 0x292D2A,
+      roughness: 0.6,
+      metalness: 0.1,
       emissive: accent,
-      emissiveIntensity: 0.035,
+      emissiveIntensity: 0.04,
     }),
   );
   tower.position.set(-0.55, 0.78, 0.1);
@@ -36,10 +36,10 @@ function addWorkstation(scene, x, color, nodeId) {
   const monitor = new THREE.Mesh(
     new THREE.BoxGeometry(1.25, 0.84, 0.1),
     new THREE.MeshStandardMaterial({
-      color: 0x17232d,
+      color: 0x1F2320,
       roughness: 0.45,
       emissive: accent,
-      emissiveIntensity: 0.08,
+      emissiveIntensity: 0.06,
     }),
   );
   monitor.position.set(0.44, 1.2, -0.18);
@@ -47,7 +47,7 @@ function addWorkstation(scene, x, color, nodeId) {
 
   const stand = new THREE.Mesh(
     new THREE.BoxGeometry(0.1, 0.28, 0.1),
-    new THREE.MeshStandardMaterial({ color: 0x81909e, roughness: 0.7 }),
+    new THREE.MeshStandardMaterial({ color: 0x9CA6A0, roughness: 0.7 }),
   );
   stand.position.set(0.44, 0.7, -0.18);
   group.add(stand);
@@ -85,8 +85,8 @@ export default function ThreeCanvas({
     if (!container) return undefined;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x101820);
-    scene.fog = new THREE.Fog(0x101820, 19, 36);
+    scene.background = new THREE.Color(0xF5F2EC);
+    scene.fog = new THREE.Fog(0xF5F2EC, 16, 36);
 
     const camera = new THREE.PerspectiveCamera(
       42,
@@ -115,29 +115,31 @@ export default function ThreeCanvas({
       controls.update();
     };
 
-    scene.add(new THREE.HemisphereLight(0xdce8f1, 0x25313a, 2));
-    const keyLight = new THREE.DirectionalLight(0xffffff, 2.2);
-    keyLight.position.set(-3, 9, 6);
+    scene.add(new THREE.HemisphereLight(0xFFFFFF, 0xE5DFD5, 1.8));
+    scene.add(new THREE.AmbientLight(0xEFEAE1, 0.4));
+    const keyLight = new THREE.DirectionalLight(0xFFFBF2, 2.4);
+    keyLight.position.set(-4, 10, 7);
     scene.add(keyLight);
 
-    const grid = new THREE.GridHelper(22, 22, 0x3b4d5a, 0x25313a);
+    const grid = new THREE.GridHelper(22, 22, 0xD4CDC0, 0xE4DDD0);
     grid.position.y = 0.005;
     scene.add(grid);
 
     const clickTargets = [
-      addWorkstation(scene, PEER_POSITIONS.pc1.x, 0x4d91ba, 'pc1'),
-      addWorkstation(scene, PEER_POSITIONS.pc2.x, 0x5c9d79, 'pc2'),
+      addWorkstation(scene, PEER_POSITIONS.pc1.x, 0x4E8B72, 'pc1'),
+      addWorkstation(scene, PEER_POSITIONS.pc2.x, 0x4E8B72, 'pc2'),
     ];
     peerGroupsRef.current = { pc1: clickTargets[0], pc2: clickTargets[1] };
 
     const tunnelStatus = String(tunnelState || 'UNKNOWN').toUpperCase();
     const tunnelColor = tunnelStatus === 'ESTABLISHED'
-      ? 0x4b9a6d
+      ? 0x4E8B72
       : tunnelStatus === 'DOWN'
-        ? 0xb64e4e
+        ? 0xE7A49A
         : tunnelStatus === 'NEGOTIATING'
-          ? 0xc0913e
-          : 0x8193a1;
+          ? 0xE9C58D
+          : 0x8E9692;
+
     const tunnelCurve = new THREE.LineCurve3(
       new THREE.Vector3(-3.05, 1.2, 0),
       new THREE.Vector3(3.05, 1.2, 0),
@@ -145,9 +147,9 @@ export default function ThreeCanvas({
     const tunnelMaterial = new THREE.MeshStandardMaterial({
       color: tunnelColor,
       emissive: tunnelColor,
-      emissiveIntensity: 0.08,
+      emissiveIntensity: 0.06,
       roughness: 0.5,
-      metalness: 0.15,
+      metalness: 0.1,
     });
     const tunnel = new THREE.Mesh(
       new THREE.TubeGeometry(tunnelCurve, 32, 0.09, 10, false),
@@ -161,9 +163,9 @@ export default function ThreeCanvas({
     const monitor = new THREE.Mesh(
       new THREE.BoxGeometry(1.25, 0.48, 0.6),
       new THREE.MeshStandardMaterial({
-        color: 0x283a46,
-        roughness: 0.65,
-        emissive: 0x4d91ba,
+        color: 0x363D39,
+        roughness: 0.7,
+        emissive: 0x4E8B72,
         emissiveIntensity: 0.04,
       }),
     );
@@ -178,7 +180,7 @@ export default function ThreeCanvas({
       ];
       const line = new THREE.Line(
         new THREE.BufferGeometry().setFromPoints(points),
-        new THREE.LineBasicMaterial({ color: 0x657b89, transparent: true, opacity: 0.75 }),
+        new THREE.LineBasicMaterial({ color: 0xACB6B0, transparent: true, opacity: 0.85 }),
       );
       collectorLinks.add(line);
     }
@@ -186,7 +188,7 @@ export default function ThreeCanvas({
 
     const activityMarker = new THREE.Mesh(
       new THREE.SphereGeometry(0.16, 16, 12),
-      new THREE.MeshBasicMaterial({ color: 0x6db6db }),
+      new THREE.MeshBasicMaterial({ color: 0x4E8B72 }),
     );
     activityMarker.visible = false;
     scene.add(activityMarker);
@@ -271,10 +273,10 @@ export default function ThreeCanvas({
     const eventType = activity.event?.eventType;
     if (eventType !== 'XFRM_OUT' && eventType !== 'XFRM_IN' && eventType !== 'SOCK_SEND') return;
     const markerColor = eventType === 'XFRM_OUT'
-      ? 0x75b9df
+      ? 0xA9C6DF
       : eventType === 'XFRM_IN'
-        ? 0x83b891
-        : 0xb6a16f;
+        ? 0x4E8B72
+        : 0xE9C58D;
     activityMarkerRef.current.material.color.setHex(markerColor);
     activityAnimationRef.current = { eventType, startedAt: performance.now() };
   }, [activity]);
@@ -289,7 +291,7 @@ export default function ThreeCanvas({
       >
         Reset camera
       </button>
-      <span className="scene-help">Drag to orbit · scroll to zoom</span>
+      <span className="scene-help">Drag to orbit · scroll to zoom · click PC1/PC2 to inspect</span>
     </div>
   );
 }

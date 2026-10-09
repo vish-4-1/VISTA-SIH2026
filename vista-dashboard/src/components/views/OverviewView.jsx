@@ -1,15 +1,20 @@
 import { useCallback, useEffect, useState } from 'react';
-import { 
-  Shield, 
-  Activity, 
-  BrainCircuit, 
-  Lock, 
-  Radio, 
+import {
+  Shield,
+  Activity,
+  BrainCircuit,
+  Lock,
+  Radio,
   Network,
-  Server
+  Server,
 } from 'lucide-react';
 import { usePcapAnalysis } from '../../context/usePcapAnalysis';
-import { fetchAuditSummary, fetchEbpfEvents, fetchEbpfStatus, fetchSocStatus } from '../../utils/apiClient';
+import {
+  fetchAuditSummary,
+  fetchEbpfEvents,
+  fetchEbpfStatus,
+  fetchSocStatus,
+} from '../../utils/apiClient';
 
 const EMPTY_VALUE = '—';
 const EVENT_POLL_INTERVAL_MS = 2500;
@@ -28,7 +33,11 @@ function EventTable({ events, loading, error }) {
   if (events.length === 0) {
     return (
       <div className="dashboard-empty" role="status">
-        {error ? `Unable to load collector events: ${error}` : loading ? 'Loading collector events…' : 'No collector events available in current window.'}
+        {error
+          ? `Unable to load collector events: ${error}`
+          : loading
+            ? 'Loading kernel ring buffer telemetry…'
+            : 'No IPsec transform events observed in current window. Generate traffic between PC1 and PC2.'}
       </div>
     );
   }
@@ -52,7 +61,7 @@ function EventTable({ events, loading, error }) {
         <thead>
           <tr>
             <th scope="col">Event Type</th>
-            <th scope="col">Timestamp</th>
+            <th scope="col">Observed Time</th>
             <th scope="col">Process</th>
             <th scope="col">PID</th>
             <th scope="col">Bytes</th>
@@ -83,7 +92,7 @@ function EventTable({ events, loading, error }) {
 }
 
 export default function OverviewView({ refreshKey = 0 }) {
-  const { analysisResult, file } = usePcapAnalysis();
+  const { analysisResult, file, analysisId, clearAnalysis } = usePcapAnalysis();
   const [events, setEvents] = useState([]);
   const [collectorStatus, setCollectorStatus] = useState(null);
   const [socStatus, setSocStatus] = useState(null);
@@ -99,7 +108,7 @@ export default function OverviewView({ refreshKey = 0 }) {
       fetchEbpfStatus(),
     ]);
     if (eventsResult.status === 'fulfilled') {
-      setEvents(Array.isArray(eventsResult.value.events) ? eventsResult.value.events : []);
+      setEvents(Array.isArray(eventsResult.value?.events) ? eventsResult.value.events : []);
       setError('');
     } else {
       setError(eventsResult.reason instanceof Error ? eventsResult.reason.message : String(eventsResult.reason));
@@ -154,40 +163,79 @@ export default function OverviewView({ refreshKey = 0 }) {
     (event) => event.eventType === 'XFRM_IN' || event.eventType === 'XFRM_OUT',
   );
   const isCollectorConnected = collectorStatus?.status === 'RUNNING' && collectorStatus?.mode === 'NATIVE_KERNEL_EBPF';
-  const totalFlows = analysisResult?.flows?.length ?? socStatus?.totalFlows ?? 0;
-  const totalPackets = analysisResult?.totalPackets ?? analysisResult?.summary?.totalPackets ?? socStatus?.rawPacketsCount ?? 0;
-  const attackCount = analysisResult?.summary?.attackFlows ?? (analysisResult?.flows?.filter(f => f.isAttack === 1).length) ?? (socStatus?.attackFlows ?? 0);
-  const benignCount = analysisResult?.summary?.benignFlows ?? (analysisResult?.flows?.filter(f => f.isAttack === 0).length) ?? (socStatus?.benignFlows ?? 0);
+
+  // Strict separation of Live Telemetry vs PCAP metrics
+  const totalFlows = analysisResult?.flows?.length ?? (events.length > 0 ? events.length : socStatus?.totalFlows ?? 0);
+  const totalPackets = analysisResult?.totalPackets ?? analysisResult?.summary?.totalPackets ?? (events.reduce((acc, e) => acc + (Number(e.packets) || 0), 0) || socStatus?.rawPacketsCount || 0);
+  const attackCount = analysisResult?.summary?.attackFlows ?? (analysisResult?.flows?.filter((f) => f.isAttack === 1).length) ?? (socStatus?.attackFlows ?? 0);
+  const benignCount = analysisResult?.summary?.benignFlows ?? (analysisResult?.flows?.filter((f) => f.isAttack === 0).length) ?? (socStatus?.benignFlows ?? 0);
   const primaryFlow = analysisResult?.flows?.[0];
-  const observedProposal = analysisResult?.ikeNegotiations?.[0]?.proposals 
+  const observedProposal = analysisResult?.ikeNegotiations?.[0]?.proposals
     || analysisResult?.predictions?.encryption?.value;
+
+  const currentAnalysisId = analysisId || analysisResult?.analysisId;
 
   return (
     <div className="dashboard-content">
+      {/* Active Analysis Mode Provenance Banner */}
+      <section className="dashboard-section session-provenance-banner">
+        <div className="provenance-banner-content">
+          <div className="provenance-info">
+            <span className={`provenance-mode-badge ${analysisResult ? 'is-pcap' : 'is-live'}`}>
+              {analysisResult ? 'Mode B · Uploaded PCAP Analysis' : 'Mode A · Live Testbed Monitor'}
+            </span>
+            <div className="provenance-title-wrap">
+              <h3 className="provenance-title">
+                {analysisResult
+                  ? `Active Analysis Session: ${file?.name || 'Uploaded Capture'}`
+                  : 'Active Environment: PC1 ⇄ IPsec ESP Tunnel ⇄ PC2'}
+              </h3>
+              <span className="provenance-meta">
+                {analysisResult
+                  ? `Session ID: ${currentAnalysisId || 'ANL-ACTIVE'} · Flows: ${analysisResult.flows?.length || 0} extracted`
+                  : 'Subnet: 172.20.0.0/24 · strongSwan 5.9.x · Linux XFRM'}
+              </span>
+            </div>
+          </div>
+          {analysisResult && (
+            <button
+              type="button"
+              className="soc-btn"
+              onClick={clearAnalysis}
+              title="Return to live testbed telemetry"
+            >
+              Clear PCAP Session
+            </button>
+          )}
+        </div>
+      </section>
+
       {summaryError && <div className="dashboard-empty" role="alert">{summaryError}</div>}
-      {/* Top KPI Metric Cards Banner */}
+
+      {/* Top Technical Telemetry KPI Cards Banner */}
       <section className="overview-kpi-grid" aria-label="System status metrics">
         <div className="kpi-card">
           <div className="kpi-header">
             <span className="kpi-title">Traffic Telemetry</span>
-            <div className="kpi-icon-wrap cyan">
-              <Activity size={17} />
+            <div className="kpi-icon-wrap sage">
+              <Activity size={16} />
             </div>
           </div>
           <div className="kpi-body">
             <div className="kpi-value">{totalPackets ? Number(totalPackets).toLocaleString() : '—'}</div>
             <div className="kpi-sub">
-              {analysisResult ? `${totalFlows} flows extracted from ${file?.name || 'PCAP'}` : `${totalFlows.toLocaleString()} flows in dataset`}
+              {analysisResult
+                ? `${totalFlows} flows extracted from ${file?.name || 'PCAP'}`
+                : `${events.length} kernel XFRM events in buffer`}
             </div>
           </div>
-          <div className="kpi-glow cyan" />
         </div>
 
         <div className="kpi-card">
           <div className="kpi-header">
-            <span className="kpi-title">IPsec / eBPF Engine</span>
-            <div className="kpi-icon-wrap emerald">
-              <Shield size={17} />
+            <span className="kpi-title">Linux eBPF Engine</span>
+            <div className="kpi-icon-wrap sage">
+              <Shield size={16} />
             </div>
           </div>
           <div className="kpi-body">
@@ -198,34 +246,32 @@ export default function OverviewView({ refreshKey = 0 }) {
               {observedXfrm ? 'XFRM transform events observed' : 'Monitoring Linux kernel ring buffer'}
             </div>
           </div>
-          <div className="kpi-glow emerald" />
         </div>
 
         <div className="kpi-card">
           <div className="kpi-header">
-            <span className="kpi-title">Threat Intelligence</span>
-            <div className="kpi-icon-wrap amber">
-              <BrainCircuit size={17} />
+            <span className="kpi-title">AI Dual-ML State</span>
+            <div className="kpi-icon-wrap lilac">
+              <BrainCircuit size={16} />
             </div>
           </div>
           <div className="kpi-body">
             <div className="kpi-value">
-              {attackCount > 0 ? `${attackCount} Detected` : benignCount > 0 ? 'Benign' : 'Ready'}
+              {attackCount > 0 ? `${attackCount} Attacked` : benignCount > 0 ? 'Benign' : 'Ready'}
             </div>
             <div className="kpi-sub">
-              {analysisResult 
+              {analysisResult
                 ? `${benignCount} benign, ${attackCount} attack flows classified`
-                : 'Dual-ML attack & application classification'}
+                : 'XGBoost Threat + Encrypted App Profiler'}
             </div>
           </div>
-          <div className="kpi-glow amber" />
         </div>
 
         <div className="kpi-card">
           <div className="kpi-header">
-            <span className="kpi-title">Security Posture</span>
-            <div className="kpi-icon-wrap purple">
-              <Lock size={17} />
+            <span className="kpi-title">NIST Security Posture</span>
+            <div className="kpi-icon-wrap amber">
+              <Lock size={16} />
             </div>
           </div>
           <div className="kpi-body">
@@ -238,19 +284,18 @@ export default function OverviewView({ refreshKey = 0 }) {
                 : (auditSummary?.source || 'No operational audit source configured')}
             </div>
           </div>
-          <div className="kpi-glow purple" />
         </div>
       </section>
 
-      {/* Interactive Topology Visualizer Card */}
+      {/* End-to-End Tunnel Architecture Diagram */}
       <section className="dashboard-section topology-visual-card" aria-labelledby="connection-title">
         <div className="section-heading">
           <div>
             <h2 id="connection-title" className="section-title-with-icon">
-              <Network size={16} className="section-heading-icon" />
+              <Network size={16} className="section-heading-icon text-sage" />
               IPsec End-to-End Tunnel Architecture
             </h2>
-            <p>Real-time tunnel endpoint state and observed cryptographic transform headers.</p>
+            <p>Authoritative PC1 ⇄ PC2 tunnel endpoint state and observed cryptographic transform headers.</p>
           </div>
           <span className={`tunnel-status-pill ${observedXfrm ? 'is-active' : ''}`}>
             <span className="pill-dot-core" />
@@ -262,46 +307,38 @@ export default function OverviewView({ refreshKey = 0 }) {
           {/* Peer 1: PC1 */}
           <div className="diagram-node left-node">
             <div className="diagram-node-icon-box">
-              <Server size={22} />
-              <div className="node-glow" />
+              <Server size={20} />
             </div>
-            <div className="diagram-node-name">PC1 Client</div>
-            <div className="diagram-node-ip">{primaryFlow?.src || 'Address not exposed'}</div>
-            <div className="diagram-node-badge">{primaryFlow ? 'Observed Peer' : 'Endpoint 1'}</div>
+            <div className="diagram-node-name">PC1 Initiator</div>
+            <div className="diagram-node-ip">{primaryFlow?.src || '172.20.0.2'}</div>
+            <div className="diagram-node-badge">{primaryFlow ? 'Observed Peer' : 'Docker Host 1'}</div>
           </div>
 
-          {/* Central Encrypted IPsec Tunnel */}
+          {/* Central Encrypted IPsec Tunnel Channel */}
           <div className="diagram-tunnel-channel">
-            <div className="tunnel-animated-stream">
-              <div className="stream-line" />
-              <div className="stream-particle p1" />
-              <div className="stream-particle p2" />
-              <div className="stream-particle p3" />
-            </div>
             <div className="tunnel-crypto-chip">
-              <Lock size={12} className="crypto-lock-icon" />
+              <Lock size={13} className="crypto-lock-icon" />
               <span>
-                {primaryFlow?.spi 
-                  ? `ESP Tunnel (SPI: ${primaryFlow.spi})` 
-                  : observedXfrm 
-                    ? 'XFRM Tunnel Active' 
-                    : 'Tunnel unobserved'}
+                {primaryFlow?.spi
+                  ? `ESP Tunnel (SPI: ${primaryFlow.spi})`
+                  : observedXfrm
+                    ? 'Kernel XFRM Tunnel Active'
+                    : 'Tunnel unobserved in window'}
               </span>
             </div>
             <div className="tunnel-telemetry-badge">
-              {observedProposal || (observedXfrm ? 'Kernel XFRM Transform' : 'Proposals unobserved in capture')}
+              {observedProposal || (observedXfrm ? 'Linux XFRM IPsec Transform' : 'Proposals unobserved in capture')}
             </div>
           </div>
 
           {/* Peer 2: PC2 */}
           <div className="diagram-node right-node">
             <div className="diagram-node-icon-box">
-              <Server size={22} />
-              <div className="node-glow" />
+              <Server size={20} />
             </div>
-            <div className="diagram-node-name">PC2 Gateway</div>
-            <div className="diagram-node-ip">{primaryFlow?.dst || 'Address not exposed'}</div>
-            <div className="diagram-node-badge">{primaryFlow ? 'Observed Peer' : 'Endpoint 2'}</div>
+            <div className="diagram-node-name">PC2 Responder</div>
+            <div className="diagram-node-ip">{primaryFlow?.dst || '172.20.0.3'}</div>
+            <div className="diagram-node-badge">{primaryFlow ? 'Observed Peer' : 'Docker Host 2'}</div>
           </div>
         </div>
 
@@ -320,7 +357,7 @@ export default function OverviewView({ refreshKey = 0 }) {
           </div>
           <div className="detail-box">
             <span className="detail-label">Security Association</span>
-            <span className="detail-val text-cyan">{primaryFlow?.spi ? `SPI ${primaryFlow.spi}` : observedXfrm ? 'XFRM event in window' : '—'}</span>
+            <span className="detail-val text-sage">{primaryFlow?.spi ? `SPI ${primaryFlow.spi}` : observedXfrm ? 'Active in window' : '—'}</span>
           </div>
         </div>
       </section>
@@ -330,10 +367,10 @@ export default function OverviewView({ refreshKey = 0 }) {
         <div className="section-heading">
           <div>
             <h2 id="telemetry-title" className="section-title-with-icon">
-              <Radio size={16} className="section-heading-icon text-cyan" />
+              <Radio size={16} className="section-heading-icon text-sage" />
               Live Kernel Telemetry Stream
             </h2>
-            <p>Real-time Linux eBPF ring buffer event stream capturing IPsec transforms.</p>
+            <p>Authoritative Linux eBPF ring buffer event stream capturing live IPsec transforms.</p>
           </div>
           <span className="section-meta-pill">
             {events.length} events in buffer

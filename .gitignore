@@ -28,4 +28,5 @@ vista-ml/data/raw/public/**
 
 # Scratch scripts
 scratch/
-
+configs/generated/
+captures/strongswan/experiments/

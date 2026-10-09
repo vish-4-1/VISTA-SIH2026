@@ -43,6 +43,7 @@ export default function TrafficAnalysisView() {
     error,
     analyzeFile,
     clearAnalysis,
+    analysisId,
   } = usePcapAnalysis();
   const flows = analysisResult?.flows ?? EMPTY_FLOWS;
   const [searchQuery, setSearchQuery] = useState('');
@@ -252,7 +253,7 @@ export default function TrafficAnalysisView() {
               </span>
               {file && (
                 <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-                  File: {file.name}
+                  File: {file.name} {analysisId ? `(${analysisId})` : ''}
                 </span>
               )}
             </div>

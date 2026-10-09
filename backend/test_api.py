@@ -261,7 +261,46 @@ def run_tests():
         assert "threatModel" in pcap_data["mlInference"]
         print("[PASS] PCAP analysis outputs separate trafficPrediction (AI Analysis) and threatPrediction (Threat Intel)")
 
-    print("\nALL BACKEND API TESTS (INCLUDING EBPF & SEPARATED ML) PASSED SUCCESSFULLY! [OK]")
+    # 13. Testbed Profiles and Configuration Validation
+    res = client.get("/api/testbed/profiles")
+    assert res.status_code == 200
+    profiles_data = res.json()
+    assert len(profiles_data["profiles"]) >= 2
+    assert "supportedMatrix" in profiles_data
+    print("[PASS] GET /api/testbed/profiles returned verified swanctl configuration profiles")
+
+    res = client.post("/api/testbed/validate", json={"mode": "tunnel", "cipher": "aes256gcm16", "dhGroup": 14})
+    assert res.status_code == 200
+    assert res.json()["valid"] is True
+    assert res.json()["nistCompliance"] == "Compliant"
+
+    res_invalid = client.post("/api/testbed/validate", json={"mode": "unknown", "cipher": "des-ede3", "dhGroup": 99})
+    assert res_invalid.status_code == 200
+    assert res_invalid.json()["valid"] is False
+    assert len(res_invalid.json()["issues"]) >= 2
+    print("[PASS] POST /api/testbed/validate validated real IPsec configurations and rejected invalid suites")
+
+    # 14. Stable Analysis ID and Provenance in Reports
+    assert "analysisId" in pcap_data
+    assert pcap_data["analysisId"].startswith("ANL-")
+    assert pcap_data["dataMode"] == "pcap"
+
+    report_res = client.post(
+        "/api/reports/generate",
+        json={
+            "reportType": "Technical Assessment",
+            "analysisId": "ANL-TEST-VERIFIED-1",
+            "filename": "sample_ipsec.pcap",
+        },
+    )
+    assert report_res.status_code == 200
+    report_json = report_res.json()
+    assert report_json["analysisId"] == "ANL-TEST-VERIFIED-1"
+    assert "ANL-TEST-VERIFIED-1" in report_json["content"]
+    assert "sample_ipsec.pcap" in report_json["content"]
+    print("[PASS] Stable Analysis ID & target provenance correctly generated and embedded into Reports")
+
+    print("\nALL BACKEND API TESTS (INCLUDING EBPF & SEPARATED ML & TESTBED) PASSED SUCCESSFULLY! [OK]")
 
 if __name__ == "__main__":
     run_tests()

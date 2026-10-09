@@ -95,11 +95,16 @@ export async function fetchMlMetrics() {
 /**
  * Generates dynamic assessment report markdown.
  */
-export async function generateReport(reportType = 'Technical Assessment', flows) {
+export async function generateReport(reportType = 'Technical Assessment', flows, analysisId, filename) {
+  const payload = { reportType };
+  if (flows) payload.flows = flows;
+  if (analysisId) payload.analysisId = analysisId;
+  if (filename) payload.filename = filename;
+
   const res = await fetch(`${API_BASE}/reports/generate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ reportType, ...(flows ? { flows } : {}) }),
+    body: JSON.stringify(payload),
   });
   if (!res.ok) throw new Error('Failed to generate report');
   return await res.json();
@@ -158,3 +163,26 @@ export async function fetchSampleCaptureBlob(filename) {
   const blob = await res.blob();
   return new File([blob], filename, { type: 'application/octet-stream' });
 }
+
+/**
+ * Fetches verified IPsec testbed swanctl profiles and capability matrix.
+ */
+export async function fetchTestbedProfiles() {
+  const res = await fetch(`${API_BASE}/testbed/profiles`);
+  if (!res.ok) throw new Error('Failed to fetch testbed profiles');
+  return await res.json();
+}
+
+/**
+ * Validates a candidate IPsec configuration against testbed constraints.
+ */
+export async function validateTestbedConfig(config) {
+  const res = await fetch(`${API_BASE}/testbed/validate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(config),
+  });
+  if (!res.ok) throw new Error('Failed to validate testbed configuration');
+  return await res.json();
+}
+

@@ -27,7 +27,7 @@ function percent(value) {
 }
 
 export default function DatasetView() {
-  const { file, analysisResult, status, error } = usePcapAnalysis();
+  const { file, analysisResult, status, error, analysisId } = usePcapAnalysis();
   const [mlMetrics, setMlMetrics] = useState(null);
   const [metricsError, setMetricsError] = useState('');
   const totalFlows = realDatasetSummary.totalFlows;
@@ -68,7 +68,7 @@ export default function DatasetView() {
             <p>Repository datasets and exported model-evaluation artifacts; these are not live telemetry.</p>
             <p>Source: DATASET/ CSV files and VISTA model evaluation reports.</p>
           </div>
-          <Database size={18} color="var(--cyan)" aria-hidden="true" />
+          <Database size={18} className="text-sage" aria-hidden="true" />
         </div>
         <div className="connection-details">
           <div><dt>Flow records</dt><dd>{totalFlows?.toLocaleString() ?? '—'}</dd></div>
@@ -82,12 +82,13 @@ export default function DatasetView() {
         <section className="dashboard-section">
           <div className="section-heading">
             <div>
-              <h2>Current uploaded analysis</h2>
+              <h2>Current Uploaded Analysis Session</h2>
               <p>Backend analysis shared with Traffic Analysis, AI Analysis, Threat Intelligence, and Reports.</p>
             </div>
           </div>
           <dl className="connection-details">
             <div><dt>File</dt><dd>{file.name}</dd></div>
+            <div><dt>Session ID</dt><dd className="monospace">{analysisId || analysisResult?.analysisId || 'ANL-ACTIVE'}</dd></div>
             <div><dt>Status</dt><dd>{status === 'success' ? 'Analysis complete' : status === 'analyzing' ? 'Analyzing' : status === 'error' ? 'Error' : '—'}</dd></div>
             <div><dt>File size</dt><dd>{file.size.toLocaleString()} bytes</dd></div>
             {status === 'success' && (

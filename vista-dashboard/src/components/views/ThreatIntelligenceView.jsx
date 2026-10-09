@@ -25,7 +25,7 @@ function EmptyState({ children, role = 'status' }) {
 }
 
 export default function ThreatIntelligenceView() {
-  const { analysisResult, file, status: analysisStatus, error: analysisError } = usePcapAnalysis();
+  const { analysisResult, file, status: analysisStatus, error: analysisError, analysisId } = usePcapAnalysis();
   const [dataState, setDataState] = useState({
     threats: [],
     loading: true,
@@ -112,13 +112,16 @@ export default function ThreatIntelligenceView() {
       <section className="dashboard-section">
         <div className="section-heading">
           <div>
-            <h2>Threat intelligence</h2>
+            <h2>Threat Intelligence &amp; Attack Attribution</h2>
             <p>
               {isLiveAnalysis
                 ? 'ML-predicted attack classifications from the uploaded PCAP. These are unverified model predictions, not confirmed incidents.'
                 : 'Attack-labelled flows from the VISTA repository dataset. These are training/evaluation records, not live detections.'}
             </p>
-            <p>Source: {dataSource || (isLiveAnalysis ? file?.name || 'Uploaded analysis' : 'Repository dataset')}</p>
+            <p>
+              Source: {dataSource || (isLiveAnalysis ? file?.name || 'Uploaded analysis' : 'Repository dataset')}
+              {analysisId ? ` · Session: ${analysisId}` : ''}
+            </p>
           </div>
           <span className="section-meta">
             {sectionMetaText}
@@ -140,8 +143,8 @@ export default function ThreatIntelligenceView() {
 
         {/* Baseline dataset banner (when no PCAP is loaded) */}
         {!file && !isLoading && !fetchError && (
-          <div style={{ marginBottom: 16, padding: '10px 14px', borderRadius: 6, background: 'rgba(0,240,255,0.06)', border: '1px solid var(--border-subtle)', fontSize: 12, color: 'var(--text-secondary)' }}>
-            <Shield size={13} style={{ verticalAlign: 'middle', marginRight: 6 }} />
+          <div style={{ marginBottom: 16, padding: '10px 14px', borderRadius: 6, background: 'rgba(78, 139, 114, 0.08)', border: '1px solid var(--border-subtle)', fontSize: 12, color: 'var(--text-secondary)' }}>
+            <Shield size={13} style={{ verticalAlign: 'middle', marginRight: 6 }} className="text-sage" />
             Upload a PCAP in Traffic Analysis to run live ML inference. The findings below are from the repository evaluation dataset (<code>realFlows.json</code>) — they are dataset labels, not real-time detections.
           </div>
         )}
@@ -154,7 +157,7 @@ export default function ThreatIntelligenceView() {
             gap: '10px',
             marginBottom: '16px',
             padding: '12px 14px',
-            background: 'rgba(255, 255, 255, 0.02)',
+            background: 'var(--bg-card-elevated)',
             border: '1px solid var(--border-subtle)',
             borderRadius: '6px',
           }}>
@@ -164,7 +167,7 @@ export default function ThreatIntelligenceView() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <span style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Evaluated by Model</span>
-              <span style={{ fontSize: 16, fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--cyan)' }}>{evaluatedCount}</span>
+              <span style={{ fontSize: 16, fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--accent-sage)' }}>{evaluatedCount}</span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <span style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Successful Predictions</span>

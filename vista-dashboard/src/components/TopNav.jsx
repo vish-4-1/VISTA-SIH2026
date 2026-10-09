@@ -41,7 +41,7 @@ function ConnectionPill({ label, connected, detail, icon: Icon }) {
 }
 
 export default function TopNav({ onRefresh, activeTab = 'overview' }) {
-  const { file, status: analysisStatus, error: analysisError } = usePcapAnalysis();
+  const { file, status: analysisStatus, error: analysisError, analysisId } = usePcapAnalysis();
   const [backendOnline, setBackendOnline] = useState(false);
   const [backendDetail, setBackendDetail] = useState('');
   const [collectorOnline, setCollectorOnline] = useState(false);
@@ -105,10 +105,11 @@ export default function TopNav({ onRefresh, activeTab = 'overview' }) {
         {file && (
           <div
             className={`active-capture-chip ${analysisStatus === 'success' ? 'is-analyzed' : analysisStatus === 'analyzing' ? 'is-analyzing' : 'is-error'}`}
-            title={analysisError || `${file.name} · ${analysisStatus}`}
+            title={analysisError || `${file.name} · ${analysisId || ''} · ${analysisStatus}`}
           >
             <FileCode size={13} className="capture-icon" />
             <span className="capture-name">{file.name}</span>
+            {analysisId && <span className="capture-id-badge monospace">{analysisId}</span>}
             <span className="capture-badge">
               {analysisStatus === 'success' ? 'Analyzed' : analysisStatus === 'analyzing' ? 'Processing…' : 'Error'}
             </span>

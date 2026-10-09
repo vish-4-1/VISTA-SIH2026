@@ -62,3 +62,11 @@ This document lists the remaining technical gaps and boundaries in the VISTA fra
 - **Required Implementation:** Add `jsPDF` or `html2pdf.js` in the frontend or `reportlab` in the backend.
 - **Priority:** P2
 - **Estimated Complexity:** Low
+
+---
+
+## Verified Runtime State (Updated)
+
+The direct StrongSwan testbed currently verifies a live IPv4 tunnel-mode endpoint pair (`pc1` <-> `pc2`) with IKEv2 and ESP in tunnel mode. The working baseline uses AES_CBC-256/HMAC_SHA2_256_128 for the IKE_SA and AES_GCM_16-256 for the child SA, with MODP_2048 DH and PFS enabled. The repo also includes configuration-generation and validation logic for transport mode, AES-GCM/AES-CBC profiles, additional DH groups, and IPv6 constraints, but those scenarios are still treated as supported only when the live runtime demonstrates them.
+
+The most important runtime fix was in the experiment runner: it now validates the live strongSwan capability matrix, writes the generated swanctl config directly into each container without relying on `docker cp` from a Windows host path, initiates the tunnel when needed, verifies the active SA state, and records the structured result. The current environment is still blocked from claiming full IPv6 or transport-mode end-to-end verification because the Docker network and kernel do not provide a proven dual-stack/transport implementation in this runtime.

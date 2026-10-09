@@ -19,7 +19,7 @@ function EmptyState({ children }) {
 }
 
 export default function AiAnalysisView() {
-  const { analysisResult, file, status, error: analysisError } = usePcapAnalysis();
+  const { analysisResult, file, status, error: analysisError, analysisId } = usePcapAnalysis();
   const [modelInfo, setModelInfo] = useState(null);
   const [canonicalSchema, setCanonicalSchema] = useState([]);
   const [metrics, setMetrics] = useState(null);
@@ -80,11 +80,15 @@ export default function AiAnalysisView() {
       <section className="dashboard-section">
         <div className="section-heading">
           <div>
-            <h2>AI analysis</h2>
-            <p>Observed capture data and predictions from the backend model artifacts.</p>
-            <p>Source: trained flow classifiers and documented offline evaluation reports.</p>
+            <h2>AI &amp; Dual-ML Analysis</h2>
+            <p>
+              {file
+                ? `Capture inference: ${file.name} · Session ID: ${analysisId || analysisResult?.analysisId || 'ANL-ACTIVE'}`
+                : 'Observed capture data and predictions from backend model artifacts.'}
+            </p>
+            <p>Source: trained flow classifiers (traffic_classifier, attack_classifier) and offline evaluation artifacts.</p>
           </div>
-          <BrainCircuit size={20} color="var(--cyan)" aria-hidden="true" />
+          <BrainCircuit size={20} className="text-sage" aria-hidden="true" />
         </div>
         {error && <div className="dashboard-empty" role="alert">{error}</div>}
         {loading ? (

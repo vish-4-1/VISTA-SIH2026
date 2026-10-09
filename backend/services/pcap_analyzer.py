@@ -7,6 +7,7 @@ when the complete recorded feature schema can be formed from the capture.
 
 from __future__ import annotations
 
+import hashlib
 import logging
 import os
 import tempfile
@@ -532,8 +533,15 @@ class PcapAnalyzer:
         }
         assessment = posture_engine.evaluate_session(session_for_eval)
 
+        analyzed_at = datetime.now(timezone.utc).isoformat()
+        digest_src = f"{name}:{total_raw_packets}:{total_raw_bytes}:{len(flows_list)}"
+        analysis_id = f"ANL-{hashlib.sha256(digest_src.encode('utf-8')).hexdigest()[:10].upper()}"
+
         return {
+            "analysisId": analysis_id,
             "filename": name,
+            "dataMode": "pcap",
+            "analyzedAt": analyzed_at,
             "totalPackets": total_raw_packets,
             "totalBytes": total_raw_bytes,
             "flows": flows_list,

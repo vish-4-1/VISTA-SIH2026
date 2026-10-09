@@ -30,6 +30,8 @@ function ReportContent({
       const result = await generateReport(
         reportType,
         analysisStatus === 'success' ? analysisResult?.flows : undefined,
+        analysisResult?.analysisId,
+        file?.name,
       );
       if (requestId.current === currentRequestId) setReportState(result);
     } catch (requestError) {

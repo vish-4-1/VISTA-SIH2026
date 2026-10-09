@@ -11,6 +11,10 @@ RUN apt-get update \
         tcpdump \
         netcat-openbsd \
         ca-certificates \
+        python3 \
+        python3-pip \
+        curl \
+        iperf3 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY entrypoint.sh /usr/local/sbin/vista-strongswan-entrypoint
