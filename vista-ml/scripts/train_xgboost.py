@@ -43,6 +43,11 @@ def main() -> None:
     model = train_xgboost_classifier(X_train, y_train, random_state=42)
     save_model_bundle(model, ROOT / "models" / "xgboost_classifier.joblib", {
         "model": "XGBClassifier",
+        "prediction_task": "flow traffic-label classification",
+        "training_data_scope": "synthetic development dataset",
+        "training_dataset": "data/sample/synthetic_vista_dataset.parquet",
+        "evaluation_scope": "experiment-aware group holdout; offline synthetic-data evaluation",
+        "probability_calibration": "not evaluated",
         "feature_columns": feature_columns,
         "random_seed": 42,
         "dataset_shape": df.shape,

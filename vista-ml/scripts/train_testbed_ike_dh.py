@@ -27,16 +27,12 @@ from vista_ml.models.xgboost_model import save_model_bundle as save_xgboost_bund
 from vista_ml.models.xgboost_model import train_xgboost_classifier
 
 
-CLIENT = "vista-client"
-GATEWAY = "vista-gateway"
+PC1 = "pc1"
+PC2 = "pc2"
 GROUP_PROPOSALS = {
     "MODP_2048": "aes256-sha256-modp2048",
     "MODP_3072": "aes256-sha256-modp3072",
     "ECP_256": "aes256-sha256-ecp256",
-}
-BACKUPS = {
-    CLIENT: "/tmp/vista-client-swanctl-original.conf",
-    GATEWAY: "/tmp/vista-gateway-swanctl-original.conf",
 }
 CONFIG_PATH = "/etc/swanctl/swanctl.conf"
 
@@ -81,53 +77,44 @@ def _docker(*args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
 
 def _ensure_tcpdump() -> None:
     _docker(
-        "exec", GATEWAY, "sh", "-lc",
+        "exec", PC1, "sh", "-lc",
         "command -v tcpdump >/dev/null 2>&1 || (apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq tcpdump)",
     )
 
 
-def _backup_configs() -> None:
-    for container, backup_path in BACKUPS.items():
-        _docker("exec", container, "cp", CONFIG_PATH, backup_path)
-
-
 def _terminate_connection() -> None:
-    for container in (CLIENT, GATEWAY):
-        _docker("exec", container, "swanctl", "--terminate", "--ike", "vista", check=False)
+    for container in (PC1, PC2):
+        _docker("exec", container, "swanctl", "--terminate", "--ike", "pc1-pc2", check=False)
 
 
 def _load_variant(group: str) -> None:
     proposal = GROUP_PROPOSALS[group]
-    client_edit = (
-        f"sed -i 's|^[[:space:]]*proposals = .*|        proposals = {proposal}|' {CONFIG_PATH}; "
-        f"sed -i 's|start_action = start|start_action = none|' {CONFIG_PATH}; "
-        "swanctl --load-conns"
-    )
-    gateway_edit = (
-        f"sed -i 's|^[[:space:]]*proposals = .*|        proposals = {proposal}|' {CONFIG_PATH}; "
-        "swanctl --load-conns"
-    )
-    _docker("exec", CLIENT, "sh", "-lc", client_edit)
-    _docker("exec", GATEWAY, "sh", "-lc", gateway_edit)
+    for container in (PC1, PC2):
+        variant_path = f"/tmp/vista-swanctl-{group.lower()}.conf"
+        load_variant = (
+            f"sed 's|^[[:space:]]*proposals = .*|        proposals = {proposal}|' "
+            f"{CONFIG_PATH} > {variant_path} && "
+            f"swanctl --load-conns --file {variant_path} && "
+            f"rm -f {variant_path}"
+        )
+        _docker("exec", container, "sh", "-lc", load_variant)
 
 
 def _restore_configs() -> None:
     _terminate_connection()
-    for container, backup_path in BACKUPS.items():
-        _docker("exec", container, "cp", backup_path, CONFIG_PATH)
+    for container in (PC1, PC2):
         _docker("exec", container, "swanctl", "--load-conns")
-        _docker("exec", container, "rm", "-f", backup_path)
-    status = _docker("exec", CLIENT, "swanctl", "--list-sas", check=False).stdout
+    status = _docker("exec", PC1, "swanctl", "--list-sas", check=False).stdout
     if "ESTABLISHED" not in status:
-        _docker("exec", CLIENT, "swanctl", "--initiate", "--child", "vista-tunnel")
+        _docker("exec", PC1, "swanctl", "--initiate", "--child", "pc-tunnel")
 
 
 def _capture_handshake(group: str, repetition: int, capture_path: Path) -> dict[str, float | int | str]:
     remote_path = f"/tmp/ike-init-{group.lower()}-{repetition:02d}.pcap"
     capture = subprocess.Popen(
         [
-            _docker_path(), "exec", GATEWAY, "tcpdump", "-n", "-i", "eth0",
-            "-c", "2", "-U", "-w", remote_path, "udp port 500",
+            _docker_path(), "exec", PC1, "tcpdump", "-n", "-i", "eth0",
+            "-c", "2", "-U", "-w", remote_path, "udp port 500 or udp port 4500",
         ],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.PIPE,
@@ -140,13 +127,13 @@ def _capture_handshake(group: str, repetition: int, capture_path: Path) -> dict[
             stdout, stderr = capture.communicate(timeout=5)
             raise RuntimeError(f"tcpdump did not start for {group}/{repetition}: {ready_line}{stderr or stdout}")
 
-        _docker("exec", CLIENT, "swanctl", "--initiate", "--child", "vista-tunnel")
+        _docker("exec", PC1, "swanctl", "--initiate", "--child", "pc-tunnel")
         stdout, stderr = capture.communicate(timeout=20)
         if capture.returncode != 0:
             raise RuntimeError(f"IKE_SA_INIT capture failed: {stderr or stdout}")
-        _docker("cp", f"{GATEWAY}:{remote_path}", str(capture_path))
+        _docker("cp", f"{PC1}:{remote_path}", str(capture_path))
     except Exception:
-        _docker("exec", GATEWAY, "pkill", "-INT", "tcpdump", check=False)
+        _docker("exec", PC1, "pkill", "-INT", "tcpdump", check=False)
         capture.kill()
         capture.communicate()
         raise
@@ -156,6 +143,10 @@ def _capture_handshake(group: str, repetition: int, capture_path: Path) -> dict[
         if IP not in packet or UDP not in packet:
             continue
         payload = bytes(packet[UDP].payload)
+        if 4500 in {int(packet[UDP].sport), int(packet[UDP].dport)}:
+            if payload[:4] != b"\x00\x00\x00\x00":
+                continue
+            payload = payload[4:]
         if len(payload) < 28:
             continue
         if payload[17] >> 4 != 2 or payload[18] != 34:
@@ -189,7 +180,7 @@ def _capture_handshake(group: str, repetition: int, capture_path: Path) -> dict[
 
 
 def _negotiated_dh_group() -> str:
-    output = _docker("exec", CLIENT, "swanctl", "--list-sas").stdout
+    output = _docker("exec", PC1, "swanctl", "--list-sas").stdout
     matches = re.findall(r"\b(MODP_2048|MODP_3072|ECP_256)\b", output)
     unique = sorted(set(matches))
     if len(unique) != 1:
@@ -219,7 +210,6 @@ def main() -> None:
         directory.mkdir(parents=True, exist_ok=True)
 
     rows = []
-    _backup_configs()
     try:
         for group, proposal in GROUP_PROPOSALS.items():
             for repetition in range(args.repetitions):
@@ -284,7 +274,7 @@ def main() -> None:
     report = {
         "dataset_category": "VISTA-generated StrongSwan testbed, controlled configuration-inference experiment",
         "task": "classify IKE DH group from IKE_SA_INIT packet lengths/timing only",
-        "capture_point": "vista-gateway eth0; IKE_SA_INIT UDP port 500",
+        "capture_point": "pc1 eth0; IKE_SA_INIT UDP port 500",
         "model_features": feature_columns,
         "labels": label_names,
         "class_distribution": dataset["label"].value_counts().to_dict(),

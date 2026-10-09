@@ -1,6 +1,6 @@
 """
 VISTA eBPF Service Bridge
-Exposes live eBPF ring buffer events and integrates with the ML fusion pipeline.
+Exposes Linux kernel events to the ML fusion pipeline.
 """
 
 from __future__ import annotations
@@ -18,11 +18,11 @@ class EbpfService:
         pass
 
     def get_live_events(self, limit: int = 12) -> List[Dict[str, Any]]:
-        """Returns the most recent eBPF kernel events."""
+        """Returns recent kernel events, or an empty list if collection is unavailable."""
         return ebpf_agent.get_recent_events(limit=limit)
 
     def get_status(self) -> Dict[str, Any]:
-        """Returns probe and ring buffer status."""
+        """Returns collector mode, probe attachment, and transport status."""
         return ebpf_agent.get_status()
 
     def fuse_with_ebpf(self, flow_records: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -40,8 +40,7 @@ class EbpfService:
             sanitized = merged.astype(object).where(pd.notnull(merged), None)
             return sanitized.to_dict(orient="records")
         except Exception as err:
-            print(f"[EbpfService] Fusion note: {err}")
-            return flow_records
+            raise RuntimeError("PCAP/eBPF flow fusion failed.") from err
 
 
 ebpf_service = EbpfService()

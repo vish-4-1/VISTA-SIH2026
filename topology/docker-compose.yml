@@ -1,115 +1,97 @@
 version: "3.8"
 
 # ============================================================================
-# VISTA IPsec Testbed — Docker Compose
+# VISTA Direct PC1-to-PC2 IPsec Testbed — Docker Compose
 # SIH26160 · NTRO · Smart India Hackathon 2026
 #
-# Network topology:
+# Topology:
 #
-#   vista-client (172.20.0.2) ── vista-net ── vista-gateway (172.20.0.10)
-#                                                     │
-#                                               vista-internal
-#                                                     │
-#                                          vista-server (172.22.0.10)
+#   pc1 (172.20.0.2) <===== ONE DIRECT IPsec TUNNEL =====> pc2 (172.20.0.3)
 #
-# Container naming must match the ML pipeline scripts in vista-ml/scripts/.
+# No gateway, server, router, or intermediate proxy.
 # ============================================================================
 
 networks:
   vista-net:
+    name: vista-pc-net
     driver: bridge
     ipam:
       config:
         - subnet: 172.20.0.0/24
 
-  vista-internal:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.22.0.0/24
-
 services:
 
   # --------------------------------------------------------------------------
-  # INITIATOR — IKEv2 client / workstation
-  # Starts the IKE_SA_INIT exchange toward vista-gateway.
-  # NET_ADMIN is required for the Linux IPsec XFRM kernel subsystem.
+  # PC1 — Workstation / IPsec Endpoint 1
+  # Initiates the direct IKEv2 / IPsec tunnel toward PC2.
   # --------------------------------------------------------------------------
-  vista-client:
-    container_name: vista-client
-    image: strongswan/strongswan:latest
+  pc1:
+    container_name: pc1
+    build:
+      context: ./strongswan
+      dockerfile: Dockerfile
     cap_add:
       - NET_ADMIN
+    environment:
+      VISTA_INITIATE: "1"
+      VISTA_CHILD: "pc-tunnel"
     networks:
       vista-net:
         ipv4_address: 172.20.0.2
     volumes:
-      - ../configs/client-swanctl.conf:/etc/swanctl/swanctl.conf:ro
+      - ../configs/pc1-swanctl.conf:/etc/swanctl/swanctl.conf:ro
+    depends_on:
+      pc2:
+        condition: service_healthy
     restart: unless-stopped
-    # charon (not charon-systemd) is the correct daemon for non-systemd containers.
-    command: ["charon"]
 
   # --------------------------------------------------------------------------
-  # GATEWAY — IKEv2 responder / security gateway
-  # Terminates the IPsec tunnel and routes decrypted traffic to vista-server.
-  # Attached to both networks so it can forward between them.
+  # PC2 — Workstation / IPsec Endpoint 2
+  # Responds to IKEv2 from PC1 and establishes the direct tunnel.
   # --------------------------------------------------------------------------
-  vista-gateway:
-    container_name: vista-gateway
-    image: strongswan/strongswan:latest
+  pc2:
+    container_name: pc2
+    build:
+      context: ./strongswan
+      dockerfile: Dockerfile
     cap_add:
       - NET_ADMIN
+    environment:
+      VISTA_INITIATE: "0"
     networks:
       vista-net:
-        ipv4_address: 172.20.0.10
-      vista-internal:
-        ipv4_address: 172.22.0.2
+        ipv4_address: 172.20.0.3
     volumes:
-      - ../configs/gateway-swanctl.conf:/etc/swanctl/swanctl.conf:ro
-    restart: unless-stopped
-    command: ["charon"]
-
-  # --------------------------------------------------------------------------
-  # SERVER — Protected resource behind the gateway
-  # Listens for test traffic forwarded by vista-gateway after IPsec decryption.
-  # Exposes a simple HTTP server and a netcat listener for the ML test scripts.
-  # --------------------------------------------------------------------------
-  vista-server:
-    container_name: vista-server
-    image: python:3.11-slim
-    networks:
-      vista-internal:
-        ipv4_address: 172.22.0.10
-    command: >
-      sh -c "apt-get update -qq &&
-             apt-get install -y -qq netcat-openbsd &&
-             python3 -m http.server 18080"
+      - ../configs/pc2-swanctl.conf:/etc/swanctl/swanctl.conf:ro
+    healthcheck:
+      test: ["CMD-SHELL", "swanctl --list-conns | grep -q 'pc1-pc2'"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+      start_period: 5s
     restart: unless-stopped
 
   # --------------------------------------------------------------------------
-  # eBPF HOST MONITOR — Privileged kernel-space telemetry collector
-  # Runs on the host kernel PID namespace and monitors cgroup events for
-  # both IPsec containers.  This currently uses Tetragon as a placeholder;
-  # replace with the custom VISTA eBPF agent when implemented.
-  #
-  # NOTE: This container requires a Linux host with eBPF support.
-  # It will fail gracefully on Windows/macOS Docker Desktop (no host kernel).
+  # eBPF HOST MONITOR — libbpf loads a CO-RE object compiled against runtime BTF.
+  # Observes host/WSL2 kernel XFRM/socket probes; not an IPsec endpoint.
   # --------------------------------------------------------------------------
   vista-ebpf-monitor:
     container_name: vista-ebpf-monitor
-    image: cilium/tetragon:latest
-    pid: host
-    network_mode: host
-    privileged: true
+    profiles: ["ebpf"]
+    build:
+      context: ../ebpf
+      dockerfile: Dockerfile
     cap_add:
-      - CAP_BPF
-      - CAP_PERFMON
-      - CAP_NET_ADMIN
-    volumes:
-      - /sys/kernel/debug:/sys/kernel/debug:ro
-      - /sys/fs/bpf:/sys/fs/bpf
-      - /sys/fs/cgroup:/sys/fs/cgroup:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    depends_on:
-      - vista-client
-      - vista-gateway
+      - BPF
+      - PERFMON
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    read_only: true
+    tmpfs:
+      - /run/vista:rw,noexec,nosuid,size=64m
+      - /tmp:rw,noexec,nosuid,size=16m
+    ports:
+      - "127.0.0.1:8765:8765"
+    restart: unless-stopped

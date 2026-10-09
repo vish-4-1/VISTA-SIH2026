@@ -29,11 +29,9 @@ from vista_ml.models.xgboost_model import save_model_bundle as save_xgboost_bund
 from vista_ml.models.xgboost_model import train_xgboost_classifier
 
 
-CLIENT_CONTAINER = "vista-client"
-GATEWAY_CONTAINER = "vista-gateway"
-SERVER_CONTAINER = "vista-server"
-SERVER_IP = "172.22.0.10"
-GATEWAY_INNER_IP = "172.22.0.2"
+PC1_CONTAINER = "pc1"
+PC2_CONTAINER = "pc2"
+PC2_IP = "172.20.0.3"
 TCP_PORT = 18080
 
 
@@ -58,20 +56,10 @@ def _docker(*args: str, check: bool = True, capture_output: bool = True) -> subp
 
 
 def _ensure_runtime() -> None:
-    nat_command = (
-        "if ! command -v iptables >/dev/null 2>&1; then "
-        "apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iptables; fi; "
-        "iptables -t nat -C POSTROUTING -s 172.20.0.2/32 -d 172.22.0.10/32 -o eth1 "
-        "-j SNAT --to-source 172.22.0.2 2>/dev/null || "
-        "iptables -t nat -A POSTROUTING -s 172.20.0.2/32 -d 172.22.0.10/32 -o eth1 "
-        "-j SNAT --to-source 172.22.0.2"
-    )
-    _docker("exec", "vista-gateway", "sh", "-lc", nat_command)
-
     for container, package, tool in [
-        ("vista-gateway", "tcpdump", "tcpdump"),
-        (SERVER_CONTAINER, "netcat-openbsd", "nc"),
-        (CLIENT_CONTAINER, "netcat-openbsd", "nc"),
+        (PC1_CONTAINER, "tcpdump", "tcpdump"),
+        (PC1_CONTAINER, "netcat-openbsd", "nc"),
+        (PC2_CONTAINER, "netcat-openbsd", "nc"),
     ]:
         command = (
             f"command -v {tool} >/dev/null 2>&1 || "
@@ -79,7 +67,7 @@ def _ensure_runtime() -> None:
         )
         _docker("exec", container, "sh", "-lc", command)
 
-    _docker("exec", CLIENT_CONTAINER, "ping", "-c", "1", "-W", "2", SERVER_IP)
+    _docker("exec", PC1_CONTAINER, "ping", "-c", "1", "-W", "2", PC2_IP)
 
 
 def _capture_packets(experiment_id: str, label: str, index: int, capture_path: Path) -> None:
@@ -88,7 +76,7 @@ def _capture_packets(experiment_id: str, label: str, index: int, capture_path: P
     packet_limit = "12" if label == "ICMP_NORMAL" else "5"
     capture = subprocess.Popen(
         [
-            _docker_path(), "exec", GATEWAY_CONTAINER, "tcpdump", "-n", "-i", "eth0",
+            _docker_path(), "exec", PC1_CONTAINER, "tcpdump", "-n", "-i", "eth0",
             "-c", packet_limit, "-U", "-w", remote_path, tcpdump_filter,
         ],
         stdout=subprocess.DEVNULL,
@@ -103,25 +91,25 @@ def _capture_packets(experiment_id: str, label: str, index: int, capture_path: P
             raise RuntimeError(f"tcpdump did not start for {experiment_id}: {ready_line}{stderr or stdout}")
 
         if label == "ICMP_NORMAL":
-            _docker("exec", CLIENT_CONTAINER, "ping", "-c", "6", "-i", "0.2", "-W", "2", SERVER_IP)
+            _docker("exec", PC1_CONTAINER, "ping", "-c", "6", "-i", "0.2", "-W", "2", PC2_IP)
         else:
             receive_path = f"/tmp/{experiment_id}-received.txt"
-            _docker("exec", "-d", SERVER_CONTAINER, "sh", "-lc", f"nc -l -p {TCP_PORT} > {receive_path}")
+            _docker("exec", "-d", PC2_CONTAINER, "sh", "-lc", f"nc -l -p {TCP_PORT} > {receive_path}")
             marker = f"VISTA-NORMAL-{experiment_id}"
             _docker(
-                "exec", "-i", CLIENT_CONTAINER, "sh", "-lc",
-                f"printf '%s\\n' '{marker}' | nc -w 3 {SERVER_IP} {TCP_PORT}",
+                "exec", "-i", PC1_CONTAINER, "sh", "-lc",
+                f"printf '%s\\n' '{marker}' | nc -w 3 {PC2_IP} {TCP_PORT}",
             )
-            received = _docker("exec", SERVER_CONTAINER, "cat", receive_path).stdout.strip()
+            received = _docker("exec", PC2_CONTAINER, "cat", receive_path).stdout.strip()
             if received != marker:
                 raise RuntimeError(f"TCP marker was not received for {experiment_id}.")
 
         stdout, stderr = capture.communicate(timeout=20)
         if capture.returncode != 0:
             raise RuntimeError(f"tcpdump failed for {experiment_id}: {stderr or stdout}")
-        _docker("cp", f"{GATEWAY_CONTAINER}:{remote_path}", str(capture_path))
+        _docker("cp", f"{PC1_CONTAINER}:{remote_path}", str(capture_path))
     except Exception:
-        _docker("exec", GATEWAY_CONTAINER, "pkill", "-INT", "tcpdump", check=False)
+        _docker("exec", PC1_CONTAINER, "pkill", "-INT", "tcpdump", check=False)
         capture.kill()
         capture.communicate()
         raise
@@ -246,9 +234,9 @@ def main() -> None:
         "ipsec_configuration_ground_truth": {
             "ike_version": "IKEv2",
             "ike_proposal": "AES-CBC-256 / HMAC-SHA2-256-128 / PRF-HMAC-SHA2-256 / MODP-2048",
-            "esp_proposal": "AES-CBC-256 / HMAC-SHA2-256-128",
+            "esp_proposal": "AES-GCM-256",
             "mode": "tunnel",
-            "child_sa_pfs": "no separate DH/PFS proposal configured",
+            "child_sa_pfs": "MODP-2048",
             "configuration_variants_collected": 1,
         },
         "limitations": [
@@ -259,7 +247,7 @@ def main() -> None:
             "Only one IPsec configuration was collected, so IKE version, cipher, DH/PFS, and mode inference cannot be trained or evaluated from this run.",
             "Each independent capture session is one experiment group; the small test set is for pipeline validation only.",
         ],
-        "capture_point": "vista-gateway eth0; outer encrypted ESP packet headers before decryption",
+        "capture_point": "pc1 eth0; outer encrypted ESP packet headers before decryption",
         "model_input_scope": "outer ESP sizes, timing, rates, and direction only; no inner IP/TCP/ICMP headers or payload",
         "capture_dir": str(capture_dir),
         "feature_dataset": str(dataset_path),

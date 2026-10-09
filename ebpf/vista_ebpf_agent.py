@@ -2,10 +2,8 @@
 VISTA eBPF Userspace Telemetry Collector Agent
 SIH26160 · NTRO · Smart India Hackathon 2026
 
-Reads from the BPF Ring Buffer or kernel tracepipe on Linux.
-When run in cross-platform development or testbed environments without host BPF
-capabilities, provides high-fidelity kernel event emulation adhering strictly to
-the VISTA eBPF schema.
+This backend-side agent polls the Docker Linux collector API. If the collector or
+its eBPF probes are unavailable, it reports UNAVAILABLE and returns no events.
 """
 
 from __future__ import annotations
@@ -13,76 +11,34 @@ from __future__ import annotations
 import collections
 import json
 import os
-import platform
-import random
 import threading
 import time
-from datetime import datetime, timezone
-from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional
+from typing import Any, Dict, List, Optional
+from urllib.request import urlopen
 
 import pandas as pd
 
-# Event definitions aligned with vista_ipsec_monitor.bpf.c
-EVENT_TYPES = {
-    1: "XFRM_OUT",
-    2: "XFRM_IN",
-    3: "SOCK_SEND",
-    4: "SOCK_RECV",
-    5: "REPLAY_DROP",
-}
-
-FUNCTION_MAP = {
-    "XFRM_OUT": "xfrm_output()",
-    "XFRM_IN": "xfrm_input()",
-    "SOCK_SEND": "sock_sendmsg()",
-    "SOCK_RECV": "sock_recvmsg()",
-    "REPLAY_DROP": "trace_sock_drops()",
-}
-
-DEFAULT_PROCESSES = [
-    {"pid": 4821, "comm": "charon"},
-    {"pid": 5104, "comm": "curl"},
-    {"pid": 5220, "comm": "nc"},
-    {"pid": 5389, "comm": "iperf3"},
-    {"pid": 5410, "comm": "python3"},
-]
-
-KNOWN_SPIS = [
-    "0xc6dd300d",
-    "0xb3b1799d",
-    "0x49c812a0",
-    "0x7c307511",
-]
+from ebpf.event_window import select_recent_events
 
 
 class VistaEbpfAgent:
-    """
-    Collects, buffers, and distributes eBPF kernel telemetry.
-    """
+    """Reads events and status from the privileged Linux collector API."""
 
     def __init__(self, max_buffer_size: int = 500) -> None:
         self.max_buffer_size = max_buffer_size
         self.event_buffer: collections.deque[Dict[str, Any]] = collections.deque(maxlen=max_buffer_size)
         self.is_running = False
         self._thread: Optional[threading.Thread] = None
-        self._seq_counter = 1000
-        self._is_linux = platform.system().lower() == "linux"
-        self._bpf_loaded = False
-        self._init_backend()
-
-    def _init_backend(self) -> None:
-        """Attempts to load BCC / libbpf if running on real Linux kernel with root."""
-        if self._is_linux and os.geteuid() == 0:
-            try:
-                # Attempt BCC or native libbpf attach
-                # from bcc import BPF
-                pass
-            except Exception as err:
-                print(f"[EbpfAgent] BPF native loader note: {err}")
+        self.collector_url = os.environ.get(
+            "VISTA_EBPF_COLLECTOR_URL", "http://127.0.0.1:8765"
+        ).rstrip("/")
+        self._collector_status: Dict[str, Any] = {}
+        self._collector_error: Optional[str] = None
+        self._collector_last_success = 0.0
+        self._event_mode = "UNAVAILABLE"
 
     def start(self) -> None:
-        """Starts background collection / generation thread."""
+        """Starts polling the collector without synthesizing events when unavailable."""
         if self.is_running:
             return
         self.is_running = True
@@ -96,68 +52,59 @@ class VistaEbpfAgent:
             self._thread.join(timeout=1.0)
 
     def _worker_loop(self) -> None:
-        """Generates/collects telemetry events periodically."""
+        """Polls the Linux collector; unavailable collection never creates events."""
         while self.is_running:
             try:
-                event = self._produce_event()
-                self.event_buffer.append(event)
+                self._poll_collector()
             except Exception as err:
-                print(f"[EbpfAgent] Worker error: {err}")
-            time.sleep(random.uniform(0.15, 0.45))
+                self._collector_error = str(err)
+                self._collector_status = {
+                    "status": "ERROR",
+                    "mode": "UNAVAILABLE",
+                    "probes": [],
+                    "error": self._collector_error,
+                }
+                self._set_event_mode("UNAVAILABLE")
+            time.sleep(0.5)
 
-    def _produce_event(self) -> Dict[str, Any]:
-        """Produces a structured kernel event."""
-        now = datetime.now(timezone.utc)
-        self._seq_counter += 1
+    def _get_collector_json(self, path: str) -> Dict[str, Any]:
+        with urlopen(f"{self.collector_url}{path}", timeout=1.5) as response:
+            return json.loads(response.read().decode("utf-8"))
 
-        proc = random.choice(DEFAULT_PROCESSES)
-        spi = random.choice(KNOWN_SPIS)
-        event_code = random.choices([1, 2, 3, 4, 5], weights=[35, 35, 15, 10, 5])[0]
-        event_name = EVENT_TYPES[event_code]
-        fn_name = FUNCTION_MAP[event_name]
+    def _poll_collector(self) -> None:
+        """Refreshes status and events from the privileged collector container."""
+        status = self._get_collector_json("/status")
+        self._collector_status = status
+        if status.get("mode") != "NATIVE_KERNEL_EBPF":
+            self._collector_last_success = time.monotonic()
+            self._set_event_mode("UNAVAILABLE")
+            self._collector_error = status.get("error") or "Native eBPF probes are unavailable."
+            return
 
-        packet_len = random.choice([64, 128, 256, 512, 1024, 1420, 1460])
-        flag = "OK"
-        if event_name == "XFRM_OUT":
-            flag = "ENCRYPTED"
-        elif event_name == "XFRM_IN":
-            flag = "TX_PASS"
-        elif event_name == "REPLAY_DROP":
-            flag = "DROP_ALERT"
-        elif event_name == "SOCK_SEND":
-            flag = "SOCKET_TX"
+        payload = self._get_collector_json("/events?limit=500")
+        self._collector_error = None
+        self._collector_last_success = time.monotonic()
+        self._set_event_mode(status["mode"])
+        known_ids = {event.get("id") for event in self.event_buffer}
+        for event in payload.get("events", []):
+            if event.get("id") not in known_ids:
+                self.event_buffer.append(event)
+                known_ids.add(event.get("id"))
 
-        flow_id = f"ESP|172.20.0.2|172.20.0.10"
+    def _set_event_mode(self, mode: str) -> None:
+        if self._event_mode != mode:
+            self.event_buffer.clear()
+            self._event_mode = mode
 
-        return {
-            "id": f"EBPF-{len(self.event_buffer) + 1:06d}",
-            "time": now.strftime("%H:%M:%S"),
-            "timestamp": now.isoformat(),
-            "timestamp_ns": int(now.timestamp() * 1e9),
-            "fn": fn_name,
-            "eventType": event_name,
-            "target": f"PID {proc['pid']} ({proc['comm']})",
-            "pid": proc["pid"],
-            "process_name": proc["comm"],
-            "spi": spi,
-            "seq": self._seq_counter,
-            "bytes": packet_len,
-            "packets": 1,
-            "detail": f"spi={spi} seq={self._seq_counter} len={packet_len}B",
-            "flag": flag,
-            "socket_id": f"sock_{proc['pid']}_{random.randint(10, 99)}",
-            "flow_id": flow_id,
-        }
+    def _collector_is_native(self) -> bool:
+        return (
+            self._collector_status.get("mode") == "NATIVE_KERNEL_EBPF"
+            and time.monotonic() - self._collector_last_success <= 3.0
+        )
 
     def get_recent_events(self, limit: int = 12) -> List[Dict[str, Any]]:
         """Returns the most recent events."""
-        events = list(self.event_buffer)
-        if not events:
-            # Generate seed batch if empty
-            for _ in range(limit):
-                self.event_buffer.append(self._produce_event())
-            events = list(self.event_buffer)
-        return events[-limit:]
+        return select_recent_events(self.event_buffer, limit)
 
     def export_events_dataframe(self, limit: int = 200) -> pd.DataFrame:
         """
@@ -176,6 +123,8 @@ class VistaEbpfAgent:
             "bytes",
             "packets",
         ]
+        if df.empty:
+            return pd.DataFrame(columns=columns)
         for col in columns:
             if col not in df.columns:
                 df[col] = None
@@ -184,19 +133,27 @@ class VistaEbpfAgent:
 
     def get_status(self) -> Dict[str, Any]:
         """Returns eBPF subsystem status."""
+        live_mode = self._collector_status.get("mode", "UNAVAILABLE")
+        probes = self._collector_status.get("probes", [])
+        collector_status = self._collector_status.get("status", "UNAVAILABLE")
+        if live_mode == "NATIVE_KERNEL_EBPF" and not self._collector_is_native():
+            live_mode = "UNAVAILABLE"
+            collector_status = "ERROR"
+            probes = [{**probe, "status": "STALE"} for probe in probes]
         return {
-            "status": "RUNNING" if self.is_running else "INITIALIZING",
-            "mode": "NATIVE_KERNEL_EBPF" if (self._is_linux and self._bpf_loaded) else "TESTBED_KERNEL_BRIDGE",
-            "probes": [
-                {"name": "kprobe:xfrm_output", "status": "ATTACHED", "target": "Linux XFRM IPsec Outbound"},
-                {"name": "kprobe:xfrm_input", "status": "ATTACHED", "target": "Linux XFRM ESP Inbound"},
-                {"name": "tracepoint:sock:sock_sendmsg", "status": "ATTACHED", "target": "Socket Transmission"},
-                {"name": "tracepoint:sock:sock_recvmsg", "status": "ATTACHED", "target": "Socket Ingestion"},
-            ],
+            "status": "RUNNING" if self.is_running else "STOPPED",
+            "mode": live_mode,
+            "collectorUrl": self.collector_url,
+            "collectorStatus": collector_status,
+            "bpfError": self._collector_status.get("error") or self._collector_error,
+            "probes": probes,
             "bufferedEventsCount": len(self.event_buffer),
-            "ringBufferCapacityBytes": 262144, # 256 KB
-            "ringBufferDroppedEvents": 0,
-            "activeSpiCount": len(KNOWN_SPIS),
+            "transport": self._collector_status.get("transport"),
+            "ringBufferCapacityBytes": self._collector_status.get("ringBufferCapacityBytes", 0),
+            "ringBufferDroppedEvents": self._collector_status.get("ringBufferDroppedEvents", 0),
+            "hookHits": self._collector_status.get("hookHits", {}),
+            "ringEventsSeen": self._collector_status.get("ringEventsSeen", 0),
+            "activeSpiCount": self._collector_status.get("activeSpiCount", 0),
         }
 
 

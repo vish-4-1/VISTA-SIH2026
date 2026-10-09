@@ -1,7 +1,6 @@
 /**
  * VISTA API Client
  * Facilitates communication with the FastAPI VISTA AI Core.
- * Provides transparent fallback to client-side heuristics if the backend is offline.
  */
 
 const API_BASE = '/api';
@@ -78,6 +77,12 @@ export async function fetchAuditSessions(limit = 500) {
   return await res.json();
 }
 
+export async function fetchAuditSummary() {
+  const res = await fetch(`${API_BASE}/audit/summary`);
+  if (!res.ok) throw new Error('Failed to fetch audit summary');
+  return await res.json();
+}
+
 /**
  * Fetches model metrics and SHAP feature importance.
  */
@@ -90,13 +95,26 @@ export async function fetchMlMetrics() {
 /**
  * Generates dynamic assessment report markdown.
  */
-export async function generateReport(reportType = 'Technical Assessment') {
+export async function generateReport(reportType = 'Technical Assessment', flows) {
   const res = await fetch(`${API_BASE}/reports/generate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ reportType }),
+    body: JSON.stringify({ reportType, ...(flows ? { flows } : {}) }),
   });
   if (!res.ok) throw new Error('Failed to generate report');
+  return await res.json();
+}
+
+export async function fetchThreats(flows) {
+  const options = flows
+    ? {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ flows }),
+      }
+    : {};
+  const res = await fetch(`${API_BASE}/soc/threats`, options);
+  if (!res.ok) throw new Error('Failed to fetch threat analysis');
   return await res.json();
 }
 
@@ -116,4 +134,27 @@ export async function fetchEbpfStatus() {
   const res = await fetch(`${API_BASE}/ebpf/status`);
   if (!res.ok) throw new Error('Failed to fetch eBPF status');
   return await res.json();
+}
+
+/**
+ * Fetches available sample PCAPs in the repository.
+ */
+export async function fetchSampleCaptures() {
+  try {
+    const res = await fetch(`${API_BASE}/captures/samples`);
+    if (!res.ok) return [];
+    return await res.json();
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Downloads a sample capture as a File object ready for analyzeFile().
+ */
+export async function fetchSampleCaptureBlob(filename) {
+  const res = await fetch(`${API_BASE}/captures/samples/${encodeURIComponent(filename)}`);
+  if (!res.ok) throw new Error(`Failed to load sample capture ${filename}`);
+  const blob = await res.blob();
+  return new File([blob], filename, { type: 'application/octet-stream' });
 }

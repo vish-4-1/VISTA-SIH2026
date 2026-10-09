@@ -1,337 +1,395 @@
-import React, { useState } from 'react';
-import { 
-  Cpu, 
-  Zap, 
-  TrendingUp, 
-  Layers, 
-  ShieldCheck, 
-  Sparkles, 
-  BarChart2, 
-  CheckCircle2,
-  ArrowRight,
-  HelpCircle,
-  Database,
-  Download
-} from 'lucide-react';
-import realMlMetrics from '../../data/realMlMetrics.json';
+import { useEffect, useState } from 'react';
+import { Activity, BrainCircuit, Database, Sparkles } from 'lucide-react';
+import { usePcapAnalysis } from '../../context/usePcapAnalysis';
+import { checkBackendStatus, fetchMlMetrics } from '../../utils/apiClient';
+
+const MODELS = [
+  { id: 'traffic_classifier', apiId: 'traffic_classifier', metricId: 'traffic_classifier', label: 'Traffic Classifier (Encrypted Apps)' },
+  { id: 'attack_classifier', apiId: 'attack_classifier', metricId: 'attack_classifier', label: 'Attack Classifier — XGBoost (Threat Attribution)' },
+  { id: 'random_forest', apiId: 'random_forest', metricId: 'random_forest', label: 'Random Forest Baseline (Comparative Evaluation)' },
+  { id: 'isolation_forest', apiId: 'isolation_forest', label: 'Isolation Forest (Unsupervised Anomaly)' },
+];
+
+function formatPercent(value) {
+  return Number.isFinite(value) ? `${(value * 100).toFixed(2)}%` : '—';
+}
+
+function EmptyState({ children }) {
+  return <div className="dashboard-empty">{children}</div>;
+}
 
 export default function AiAnalysisView() {
-  const [selectedModel, setSelectedModel] = useState('xgboost');
+  const { analysisResult, file, status, error: analysisError } = usePcapAnalysis();
+  const [modelInfo, setModelInfo] = useState(null);
+  const [canonicalSchema, setCanonicalSchema] = useState([]);
+  const [metrics, setMetrics] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const rf = realMlMetrics.randomForest || {};
-  const xgb = realMlMetrics.xgboost || {};
-  const iso = realMlMetrics.isolationForest || {};
-  const topShap = realMlMetrics.topShapFeatures || [];
+  useEffect(() => {
+    let cancelled = false;
+    Promise.allSettled([checkBackendStatus(), fetchMlMetrics()])
+      .then(([statusResult, metricsResult]) => {
+        if (cancelled) return;
+        if (statusResult.status === 'fulfilled' && statusResult.value.online) {
+          setModelInfo(statusResult.value.models);
+          setCanonicalSchema(statusResult.value.canonicalFeatureSchema || []);
+        } else {
+          setError(statusResult.status === 'rejected'
+            ? String(statusResult.reason)
+            : statusResult.value.error || 'Backend model status is unavailable.');
+        }
+        if (metricsResult.status === 'fulfilled') {
+          setMetrics(metricsResult.value);
+        } else {
+          setError((previous) => [previous, String(metricsResult.reason)].filter(Boolean).join(' '));
+        }
+        setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-  const pipelineSteps = [
-    { title: "PCAP + eBPF", desc: "Raw ESP frames & socket events (Option B)", color: "var(--cyan)" },
-    { title: "Feature Extraction", desc: "Sliding window aggregation (22 features)", color: "var(--blue)" },
-    { title: "Feature Engineering", desc: "Decoupled IAT & packet jitter", color: "var(--purple)" },
-    { title: "AI Model Registry", desc: "XGBoost, RF, Isolation Forest", color: "var(--amber)" },
-    { title: "Classification & Anomaly", desc: "App attribution & zero-day recall", color: "var(--green)" },
-    { title: "Security Assessment", desc: "NIST posture & composite risk", color: "var(--cyan)" },
-  ];
-
-  const models = [
-    {
-      id: "xgboost",
-      name: "XGBoost Classifier",
-      task: "Multi-Class Attack Attribution (Supervised)",
-      accuracy: `${(xgb.accuracy * 100).toFixed(2)}%`,
-      macroF1: `${(xgb.macro_f1 * 100).toFixed(2)}%`,
-      macroRecall: `${(xgb.macro_recall * 100).toFixed(2)}%`,
-      latency: "1.2 ms",
-      features: 18,
-      status: "PRODUCTION",
-      report: xgb.label_report || {}
-    },
-    {
-      id: "randomForest",
-      name: "Random Forest Baseline",
-      task: "Encrypted Traffic Classification & Robustness",
-      accuracy: `${(rf.accuracy * 100).toFixed(2)}%`,
-      macroF1: `${(rf.macro_f1 * 100).toFixed(2)}%`,
-      macroRecall: `${(rf.macro_recall * 100).toFixed(2)}%`,
-      latency: "1.8 ms",
-      features: 18,
-      status: "PRODUCTION",
-      report: rf.label_report || {}
-    },
-    {
-      id: "isolationForest",
-      name: "Isolation Forest (Unsupervised)",
-      task: "Zero-Day Attack Anomaly Detection (0 Attack Samples)",
-      accuracy: `${(iso.recall * 100).toFixed(1)}% Recall`,
-      macroF1: `${(iso.f1 * 100).toFixed(2)}%`,
-      macroRecall: `${(iso.recall * 100).toFixed(1)}%`,
-      latency: "0.8 ms",
-      features: 18,
-      status: "ACTIVE GUARDIAN",
-      report: {
-        "True Positives (Attacks Flagged)": { precision: iso.precision, recall: iso.recall, "f1-score": iso.f1, support: iso.TP },
-        "Inlier Normal Traffic": { precision: 0.85, recall: 0.89, "f1-score": 0.87, support: iso.TN + iso.FP }
-      }
+  const predictions = analysisResult?.flows || [];
+  const shapFeatures = metrics?.shapImportance?.top_features || [];
+  const inference = analysisResult?.mlInference;
+  const captureSummary = analysisResult?.summary || {};
+  const observedProtocols = [...new Set(predictions.map((flow) => flow.proto).filter(Boolean))];
+  const featureList = (canonicalSchema && canonicalSchema.length > 0)
+    ? canonicalSchema
+    : (modelInfo?.traffic_classifier?.featureSchema
+      || modelInfo?.attack_classifier?.featureSchema
+      || modelInfo?.xgboost?.featureSchema
+      || []);
+  const normalizedFeatures = featureList.map((item) => {
+    if (typeof item === 'string') {
+      return {
+        name: item,
+        group: 'NETWORK',
+        type: 'float',
+        unit: '—',
+        description: `Flow attribute ${item}`,
+      };
     }
-  ];
-
-  const activeModelData = models.find(m => m.id === selectedModel) || models[0];
+    return item;
+  });
 
   return (
-    <div style={{
-      padding: '24px 32px 48px 32px',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '24px',
-      maxWidth: '1680px',
-      margin: '0 auto',
-      width: '100%'
-    }}>
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px' }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#fff', letterSpacing: '-0.3px' }}>
-              VISTA AI Intelligence & ML Pipeline
-            </h1>
-            <span className="soc-badge success" style={{ fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <Database size={11} />
-              <span>TESTBED TRAINED & VALIDATED</span>
-            </span>
-          </div>
-          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-            Side-channel inference architecture, genuine model metrics from vista-ml evaluation, and TreeExplainer SHAP attribution
-          </p>
-        </div>
-
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <a 
-            href="/data/realMlMetrics.json" 
-            download="vista_model_metrics.json"
-            className="soc-btn"
-            style={{ textDecoration: 'none' }}
-          >
-            <Download size={13} />
-            <span>EXPORT METRICS (JSON)</span>
-          </a>
-        </div>
-      </div>
-
-      {/* Model Pipeline Flow Visualization */}
-      <div className="soc-card" style={{ padding: '20px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-          <div className="soc-card-title">
-            <Layers size={16} color="var(--cyan)" />
-            <span>End-to-End VISTA ML Pipeline</span>
-          </div>
-          <span className="soc-badge success">Active In-Memory (Zero Network RPC Latency)</span>
-        </div>
-
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(6, 1fr)',
-          gap: '12px'
-        }}>
-          {pipelineSteps.map((step, idx) => (
-            <div key={idx} style={{
-              background: 'rgba(6, 9, 15, 0.7)',
-              border: `1px solid ${step.color}`,
-              borderRadius: '8px',
-              padding: '14px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between'
-            }}>
-              <div>
-                <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--text-dim)', marginBottom: '4px' }}>
-                  STAGE 0{idx + 1}
-                </div>
-                <div style={{ fontSize: '13px', fontWeight: '700', color: '#fff', marginBottom: '4px' }}>
-                  {step.title}
-                </div>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: '1.4' }}>
-                  {step.desc}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Model Cards Row — Bound to genuine metrics */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
-        {models.map((m) => {
-          const isSelected = selectedModel === m.id;
-          return (
-            <div 
-              key={m.id} 
-              className="soc-card" 
-              onClick={() => setSelectedModel(m.id)}
-              style={{ 
-                padding: '20px', 
-                display: 'flex', 
-                flexDirection: 'column', 
-                justifyContent: 'space-between',
-                cursor: 'pointer',
-                borderColor: isSelected ? 'var(--cyan)' : 'var(--border-subtle)',
-                background: isSelected ? 'rgba(0, 240, 255, 0.04)' : 'rgba(8, 13, 23, 0.6)'
-              }}
-            >
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-                  <span style={{ fontSize: '15px', fontWeight: '800', color: '#fff' }}>{m.name}</span>
-                  <span className={`soc-badge ${isSelected ? 'info' : 'low'}`}>{m.status}</span>
-                </div>
-                <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: '1.4' }}>
-                  {m.task}
-                </p>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '16px', fontFamily: 'var(--font-mono)', fontSize: '11px' }}>
-                  <div style={{ background: 'rgba(6, 9, 15, 0.6)', padding: '8px', borderRadius: '4px' }}>
-                    <div style={{ color: 'var(--text-dim)' }}>Accuracy / Recall:</div>
-                    <div style={{ fontSize: '16px', fontWeight: '800', color: 'var(--green)' }}>{m.accuracy}</div>
-                  </div>
-                  <div style={{ background: 'rgba(6, 9, 15, 0.6)', padding: '8px', borderRadius: '4px' }}>
-                    <div style={{ color: 'var(--text-dim)' }}>Macro F1-Score:</div>
-                    <div style={{ fontSize: '16px', fontWeight: '800', color: 'var(--cyan)' }}>{m.macroF1}</div>
-                  </div>
-                  <div style={{ background: 'rgba(6, 9, 15, 0.6)', padding: '8px', borderRadius: '4px' }}>
-                    <div style={{ color: 'var(--text-dim)' }}>Macro Recall:</div>
-                    <div style={{ fontSize: '13px', fontWeight: '600', color: '#fff' }}>{m.macroRecall}</div>
-                  </div>
-                  <div style={{ background: 'rgba(6, 9, 15, 0.6)', padding: '8px', borderRadius: '4px' }}>
-                    <div style={{ color: 'var(--text-dim)' }}>Inference Time:</div>
-                    <div style={{ fontSize: '13px', fontWeight: '600', color: '#fff' }}>{m.latency}</div>
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ fontSize: '11px', color: isSelected ? 'var(--cyan)' : 'var(--text-dim)', textAlign: 'right', fontFamily: 'var(--font-mono)' }}>
-                {isSelected ? '● ACTIVE INSPECTION' : 'CLICK TO VIEW BREAKDOWN'}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Per-Class Evaluation Breakdown Table from model_summary.json */}
-      <div className="soc-card" style={{ padding: '20px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+    <div className="dashboard-content">
+      <section className="dashboard-section">
+        <div className="section-heading">
           <div>
-            <div className="soc-card-title">
-              <BarChart2 size={16} color="var(--cyan)" />
-              <span>Per-Class Classification Report: {activeModelData.name}</span>
-            </div>
-            <div className="soc-card-subtitle" style={{ marginTop: '2px' }}>
-              Authentic holdout test metrics from 100-sample session-aware cross validation
-            </div>
+            <h2>AI analysis</h2>
+            <p>Observed capture data and predictions from the backend model artifacts.</p>
+            <p>Source: trained flow classifiers and documented offline evaluation reports.</p>
           </div>
-
-          <span className="soc-badge success">Zero Data Leakage (Session Grouped Split)</span>
+          <BrainCircuit size={20} color="var(--cyan)" aria-hidden="true" />
         </div>
-
-        <table className="soc-table">
-          <thead>
-            <tr>
-              <th>Class Label</th>
-              <th>Precision</th>
-              <th>Recall</th>
-              <th>F1-Score</th>
-              <th>Support (Test Samples)</th>
-              <th>Class Performance Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {Object.entries(activeModelData.report)
-              .filter(([k]) => !['accuracy', 'macro avg', 'weighted avg'].includes(k))
-              .map(([clsName, metrics]) => {
-                const f1 = metrics['f1-score'] !== undefined ? metrics['f1-score'] : metrics.f1 || 0;
-                const prec = metrics.precision || 0;
-                const rec = metrics.recall || 0;
-                const sup = metrics.support || 0;
-                return (
-                  <tr key={clsName}>
-                    <td style={{ fontFamily: 'var(--font-mono)', fontWeight: '600', color: '#fff' }}>
-                      {clsName}
-                    </td>
-                    <td style={{ fontFamily: 'var(--font-mono)', color: 'var(--cyan)' }}>
-                      {(prec * 100).toFixed(1)}%
-                    </td>
-                    <td style={{ fontFamily: 'var(--font-mono)', color: 'var(--green)' }}>
-                      {(rec * 100).toFixed(1)}%
-                    </td>
-                    <td style={{ fontFamily: 'var(--font-mono)', fontWeight: '700', color: f1 > 0.95 ? 'var(--green)' : 'var(--amber)' }}>
-                      {(f1 * 100).toFixed(1)}%
-                    </td>
-                    <td style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-dim)' }}>
-                      {sup} flows
-                    </td>
-                    <td>
-                      <span className={`soc-badge ${f1 >= 0.98 ? 'success' : 'medium'}`} style={{ fontSize: '10px' }}>
-                        {f1 >= 0.98 ? 'OPTIMAL' : 'HIGH ACCURACY'}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-          </tbody>
-        </table>
-      </div>
-
-      {/* SHAP Feature Importance Table from real top_features.json */}
-      <div className="soc-card" style={{ padding: '20px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-          <div>
-            <div className="soc-card-title">
-              <Sparkles size={16} color="var(--cyan)" />
-              <span>Real SHAP TreeExplainer Feature Importance Weights</span>
-            </div>
-            <div className="soc-card-subtitle" style={{ marginTop: '2px' }}>
-              Extracted directly from vista-ml/reports/shap/top_features.json
-            </div>
-          </div>
-
-          <span className="soc-badge info">TreeExplainer Active</span>
-        </div>
-
-        <table className="soc-table">
-          <thead>
-            <tr>
-              <th>Feature Identifier</th>
-              <th>SHAP Attribution Value</th>
-              <th>Relative Importance Visualization</th>
-              <th>Side-Channel Significance</th>
-            </tr>
-          </thead>
-          <tbody>
-            {topShap.map((feat, i) => {
-              const val = feat.shap_value || 0;
-              const maxVal = topShap[0]?.shap_value || 1.0;
-              const pct = Math.min(100, Math.round((val / maxVal) * 100));
-              return (
-                <tr key={i}>
-                  <td style={{ fontFamily: 'var(--font-mono)', fontWeight: '600', color: 'var(--cyan)' }}>
-                    {feat.feature}
-                  </td>
-                  <td style={{ fontFamily: 'var(--font-mono)', fontWeight: '700', color: '#fff' }}>
-                    +{val.toFixed(4)}
-                  </td>
-                  <td style={{ width: '280px' }}>
-                    <div style={{ height: '6px', background: 'rgba(255,255,255,0.08)', borderRadius: '3px', overflow: 'hidden' }}>
-                      <div style={{ width: `${pct}%`, height: '100%', background: 'linear-gradient(90deg, #00f0ff, #3b82f6)', borderRadius: '3px' }} />
-                    </div>
-                  </td>
-                  <td style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>
-                    {feat.feature.includes('second') ? 'Volumetric rate side-channel' :
-                     feat.feature.includes('duration') ? 'Connection temporal persistence' :
-                     feat.feature.includes('bytes') ? 'Data volume asymmetry' :
-                     feat.feature.includes('packet') ? 'Packet frequency & chunking' : 'Encrypted flow property'}
-                  </td>
+        {error && <div className="dashboard-empty" role="alert">{error}</div>}
+        {loading ? (
+          <EmptyState>Loading model and evaluation information…</EmptyState>
+        ) : (
+          <div className="dashboard-table-wrap">
+            <table className="dashboard-table">
+              <thead>
+                <tr>
+                  <th>Model</th>
+                  <th>Backend status</th>
+                  <th>Offline accuracy</th>
+                  <th>Offline macro F1</th>
+                  <th>Features</th>
+                  <th>Classes</th>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+              </thead>
+              <tbody>
+                {MODELS.map((model) => {
+                  const info = modelInfo?.[model.apiId];
+                  const evaluation = model.metricId ? metrics?.metrics?.[model.metricId] : null;
+                  return (
+                    <tr key={model.id}>
+                      <td>{model.label}</td>
+                      <td>{info?.loaded ? 'Loaded' : info ? 'Not loaded' : '—'}</td>
+                      <td>{evaluation ? formatPercent(evaluation.accuracy) : 'Unavailable'}</td>
+                      <td>{evaluation ? formatPercent(evaluation.macro_f1) : 'Unavailable'}</td>
+                      <td>{info?.features?.length ?? '—'}</td>
+                      <td>{info?.classes?.length ? info.classes.join(', ') : '—'}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+        {!loading && metrics?.evaluationProvenance && (
+          <p className="section-meta" style={{ marginTop: 10 }}>
+            Offline evaluation: {metrics.evaluationProvenance.dataset}. {metrics.evaluationProvenance.method}
+            {' '}{metrics.evaluationProvenance.limitations}
+          </p>
+        )}
+        {!loading && (
+          <details style={{ marginTop: 12 }}>
+            <summary style={{ cursor: 'pointer', fontWeight: 600 }}>
+              Backend Canonical Feature Schema ({normalizedFeatures.length || 'unavailable'})
+            </summary>
+            {normalizedFeatures.length ? (
+              <div className="dashboard-table-wrap" style={{ marginTop: 10 }}>
+                <table className="dashboard-table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: '5%' }}>#</th>
+                      <th style={{ width: '22%' }}>Feature Name</th>
+                      <th style={{ width: '15%' }}>Category</th>
+                      <th style={{ width: '10%' }}>Data Type</th>
+                      <th style={{ width: '12%' }}>Unit</th>
+                      <th style={{ width: '36%' }}>Description / Extraction Semantics</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {normalizedFeatures.map((f, index) => (
+                      <tr key={f.name || index}>
+                        <td>{index + 1}</td>
+                        <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--text-primary)' }}>
+                          {f.name}
+                        </td>
+                        <td>
+                          <span className="process-pill">{f.group || 'CANONICAL'}</span>
+                        </td>
+                        <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11 }}>{f.type || 'float'}</td>
+                        <td style={{ color: 'var(--text-secondary)' }}>{f.unit || '—'}</td>
+                        <td style={{ fontSize: 11.5, color: 'var(--text-secondary)' }}>{f.description}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <EmptyState>No canonical model input feature schema is available from the backend.</EmptyState>
+            )}
+          </details>
+        )}
+      </section>
+
+      <section className="dashboard-section">
+        <div className="section-heading">
+          <div>
+            <h2><Activity size={15} /> Uploaded traffic inference</h2>
+            <p>
+              {analysisResult
+                ? `Source: ${file?.name || analysisResult.filename || 'uploaded PCAP / CSV'} · backend inference`
+                : 'Upload a PCAP or CSV in Traffic Analysis to run inference and inspect its results here.'}
+            </p>
+          </div>
+        </div>
+        {status === 'analyzing' && <EmptyState>Analyzing {file?.name || 'uploaded traffic'}…</EmptyState>}
+        {status === 'error' && analysisError && <div className="dashboard-empty" role="alert">{analysisError}</div>}
+        {!analysisResult ? (
+          status === 'analyzing' || status === 'error'
+            ? null
+            : <EmptyState>No uploaded flow analysis is available in this session.</EmptyState>
+        ) : (
+          <>
+            <div className="connection-details" aria-label="Observed PCAP data">
+              <div><dt>Observed packets</dt><dd>{analysisResult.totalPackets ?? captureSummary.totalPackets ?? '—'}</dd></div>
+              <div><dt>Observed bytes</dt><dd>{analysisResult.totalBytes ?? captureSummary.totalBytes ?? '—'}</dd></div>
+              <div><dt>Extracted flows</dt><dd>{captureSummary.totalFlows ?? predictions.length}</dd></div>
+              <div><dt>Observed protocols</dt><dd>{observedProtocols.join(', ') || '—'}</dd></div>
+            </div>
+            {inference?.status === 'success' && (
+              <div className="dashboard-empty" role="status">
+                ML inference completed for {inference.predictedFlows} flow(s) using {inference.model}.
+                {inference.insufficientDataFlows > 0 && ` ${inference.insufficientDataFlows} additional flow(s) had insufficient features.`}
+                Model probabilities are uncalibrated estimates, not measured accuracy or confirmed detections.
+                Training data scope: {inference.trainingDataScope || 'not recorded'}.
+                {' '}{inference.evaluationScope || 'No operational validation scope is available.'}
+              </div>
+            )}
+            {inference?.status === 'insufficient_data' && (
+              <div className="dashboard-empty" role="status">
+                Insufficient Data for Prediction
+                {inference.insufficientDataFlows > 0 && ` · ${inference.insufficientDataFlows} flow(s) lack required model features.`}
+              </div>
+            )}
+            {inference?.status === 'unavailable' && (
+              <div className="dashboard-empty" role="alert">
+                Prediction Unavailable{inference.error ? `: ${inference.error}` : '.'}
+              </div>
+            )}
+            <div style={{ marginBottom: 24 }}>
+              <h3 style={{ fontSize: '13px', marginBottom: '8px' }}>Observed and unsupported protocol properties</h3>
+              <div className="dashboard-table-wrap">
+                <table className="dashboard-table">
+                  <thead>
+                    <tr>
+                      <th>Property</th>
+                      <th>Value / Status</th>
+                      <th>Evidence source</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(analysisResult.predictions || {}).map(([key, info]) => (
+                      <tr key={key}>
+                        <td style={{ textTransform: 'capitalize' }}>{key.replace(/([A-Z])/g, ' $1')}</td>
+                        <td>{info?.value ?? (
+                          <span style={{ color: 'var(--text-dim)' }}>
+                            {info?.source === "Not supported by the current model" ? "Not supported by the current model" : "Insufficient Data"}
+                          </span>
+                        )}</td>
+                        <td>
+                          {info?.source === "ML Prediction" ? (
+                            <span style={{ color: 'var(--cyan)' }}>ML Prediction</span>
+                          ) : (
+                            info?.source || '—'
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {predictions.length === 0 ? (
+              <EmptyState>No flow records were extracted, so there is no flow input for ML inference.</EmptyState>
+            ) : (
+              <>
+                <div className="dashboard-table-wrap">
+                  <table className="dashboard-table">
+                    <thead>
+                      <tr>
+                        <th>Flow ID</th>
+                        <th>Observed Protocol</th>
+                        <th>Encrypted Traffic Profile</th>
+                        <th>Profile Confidence</th>
+                        <th>Threat Attribution</th>
+                        <th>Isolation Forest</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {predictions.map((flow, index) => {
+                        const isOutOfDist = flow.trafficPrediction?.isOutOfDistribution;
+                        const trafficStatus = flow.trafficPrediction?.status || (flow.trafficType && !['PREDICTION UNAVAILABLE', 'INSUFFICIENT DATA'].includes(String(flow.trafficType).toUpperCase()) ? 'success' : null);
+                        const trafficLabel = flow.trafficPrediction?.label || flow.trafficType;
+                        const trafficProb = flow.trafficPrediction?.probability;
+
+                        const threatStatus = flow.threatPrediction?.status || flow.mlPrediction?.status;
+                        const threatLabel = flow.threatPrediction?.label || flow.attackType || flow.mlPrediction?.label;
+
+                        return (
+                          <tr key={flow.id ?? index} title={flow.predictionError || flow.trafficPrediction?.outOfDistributionReason || undefined}>
+                            <td style={{ fontFamily: 'var(--font-mono)' }}>{flow.id || '—'}</td>
+                            <td style={{ fontWeight: 600 }}>{flow.proto || '—'}</td>
+                            <td>
+                              {isOutOfDist ? (
+                                <span style={{ color: 'var(--amber)', fontSize: 12 }} title={flow.trafficPrediction?.outOfDistributionReason}>
+                                  IKE Control Plane · Out of scope
+                                </span>
+                              ) : trafficStatus === 'success' && trafficLabel ? (
+                                <span style={{ color: 'var(--cyan)' }}>{trafficLabel} · ML Profile</span>
+                              ) : flow.trafficPrediction?.status === 'insufficient_data' ? (
+                                <span style={{ color: 'var(--text-dim)' }}>Insufficient Data</span>
+                              ) : (
+                                <span style={{ color: 'var(--text-dim)' }}>Prediction Unavailable</span>
+                              )}
+                            </td>
+                            <td>
+                              {isOutOfDist ? (
+                                <span style={{ color: 'var(--text-dim)', fontSize: 11.5 }}>Not applicable</span>
+                              ) : Number.isFinite(trafficProb) ? (
+                                `${formatPercent(trafficProb)} · uncalibrated`
+                              ) : (
+                                'Not provided'
+                              )}
+                            </td>
+                            <td>
+                              {threatStatus === 'success' && threatLabel ? (
+                                <span>{threatLabel} · XGBoost Attack Classifier</span>
+                              ) : threatStatus === 'insufficient_data' ? (
+                                <span style={{ color: 'var(--text-dim)' }}>Insufficient Data</span>
+                              ) : (
+                                <span style={{ color: 'var(--text-dim)' }}>Prediction Unavailable</span>
+                              )}
+                            </td>
+                            <td>
+                              {flow.isAnomaly == null ? (
+                                'Unavailable'
+                              ) : (
+                                `${flow.isAnomaly ? 'Distribution Outlier' : 'Inlier'}${Number.isFinite(flow.anomalyScore) ? ` · raw score ${flow.anomalyScore}` : ''}`
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <div style={{ marginTop: 12, fontSize: '11px', color: 'var(--text-dim)', lineHeight: 1.6 }}>
+                  <strong>Operational Interpretation:</strong>
+                  <ul style={{ paddingLeft: 18, marginTop: 4 }}>
+                    <li><strong>Observed Protocol:</strong> Network/transport layer headers observed directly in the packet capture.</li>
+                    <li><strong>Encrypted Traffic Profile:</strong> Inferred application class from side-channel packet length and timing features inside encrypted ESP tunnels. IKE control-plane negotiations are outside the domain of the encapsulated application payload model.</li>
+                    <li><strong>Isolation Forest:</strong> Unsupervised outlier score (<code>score_samples</code>). Flags feature-space deviation from training baseline; an outlier flag is not proof of a malicious attack.</li>
+                  </ul>
+                </div>
+              </>
+            )}
+          </>
+        )}
+      </section>
+
+      <section className="dashboard-section">
+        <div className="section-heading">
+          <div>
+            <h2><Sparkles size={15} /> SHAP feature importance</h2>
+            <p>Global feature importance from the saved SHAP analysis; this is not an explanation for the current capture.</p>
+          </div>
+          <Database size={16} color="var(--cyan)" aria-hidden="true" />
+        </div>
+        {shapFeatures.length === 0 ? (
+          <EmptyState>No feature-importance report is available from the backend.</EmptyState>
+        ) : (
+          <>
+          <p className="section-meta">
+            {metrics?.shapProvenance?.dataset || 'Dataset provenance unavailable'}.
+            {' '}{metrics?.shapProvenance?.scope || ''}
+          </p>
+          <div className="dashboard-table-wrap">
+            <table className="dashboard-table">
+              <thead>
+                <tr>
+                  <th style={{ width: '32%' }}>Feature</th>
+                  <th style={{ width: '48%' }}>Relative Impact Weight</th>
+                  <th style={{ width: '20%', textAlign: 'right' }}>SHAP Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(() => {
+                  const maxShap = Math.max(...shapFeatures.map(f => Math.abs(f.shap_value || 0)), 0.001);
+                  return shapFeatures.map((item) => {
+                    const widthPct = Math.min(100, Math.max(3, Math.round((Math.abs(item.shap_value || 0) / maxShap) * 100)));
+                    return (
+                      <tr key={item.feature}>
+                        <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11.5, color: 'var(--text-primary)' }}>
+                          {item.feature}
+                        </td>
+                        <td>
+                          <div className="shap-bar-container">
+                            <div className="shap-bar-fill" style={{ width: `${widthPct}%` }} />
+                          </div>
+                        </td>
+                        <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11.5, fontWeight: 600, textAlign: 'right', color: 'var(--cyan)' }}>
+                          {Number.isFinite(item.shap_value) ? item.shap_value.toFixed(4) : '—'}
+                        </td>
+                      </tr>
+                    );
+                  });
+                })()}
+              </tbody>
+            </table>
+          </div>
+          </>
+        )}
+      </section>
     </div>
   );
 }

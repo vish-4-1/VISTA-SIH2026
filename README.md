@@ -29,15 +29,15 @@ The VISTA SOC platform provides a unified operations console for defense analyst
 
 ---
 
-### 2.3 3D Interactive IPsec Testbed & Kernel eBPF Telemetry
-> Interactive WebGL Three.js 3D visualization of full-duplex IPsec host-to-host and tunnel-mode communications with real-time packet flow animations, XFRM SA state inspector, and eBPF kernel hooks.
+### 2.3 3D Interactive PC1 ↔ PC2 IPsec Testbed & Kernel eBPF Telemetry
+> Interactive WebGL Three.js visualization of one direct PC1 ↔ PC2 IPsec tunnel with packet-flow animations, XFRM SA state inspector, and eBPF kernel hooks.
 
 ![3D IPsec Testbed and Node Inspector](docs/screenshots/06_testbed_3d.png)
 
 ---
 
 ### 2.4 AI Intelligence & ML Model Registry
-> Production inference pipelines: XGBoost (97.3% F1 Multi-Class Attack Attribution), Random Forest (98.6% Macro F1), and unsupervised Isolation Forest for zero-day anomaly detection with TreeExplainer SHAP attribution.
+> The backend loads XGBoost and Random Forest flow-label classifiers plus an Isolation Forest anomaly model. The supervised artifacts and their checked-in offline metrics are based on synthetic development data; they are not validated real-world attack detectors. Captured-flow outputs are model predictions, not confirmed incidents or cryptographic-configuration findings.
 
 ![AI Intelligence and ML Pipeline](docs/screenshots/03_ai_analysis.png)
 
@@ -84,9 +84,9 @@ The VISTA SOC platform provides a unified operations console for defense analyst
 │    • Dynamic Security Scorecard              • /api/analyze/pcap       │
 │                                              • /api/analyze/csv        │
 │  [ topology: Mode B IPsec Testbed ]          • /api/audit/sessions     │
-│    • vista-pc1 (Workstation A: 172.20.0.2)   • /api/soc/status         │
-│    • vista-pc2 (Workstation B: 172.20.0.10)  • /api/ml/metrics         │
-│    • Full-Duplex Transport Mode (Proto 50)   • /api/ebpf/events        │
+│    • pc1 (IPsec endpoint: 172.20.0.2)         • /api/soc/status         │
+│    • pc2 (IPsec endpoint: 172.20.0.3)         • /api/ml/metrics         │
+│    • Direct Tunnel Mode (ESP / Proto 50)     • /api/ebpf/events        │
 │    • AES-256-GCM / SHA256 / DH Group 19               │                │
 │                                                       ▼                │
 │                                            [ vista-ml: AI Engine ]     │
@@ -138,13 +138,14 @@ Open `http://localhost:5173` in your browser.
 - **ESP Packet Extraction (Protocol 50):** Automatically decodes Security Parameter Index (SPI) values directly from raw packets (e.g., `0xc6dd300d`).
 - **IKEv1 / IKEv2 Negotiation Parsing (UDP 500 & NAT-T 4500):** Decodes ISAKMP headers, Initiator/Responder SPIs, exchange types (IKE_SA_INIT), and extracts the exact major/minor protocol version byte.
 
-### 5.2 Live Machine Learning Inference
-- **Trained Classifiers:** XGBoost (`xgboost_classifier.joblib`) and Random Forest (`random_forest_baseline.joblib`).
-- **Attack Classes:** `NORMAL`, `DOS`, `PORT_SCAN`, `BRUTE_FORCE`, `C2_BEACONING`, `DATA_EXFILTRATION`.
-- **Honest Probability Outputs:** Real probability distributions and confidence scores via `predict_proba()`.
-- **Zero-Day Anomaly Detection:** Scored via scikit-learn Isolation Forest (`isolation_forest.joblib`).
+### 5.2 Flow Classification and Anomaly Scores
+- **Loaded Classifiers:** XGBoost (`xgboost_classifier.joblib`) and Random Forest (`random_forest_baseline.joblib`) classify flow labels using the numeric feature order recorded in each model's metadata.
+- **Supported Labels:** Read from the loaded classifier artifacts; the current checked-in models expose `NORMAL`, `DOS`, `PORT_SCAN`, `BRUTE_FORCE`, `C2_BEACONING`, and `DATA_EXFILTRATION`.
+- **Model Probabilities:** The classifiers' `predict_proba()` outputs are exposed as uncalibrated model probabilities, not guarantees of correctness. Missing required features are reported rather than imputed.
+- **Anomaly Scores:** The checked-in Isolation Forest exposes its outlier flag and raw `score_samples()` value. These outputs are not calibrated real-world threat scores.
+- **Training and evaluation limits:** The root models are trained/evaluated using the synthetic VISTA development dataset. Its offline held-out metrics and global SHAP summary do not establish performance on real-world traffic; the SHAP report is not a per-capture explanation.
 - **ONNX Model Artifacts:** Standalone `.onnx` models in `vista-ml/models/onnx/` (`xgboost_classifier.onnx`, `random_forest_baseline.onnx`, `isolation_forest.onnx`) for cross-platform deployment on ONNX Runtime (C++, Rust, Go, WebAssembly).
-- **Explainability:** SHAP feature attribution metrics generated via TreeExplainer.
+- **Explainability:** A saved global SHAP summary is available for the synthetic development dataset; no local explanation is generated for an uploaded capture.
 
 ### 5.3 Deterministic NIST Compliance Engine
 Evaluates session configurations against:
@@ -155,18 +156,36 @@ Identifies vulnerabilities:
 - Deprecated HMAC algorithms (MD5 / SHA-1)
 - Sub-2048-bit Diffie-Hellman groups
 ### 5.4 Live eBPF Kernel Ingestion & Correlation
-- **Kernel Program (`ebpf/vista_ipsec_monitor.bpf.c`):** Implements BPF CO-RE tracing on Linux kernel `kprobe/xfrm_output`, `kprobe/xfrm_input`, and `tracepoint:sock:sock_sendmsg`. Streams events via a 256 KB BPF Ring Buffer (`BPF_MAP_TYPE_RINGBUF`).
-- **Telemetry Agent (`ebpf/vista_ebpf_agent.py`):** Collects kernel events, tracking PID, process name (`comm`), SPI, sequence counters, and packet lengths.
-- **PCAP + eBPF Feature Fusion:** Correlates wire-level ESP flows with host socket telemetry using `vista_ml.features.fusion.fuse_pcap_ebpf()` to identify the exact origin process behind encrypted tunnels without inspecting payloads.
-- **Dashboard Stream:** Live streaming telemetry panel in `OverviewView.jsx` connected to `/api/ebpf/events`.
+- **Linux collector (`ebpf/`):** Uses `bpftool` to generate `vmlinux.h` from `/sys/kernel/btf/vmlinux`, Clang to build a CO-RE `.bpf.o`, and libbpf to load/attach kprobes to XFRM (`xfrm_output`, `xfrm_input`) and socket send paths (`sock_sendmsg`, `udp_sendmsg`, `__sys_sendto`). Events use a libbpf ring buffer.
+- **Runtime status:** `/api/ebpf/status` reports actual BTF availability and probe attachment. If BTF, capabilities, loading, or attachment fails, `/status` reports `UNAVAILABLE` and `/events` is empty; no synthetic kernel events are generated.
+- **Collection boundary:** XFRM events include the skb length; inbound XFRM events include SPI. The socket hook records process metadata only. Current events do not reliably correlate to a particular flow.
+
+To run the collector, use `docker compose --profile ebpf -f topology/docker-compose.yml up --build` on Linux or Docker Desktop WSL2 with readable kernel BTF and effective `CAP_BPF`/`CAP_PERFMON`. The `ebpf` profile is opt-in; the local collector API is exposed at `http://127.0.0.1:8765`.
 
 ---
 
-## 6. Mode B IPsec Testbed Configuration
+## 6. Direct PC1 ↔ PC2 IPsec Testbed
 
-Located in `configs/`:
-- `client-swanctl.conf` / `gateway-swanctl.conf`: Primary Mode B Host-to-Host Full-Duplex Transport Mode between Workstation A (`172.20.0.2`) and Workstation B (`172.20.0.10`) with AES-256-GCM AEAD & Diffie-Hellman Group 19 (ECP-256).
-- `client-cbc-swanctl.conf` / `gateway-cbc-swanctl.conf`: AES-256-CBC cipher baseline for comparative side-channel & padding oracle benchmarking.
+`topology/docker-compose.yml` builds exactly two StrongSwan endpoints from `debian:bookworm-slim`: `pc1` (`172.20.0.2`) and `pc2` (`172.20.0.3`). They share one Compose-managed Docker bridge (`vista-pc-net`) and negotiate one direct IKEv2 tunnel with host-specific tunnel selectors (`172.20.0.2/32` ↔ `172.20.0.3/32`). IKE uses AES-256/SHA-256/MODP-2048 and ESP uses AES-256-GCM. There is no VPN gateway, protected server, forwarding, or SNAT service. The separate `vista-ebpf-monitor` profile is a passive host-kernel monitor, not an IPsec endpoint.
+
+Start the two endpoints and the real CO-RE collector:
+```powershell
+docker compose --profile ebpf -f topology/docker-compose.yml up -d --build pc1 pc2 vista-ebpf-monitor
+docker exec pc1 swanctl --list-sas
+docker exec pc2 swanctl --list-sas
+docker exec pc1 ping -c 10 172.20.0.3
+docker exec pc2 ping -c 10 172.20.0.2
+docker exec pc1 ip xfrm state
+docker exec pc1 ip xfrm policy
+docker exec pc2 ip xfrm state
+docker exec pc2 ip xfrm policy
+Invoke-RestMethod http://127.0.0.1:8765/status
+Invoke-RestMethod 'http://127.0.0.1:8765/events?limit=500'
+```
+
+`pc1-cbc-swanctl.conf` / `pc2-cbc-swanctl.conf` are direct-peer AES-256-CBC comparison configurations; the default Compose tunnel uses AES-256-GCM.
+
+The Overview dashboard's eBPF stream polls the backend API and shows received native collector events; it does not generate fallback/demo kernel events.
 
 ---
 

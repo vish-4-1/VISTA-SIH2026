@@ -7,11 +7,12 @@ NIST SP 800-52 Rev. 2, and BSI TR-02102-3.
 from __future__ import annotations
 
 import json
+import math
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
-AUDITS_JSON_PATH = ROOT_DIR / "vista-dashboard" / "src" / "data" / "realAudits.json"
+SCENARIO_AUDITS_JSON_PATH = ROOT_DIR / "vista-dashboard" / "src" / "data" / "realAudits.json"
 
 
 class PostureEngine:
@@ -19,15 +20,23 @@ class PostureEngine:
         self._cached_audits: Optional[List[Dict[str, Any]]] = None
 
     def get_audit_sessions(self) -> List[Dict[str, Any]]:
-        """Loads canonical audit sessions from disk."""
+        """Returns operational audit sessions; no operational source is configured yet."""
+        return []
+
+    def evaluate_sessions(self, sessions: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Returns recalculated posture results for explicitly supplied audit inputs."""
+        return [self.evaluate_session(session) for session in sessions]
+
+    def get_scenario_audit_sessions(self) -> List[Dict[str, Any]]:
+        """Loads generated scenario records for explicit offline evaluation only."""
         if self._cached_audits is not None:
             return self._cached_audits
-        if AUDITS_JSON_PATH.exists():
+        if SCENARIO_AUDITS_JSON_PATH.exists():
             try:
-                self._cached_audits = json.loads(AUDITS_JSON_PATH.read_text(encoding="utf-8"))
+                self._cached_audits = json.loads(SCENARIO_AUDITS_JSON_PATH.read_text(encoding="utf-8"))
                 return self._cached_audits
             except Exception as err:
-                print(f"[PostureEngine] Failed to read audits json: {err}")
+                raise RuntimeError(f"Failed to read scenario audit records from {SCENARIO_AUDITS_JSON_PATH}.") from err
         return []
 
     def evaluate_session(self, session: Dict[str, Any]) -> Dict[str, Any]:
@@ -35,21 +44,64 @@ class PostureEngine:
         Evaluates a single session against NIST SP 800-77 guidelines and assigns
         a deterministic risk score and list of vulnerabilities.
         """
-        enc = str(session.get("encryption", "")).upper()
-        auth = str(session.get("auth", "")).upper()
-        dh = session.get("dhGroup", 14)
+        enc_value = session.get("encryption")
+        auth_value = session.get("auth")
+        dh = session.get("dhGroup")
         try:
             dh = int(dh)
         except (ValueError, TypeError):
-            dh = 14
-        pfs = bool(session.get("pfs", False))
-        anti_replay = bool(session.get("antiReplay", True))
-        lifetime = session.get("lifetime", 3600)
+            dh = None
+        pfs = session.get("pfs")
+        anti_replay = session.get("antiReplay")
+        lifetime = session.get("lifetime")
         try:
             lifetime = int(lifetime)
         except (ValueError, TypeError):
-            lifetime = 3600
-        ike_ver = session.get("ikeVersion", 2)
+            lifetime = None
+        ike_ver = session.get("ikeVersion")
+        try:
+            ike_ver = int(ike_ver)
+        except (ValueError, TypeError):
+            ike_ver = None
+
+        missing_fields = [
+            name for name, value in (
+                ("encryption", enc_value),
+                ("auth", auth_value),
+                ("dhGroup", dh),
+                ("pfs", pfs),
+                ("antiReplay", anti_replay),
+                ("lifetime", lifetime),
+                ("ikeVersion", ike_ver),
+            )
+            if value is None or value == ""
+        ]
+        if not isinstance(pfs, bool):
+            missing_fields.append("pfs")
+        if not isinstance(anti_replay, bool):
+            missing_fields.append("antiReplay")
+        if missing_fields:
+            return {
+                "sessionId": session.get("sessionId"),
+                "spi": session.get("spi"),
+                "ipVersion": session.get("ipVersion"),
+                "ikeVersion": ike_ver,
+                "mode": session.get("mode"),
+                "encryption": enc_value,
+                "auth": auth_value,
+                "dhGroup": dh,
+                "pfs": pfs if isinstance(pfs, bool) else None,
+                "antiReplay": anti_replay if isinstance(anti_replay, bool) else None,
+                "lifetime": lifetime,
+                "riskScore": None,
+                "securityScore": None,
+                "compliance": "Insufficient Data",
+                "vulnerabilities": [],
+                "missingFields": sorted(set(missing_fields)),
+            }
+
+        enc = str(enc_value).upper()
+        auth = str(auth_value).upper()
 
         risk_score = 0
         vulnerabilities: List[str] = []
@@ -102,7 +154,7 @@ class PostureEngine:
             vulnerabilities.append("Excessive_SA_Lifetime_Exceeds_NIST_8h_Limit")
 
         # IKE version
-        if ike_ver == 1 or str(ike_ver) == "1":
+        if ike_ver == 1:
             risk_score += 15
             vulnerabilities.append("Legacy_IKEv1_Aggressive_Mode_Pre_Shared_Key_Exposure")
 
@@ -118,13 +170,13 @@ class PostureEngine:
             compliance = "High Risk"
 
         return {
-            "sessionId": session.get("sessionId", "VPN-SES-DYNAMIC"),
-            "spi": session.get("spi", "0x00000000"),
-            "ipVersion": session.get("ipVersion", "IPv4"),
+            "sessionId": session.get("sessionId"),
+            "spi": session.get("spi"),
+            "ipVersion": session.get("ipVersion"),
             "ikeVersion": ike_ver,
-            "mode": session.get("mode", "Tunnel"),
-            "encryption": session.get("encryption", "AES-GCM-256"),
-            "auth": session.get("auth", "SHA256"),
+            "mode": session.get("mode"),
+            "encryption": enc_value,
+            "auth": auth_value,
             "dhGroup": dh,
             "pfs": pfs,
             "antiReplay": anti_replay,
@@ -142,37 +194,135 @@ class PostureEngine:
         items = sessions if sessions is not None else self.get_audit_sessions()
         if not items:
             return {
-                "overallScore": 92,
+                "overallScore": None,
                 "totalSessions": 0,
+                "assessedSessions": 0,
+                "insufficientDataCount": 0,
                 "compliantCount": 0,
                 "highRiskCount": 0,
                 "mediumRiskCount": 0,
+                "compliancePercentage": None,
+                "aeadAdoptionRate": None,
+                "strongCipherRate": None,
+                "strongAuthRate": None,
+                "pfsAdoptionRate": None,
+                "antiReplayEnforcedRate": None,
+                "strongDhRate": None,
+                "lifetimeCompliantRate": None,
+                "source": "No operational audit source configured",
             }
 
-        scores = [max(0, 100 - s.get("riskScore", 0)) for s in items]
-        mean_score = round(float(sum(scores) / len(scores)), 1)
+        def numeric_value(value: Any) -> Optional[float]:
+            if isinstance(value, bool) or value is None:
+                return None
+            try:
+                number = float(value)
+            except (TypeError, ValueError):
+                return None
+            return number if math.isfinite(number) else None
 
-        compliant = sum(1 for s in items if s.get("compliance") in ["Compliant", "Low Risk"])
-        medium = sum(1 for s in items if s.get("compliance") == "Medium Risk")
-        high = sum(1 for s in items if s.get("compliance") == "High Risk")
+        def rate_for(field: str, predicate, valid=lambda value: value not in (None, "")) -> Optional[float]:
+            observed = [
+                session[field] for session in items
+                if valid(session.get(field))
+            ]
+            if not observed:
+                return None
+            return round(sum(1 for value in observed if predicate(value)) / len(observed) * 100, 1)
 
-        # Check cryptographic proportions
-        aead_count = sum(1 for s in items if "GCM" in str(s.get("encryption", "")))
-        pfs_count = sum(1 for s in items if s.get("pfs", False) is True)
-        anti_replay_count = sum(1 for s in items if s.get("antiReplay", True) is True)
-        modern_dh = sum(1 for s in items if int(s.get("dhGroup", 0)) in [14, 19, 20, 21])
+        def has_evaluation_inputs(session: Dict[str, Any]) -> bool:
+            if any(session.get(field) in (None, "") for field in (
+                "encryption", "auth", "dhGroup", "pfs", "antiReplay", "lifetime", "ikeVersion",
+            )):
+                return False
+            if not isinstance(session.get("pfs"), bool) or not isinstance(session.get("antiReplay"), bool):
+                return False
+            return all(numeric_value(session.get(field)) is not None for field in ("dhGroup", "lifetime", "ikeVersion"))
+
+        scored_items = []
+        for session in items:
+            if not has_evaluation_inputs(session):
+                continue
+            evaluation = self.evaluate_session(session)
+            risk_score = numeric_value(evaluation.get("riskScore"))
+            if risk_score is None:
+                continue
+            scored_items.append({
+                "riskScore": risk_score,
+                "compliance": evaluation.get("compliance"),
+            })
+        compliance_items = [
+            session for session in scored_items
+            if session.get("compliance") not in (None, "")
+            and str(session["compliance"]).lower() != "insufficient data"
+        ]
+        scores = [max(0, 100 - session["riskScore"]) for session in scored_items]
+        mean_score = round(float(sum(scores) / len(scores)), 1) if scores else None
+
+        compliant = sum(
+            1 for session in compliance_items
+            if str(session["compliance"]).strip().lower()
+            in {"compliant", "secure compliant", "low risk"}
+        )
+        medium = sum(1 for session in compliance_items if "medium" in str(session["compliance"]).lower())
+        high = sum(
+            1 for session in compliance_items
+            if "high" in str(session["compliance"]).lower()
+            or "critical" in str(session["compliance"]).lower()
+        )
+
+        dh_rate = rate_for(
+            "dhGroup",
+            lambda value: numeric_value(value) is not None and numeric_value(value) >= 14,
+            lambda value: numeric_value(value) is not None,
+        )
+        lifetime_rate = rate_for(
+            "lifetime",
+            lambda value: numeric_value(value) is not None and numeric_value(value) <= 28800,
+            lambda value: numeric_value(value) is not None,
+        )
+        strong_auth_rate = rate_for(
+            "auth",
+            lambda value: (
+                "AEAD" in str(value).upper()
+                or (
+                    "SHA" in str(value).upper()
+                    and "SHA1" not in str(value).upper()
+                    and "MD5" not in str(value).upper()
+                )
+            ),
+            lambda value: isinstance(value, str) and bool(value.strip()),
+        )
 
         return {
             "overallScore": mean_score,
             "totalSessions": len(items),
+            "assessedSessions": len(scored_items),
+            "insufficientDataCount": len(items) - len(scored_items),
             "compliantCount": compliant,
             "mediumRiskCount": medium,
             "highRiskCount": high,
-            "compliancePercentage": round((compliant / len(items)) * 100, 1),
-            "aeadAdoptionRate": round((aead_count / len(items)) * 100, 1),
-            "pfsAdoptionRate": round((pfs_count / len(items)) * 100, 1),
-            "antiReplayEnforcedRate": round((anti_replay_count / len(items)) * 100, 1),
-            "strongDhRate": round((modern_dh / len(items)) * 100, 1),
+            "compliancePercentage": (
+                round((compliant / len(compliance_items)) * 100, 1)
+                if compliance_items else None
+            ),
+            "aeadAdoptionRate": rate_for(
+                "encryption", lambda value: "GCM" in str(value).upper(),
+            ),
+            "strongCipherRate": rate_for(
+                "encryption",
+                lambda value: "GCM" in str(value).upper() or "256" in str(value).upper(),
+            ),
+            "strongAuthRate": strong_auth_rate,
+            "pfsAdoptionRate": rate_for(
+                "pfs", lambda value: value is True, lambda value: isinstance(value, bool),
+            ),
+            "antiReplayEnforcedRate": rate_for(
+                "antiReplay", lambda value: value is True, lambda value: isinstance(value, bool),
+            ),
+            "strongDhRate": dh_rate,
+            "lifetimeCompliantRate": lifetime_rate,
+            "source": "Supplied audit records",
         }
 
 

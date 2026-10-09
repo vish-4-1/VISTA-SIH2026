@@ -29,6 +29,10 @@ def main() -> None:
     model = train_isolation_forest(normal_df[feature_columns], contamination=0.1, random_state=42)
     save_model_bundle(model, ROOT / "models" / "isolation_forest.joblib", {
         "model": "IsolationForest",
+        "prediction_task": "flow anomaly detection",
+        "training_data_scope": "synthetic development dataset",
+        "training_dataset": "data/sample/synthetic_vista_dataset.parquet",
+        "evaluation_scope": "threshold evaluated on the same synthetic dataset used for training",
         "feature_columns": feature_columns,
         "random_seed": 42,
     })

@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
-"""
-Export real datasets and model evaluation reports from VISTA into JSON modules
-for the React frontend dashboard. Ensures zero hardcoded dummy values.
-"""
+"""Export repository dataset summaries and evaluation reports for the dashboard."""
 
 import json
 from pathlib import Path
@@ -18,44 +15,12 @@ df_flows = pd.read_csv(WORKSPACE_ROOT / "DATASET" / "ipsec_traffic_classificatio
 print(f"    Loaded {len(df_flows)} flows.")
 
 flows_list = []
-base_time_seconds = 1696617000  # realistic base timestamp
 
 for i, row in df_flows.iterrows():
-    # compute protocol based on traffic type or random keepalive
-    proto = "ESP (50)"
-    if row.get("traffic_type") == "P2P" or "4500" in str(row.get("flow_id")):
-        proto = "UDP (4500)"
-    
-    # generate realistic timestamp string
-    ts_sec = base_time_seconds + int(i * 1.8)
-    time_str = f"{(ts_sec // 3600) % 24:02d}:{(ts_sec // 60) % 60:02d}:{ts_sec % 60:02d}"
-    
-    # Deterministic confidence based on flow completeness.
-    # Mirrors the _parserConfidence() heuristic in pcapParser.js so that
-    # pre-exported JSON and live-parsed PCAP flows show consistent scores.
-    pkt_count = int(row.get("packet_count", 0))
-    dur = float(row.get("flow_duration_sec", 0))
-    spi_val = str(row.get("esp_spi", ""))
-    score = 50
-    if pkt_count >= 20:
-        score += 20
-    elif pkt_count >= 5:
-        score += 10
-    if spi_val and spi_val not in ("", "nan", "0x0"):
-        score += 15   # SPI present → confirmed ESP traffic
-    score += 10       # CSV rows always have a known protocol (ESP)
-    if dur > 0.05:
-        score += 5
-    conf_val = min(score, 99)
-    
     flows_list.append({
         "id": str(row["flow_id"]),
         "sessionId": str(row["session_id"]),
         "spi": str(row["esp_spi"]),
-        "time": time_str,
-        "src": "172.20.0.2",
-        "dst": "172.20.0.10",
-        "proto": proto,
         "duration": round(float(row["flow_duration_sec"]), 2),
         "packets": int(row["packet_count"]),
         "bytes": int(row["total_bytes"]),
@@ -74,7 +39,6 @@ for i, row in df_flows.iterrows():
         "ebpfEvents": int(row["ebpf_event_count"]),
         "socketDrops": int(row["socket_buffer_drops"]),
         "tcpRetrans": int(row["tcp_retrans_count"]),
-        "confidence": f"{conf_val}%"
     })
 
 flows_json_path = DASHBOARD_DATA_DIR / "realFlows.json"
