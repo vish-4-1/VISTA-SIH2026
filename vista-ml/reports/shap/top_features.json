@@ -1,0 +1,148 @@
+{
+  "scope": "global",
+  "model_id": "xgboost",
+  "model_label": "XGBoost Classifier",
+  "task": "flow traffic-label classification",
+  "model_version": "vista-xgb-v1",
+  "model_artifact": "xgboost_classifier.joblib",
+  "feature_schema_version": "vista-flow-v1",
+  "dataset_id": "synthetic_vista_dataset.parquet",
+  "dataset_name": "Synthetic VISTA Testbed Validation Dataset",
+  "dataset_hash": "65303ba28077fa8e6e52f768b003b252ed2fa11e206b38c4bde1df869773746a",
+  "evaluation_split": "test",
+  "sample_count": 200,
+  "generated_at": "2026-10-10T02:00:00Z",
+  "importance_measure": "mean_absolute_shap_value",
+  "classes": [
+    "BRUTE_FORCE",
+    "C2_BEACONING",
+    "DATA_EXFILTRATION",
+    "DOS",
+    "NORMAL",
+    "PORT_SCAN"
+  ],
+  "feature_order": [
+    "packet_count",
+    "byte_count",
+    "flow_duration",
+    "mean_packet_size",
+    "std_packet_size",
+    "min_packet_size",
+    "max_packet_size",
+    "mean_inter_arrival_time",
+    "std_inter_arrival_time",
+    "min_inter_arrival_time",
+    "max_inter_arrival_time",
+    "packets_per_second",
+    "bytes_per_second",
+    "forward_packet_count",
+    "backward_packet_count",
+    "forward_bytes",
+    "backward_bytes",
+    "direction_ratio"
+  ],
+  "mean_abs_shap": {
+    "packets_per_second": 0.88344,
+    "bytes_per_second": 0.83437,
+    "flow_duration": 0.79352,
+    "backward_packet_count": 0.32399,
+    "packet_count": 0.30178,
+    "backward_bytes": 0.28078,
+    "forward_packet_count": 0.24209,
+    "byte_count": 0.1756,
+    "forward_bytes": 0.15047,
+    "max_packet_size": 0.11108,
+    "mean_packet_size": 0.07144,
+    "std_inter_arrival_time": 0.04744,
+    "std_packet_size": 0.01718,
+    "min_packet_size": 0.01399,
+    "mean_inter_arrival_time": 0.0095,
+    "max_inter_arrival_time": 0.00358,
+    "direction_ratio": 0.00227,
+    "min_inter_arrival_time": 0.00054
+  },
+  "top_features": [
+    {
+      "feature": "packets_per_second",
+      "shap_value": 0.88344
+    },
+    {
+      "feature": "bytes_per_second",
+      "shap_value": 0.83437
+    },
+    {
+      "feature": "flow_duration",
+      "shap_value": 0.79352
+    },
+    {
+      "feature": "backward_packet_count",
+      "shap_value": 0.32399
+    },
+    {
+      "feature": "packet_count",
+      "shap_value": 0.30178
+    },
+    {
+      "feature": "backward_bytes",
+      "shap_value": 0.28078
+    },
+    {
+      "feature": "forward_packet_count",
+      "shap_value": 0.24209
+    },
+    {
+      "feature": "byte_count",
+      "shap_value": 0.1756
+    },
+    {
+      "feature": "forward_bytes",
+      "shap_value": 0.15047
+    },
+    {
+      "feature": "max_packet_size",
+      "shap_value": 0.11108
+    },
+    {
+      "feature": "mean_packet_size",
+      "shap_value": 0.07144
+    },
+    {
+      "feature": "std_inter_arrival_time",
+      "shap_value": 0.04744
+    },
+    {
+      "feature": "std_packet_size",
+      "shap_value": 0.01718
+    },
+    {
+      "feature": "min_packet_size",
+      "shap_value": 0.01399
+    },
+    {
+      "feature": "mean_inter_arrival_time",
+      "shap_value": 0.0095
+    },
+    {
+      "feature": "max_inter_arrival_time",
+      "shap_value": 0.00358
+    },
+    {
+      "feature": "direction_ratio",
+      "shap_value": 0.00227
+    },
+    {
+      "feature": "min_inter_arrival_time",
+      "shap_value": 0.00054
+    }
+  ],
+  "provenance": {
+    "status": "HELD_OUT_VERIFIED",
+    "scope": "Audited held-out testbed group-split evaluation dataset; offline verification only.",
+    "evaluator": "SHAP TreeExplainer (v0.46+)",
+    "validation_manifest": "reports/shap/top_features.json",
+    "dataset_id": "synthetic_vista_dataset.parquet",
+    "dataset_name": "Synthetic VISTA Testbed Validation Dataset",
+    "dataset_sha256": "65303ba28077fa8e6e52f768b003b252ed2fa11e206b38c4bde1df869773746a",
+    "sample_count": 200
+  }
+}

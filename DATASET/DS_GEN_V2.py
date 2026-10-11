@@ -12,6 +12,7 @@ Implements the revised VISTA data generation architecture:
 
 import random
 from pathlib import Path
+# pyrefly: ignore [missing-import]
 import numpy as np
 import pandas as pd
 

@@ -100,21 +100,22 @@ def test_shap_status_endpoint():
     # Models readiness
     models = data["models"]
     assert "xgboost" in models or "attack_classifier" in models
-    assert models["xgboost"]["globalArtifactStatus"] == "UNAVAILABLE"
+    assert models["xgboost"]["globalArtifactStatus"] == "AVAILABLE"
     assert models["xgboost"]["localExplanationEligible"] is False  # Fail-closed
+    assert models["random_forest"]["globalArtifactStatus"] == "UNAVAILABLE"
 
 
-def test_global_shap_xgboost_is_unavailable_without_linked_evidence():
-    """Global SHAP values stay hidden until model, split, and dataset evidence are linked."""
+def test_global_shap_xgboost_is_available_with_linked_evidence():
+    """Global SHAP values are exposed when audited held-out model, split, and dataset evidence are linked."""
     res = client.get("/api/ml/shap/global?model=xgboost")
     assert res.status_code == 200
     data = res.json()
-    assert data["status"] == "UNAVAILABLE"
+    assert data["status"] == "AVAILABLE"
     assert data["model_id"] in {"xgboost", "xgboost_classifier"}
-    assert data["sample_count"] is None
-    assert data["top_features"] == []
-    assert "No audited held-out SHAP artifact" in data["reason"]
+    assert data["sample_count"] == 200
+    assert len(data["top_features"]) == 18
     assert data["feature_schema"] == "vista-flow-v1"
+    assert data["provenance"]["dataset_sha256"] is not None
 
 
 def test_global_shap_random_forest_is_unavailable_without_linked_evidence():
@@ -285,8 +286,10 @@ def test_metrics_endpoint_backward_compatibility():
     assert res.status_code == 200
     data = res.json()
     assert "shapImportance" in data
-    assert data["shapImportance"] is None
+    assert data["shapImportance"] is not None
+    assert data["shapImportance"]["model_id"] == "xgboost"
     assert "shapProvenance" in data
+    assert data["shapProvenance"]["status"] == "AVAILABLE_GLOBAL_ONLY"
     assert "dataset" in data["shapProvenance"]
 
 
@@ -305,9 +308,10 @@ def test_prevention_of_global_artifact_reuse_as_local_explanation():
 
     local_vals = {f["feature"]: f["contribution"] for f in local_res["feature_contributions"]}
 
-    # Global held-out values are unavailable and must not be mixed with local terms.
-    assert global_res["status"] == "UNAVAILABLE"
-    assert global_res["top_features"] == []
+    # Global held-out values represent mean absolute SHAP and must not be mixed with local signed terms.
+    assert global_res["status"] == "AVAILABLE"
+    assert len(global_res["top_features"]) == 18
+    assert all(f["shap_value"] >= 0 for f in global_res["top_features"])
     # Local values contain directional signs (+/-)
     assert any(v < 0 for v in local_vals.values())
 

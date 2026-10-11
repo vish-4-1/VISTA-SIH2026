@@ -37,6 +37,20 @@ def _class_explanations(model, shap_values, values: np.ndarray) -> list[tuple[st
     return [("", shap_values)]
 
 
+def resolve_tree_explainer(model) -> shap.TreeExplainer:
+    """Resolve and return a SHAP TreeExplainer for supported tree/booster models."""
+    if hasattr(model, "get_booster"):
+        booster = model.get_booster()
+    elif hasattr(model, "estimator") and hasattr(model.estimator, "get_booster"):
+        booster = model.estimator.get_booster()
+    else:
+        booster = model
+    return shap.TreeExplainer(booster)
+
+
+resolve_shap_explainer = resolve_tree_explainer
+
+
 def explain_xgboost(
     model,
     X: pd.DataFrame,
@@ -50,7 +64,7 @@ def explain_xgboost(
 
     sample = X.head(max_samples).copy()
     _validate_feature_order(model, sample)
-    explainer = shap.TreeExplainer(model.get_booster())
+    explainer = resolve_tree_explainer(model)
     shap_values = explainer(sample)
     values = shap_values.values
     if values.ndim == 3:
@@ -111,7 +125,7 @@ def explain_xgboost_flow(
         raise ValueError("A per-flow SHAP explanation requires exactly one selected flow.")
     _validate_feature_order(model, flow_features)
 
-    explainer = shap.TreeExplainer(model.get_booster())
+    explainer = resolve_tree_explainer(model)
     shap_values = explainer(flow_features)
     values = np.asarray(shap_values.values)
     feature_names = list(flow_features.columns)

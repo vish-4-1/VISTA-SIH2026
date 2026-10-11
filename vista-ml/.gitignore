@@ -26,3 +26,5 @@ reports/**/*.csv
 !reports/*.json
 !models/candidates/benign_outer_esp_icmp_vs_tcp/**/random_forest.metadata.json
 !reports/candidates/benign_outer_esp_icmp_vs_tcp/**
+!models/xgboost_classifier.metadata.json
+!reports/shap/top_features.json

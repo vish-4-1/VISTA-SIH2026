@@ -33,8 +33,45 @@ MODELS_DIR = ROOT_DIR / "vista-ml" / "models"
 REPORTS_DIR = ROOT_DIR / "vista-ml" / "reports"
 SHAP_REPORTS_DIR = REPORTS_DIR / "shap"
 
-# Global SHAP values are unavailable unless a provenance-complete artifact is registered.
-GLOBAL_SHAP_REGISTRY: Dict[str, Dict[str, Any]] = {}
+def load_audited_shap_registry() -> Dict[str, Dict[str, Any]]:
+    """Loads and validates audited held-out SHAP artifacts from reports/shap."""
+    registry: Dict[str, Dict[str, Any]] = {}
+    artifact_path = SHAP_REPORTS_DIR / "top_features.json"
+    if artifact_path.is_file():
+        try:
+            artifact = json.loads(artifact_path.read_text(encoding="utf-8"))
+            if (
+                isinstance(artifact, dict)
+                and artifact.get("feature_schema_version") == "vista-flow-v1"
+                and artifact.get("provenance", {}).get("status") == "HELD_OUT_VERIFIED"
+                and "mean_abs_shap" in artifact
+            ):
+                model_key = artifact.get("model_id", "xgboost").lower()
+                registry[model_key] = {
+                    "model_id": artifact.get("model_id", "xgboost"),
+                    "model_label": artifact.get("model_label", "XGBoost Classifier"),
+                    "task": artifact.get("task", "flow traffic-label classification"),
+                    "model_version": artifact.get("model_version", "vista-xgb-v1"),
+                    "model_artifact": artifact.get("model_artifact", "xgboost_classifier.joblib"),
+                    "feature_schema": artifact.get("feature_schema_version", "vista-flow-v1"),
+                    "dataset_id": artifact.get("dataset_id", "synthetic_vista_dataset.parquet"),
+                    "dataset_name": artifact.get("dataset_name", "Synthetic VISTA Testbed Validation Dataset"),
+                    "dataset_hash": artifact.get("dataset_hash"),
+                    "evaluation_split": artifact.get("evaluation_split", "test"),
+                    "sample_count": artifact.get("sample_count", 200),
+                    "generated_at": artifact.get("generated_at"),
+                    "importance_measure": artifact.get("importance_measure", "mean_absolute_shap_value"),
+                    "classes": artifact.get("classes", []),
+                    "mean_abs_shap": artifact["mean_abs_shap"],
+                    "provenance": artifact.get("provenance", {}),
+                }
+        except Exception as exc:
+            logger.warning("Failed to load audited SHAP artifact: %s", exc)
+    return registry
+
+
+# Global SHAP values are loaded from audited provenance artifacts; unlinked models fail closed.
+GLOBAL_SHAP_REGISTRY: Dict[str, Dict[str, Any]] = load_audited_shap_registry()
 
 
 class LruExplanationCache:

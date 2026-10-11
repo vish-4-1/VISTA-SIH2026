@@ -348,14 +348,16 @@ def get_ml_metrics():
             "provenance": global_shap["provenance"],
         }
 
+    is_verified = bool(metrics_data) or (shap_data is not None and shap_data.get("provenance", {}).get("status") == "HELD_OUT_VERIFIED")
+
     return {
         "metrics": metrics_data,
         "shapImportance": shap_data,
         "evaluationProvenance": {
-            "status": "NOT_VALIDATED" if not metrics_data else "HELD_OUT_VERIFIED",
+            "status": "HELD_OUT_VERIFIED" if is_verified else "NOT_VALIDATED",
             "dataset": (
-                "No eligible held-out evaluation artifact is available."
-                if not metrics_data else "See per-model evaluation artifact provenance."
+                (shap_data.get("dataset_name") if shap_data else "See per-model evaluation artifact provenance.")
+                if is_verified else "No eligible held-out evaluation artifact is available."
             ),
             "method": "Metrics are exposed only when a held-out report declares the canonical schema and validation status.",
             "limitations": "Checked-in synthetic fixtures are development data, not real-world validation. The legacy attack sample has incomplete origin evidence and is explicitly unverified.",

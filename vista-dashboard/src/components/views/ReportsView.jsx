@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Download, FileText } from 'lucide-react';
 import { usePcapAnalysis } from '../../context/usePcapAnalysis';
 import { generateReport } from '../../utils/apiClient';
@@ -22,7 +22,7 @@ function ReportContent({
   const requestId = useRef(0);
   const report = reportState;
 
-  const handleGenerate = async () => {
+  const handleGenerate = useCallback(async () => {
     const currentRequestId = ++requestId.current;
     setLoading(true);
     setError('');
@@ -41,7 +41,11 @@ function ReportContent({
     } finally {
       if (requestId.current === currentRequestId) setLoading(false);
     }
-  };
+  }, [reportType, analysisStatus, analysisResult?.flows, analysisResult?.analysisId, file?.name]);
+
+  useEffect(() => {
+    void handleGenerate();
+  }, [handleGenerate]);
 
   const handleDownload = () => {
     if (!report?.content) return;

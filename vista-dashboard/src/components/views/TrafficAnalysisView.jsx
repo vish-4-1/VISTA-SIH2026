@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { 
   AlertCircle, 
   Download, 
@@ -55,16 +55,41 @@ export default function TrafficAnalysisView() {
   const [sampleError, setSampleError] = useState('');
   const isAnalyzing = status === 'analyzing';
 
+  const handleLoadSample = useCallback(async (sampleName) => {
+    try {
+      setSampleLoading(true);
+      setSampleError('');
+      const sampleFile = await fetchSampleCaptureBlob(sampleName);
+      setSearchQuery('');
+      await analyzeFile(sampleFile);
+    } catch (err) {
+      console.error('Failed to load sample capture:', err);
+      setSampleError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSampleLoading(false);
+    }
+  }, [analyzeFile]);
+
   useEffect(() => {
     let cancelled = false;
     fetchSampleCaptures()
-      .then((captures) => { if (!cancelled) setSampleCaptures(captures); })
+      .then((captures) => {
+        if (!cancelled) {
+          setSampleCaptures(captures);
+          if (flows.length === 0 && status === 'idle') {
+            const defaultSample = captures.find((c) => c.name.includes('ikev2'))?.name || captures[0]?.name;
+            if (defaultSample) {
+              void handleLoadSample(defaultSample);
+            }
+          }
+        }
+      })
       .catch((requestError) => {
         if (!cancelled) setSampleListError(requestError instanceof Error ? requestError.message : String(requestError));
       })
       .finally(() => { if (!cancelled) setSamplesLoading(false); });
     return () => { cancelled = true; };
-  }, []);
+  }, [flows.length, status, handleLoadSample]);
 
   const columns = useMemo(
     () => Object.entries(fieldLabels).filter(([field]) => flows.some((flow) => flow[field] != null)),
@@ -95,21 +120,6 @@ export default function TrafficAnalysisView() {
     if (droppedFile) {
       setSearchQuery('');
       void analyzeFile(droppedFile);
-    }
-  };
-
-  const handleLoadSample = async (sampleName) => {
-    try {
-      setSampleLoading(true);
-      setSampleError('');
-      const sampleFile = await fetchSampleCaptureBlob(sampleName);
-      setSearchQuery('');
-      await analyzeFile(sampleFile);
-    } catch (err) {
-      console.error('Failed to load sample capture:', err);
-      setSampleError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setSampleLoading(false);
     }
   };
 

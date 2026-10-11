@@ -1,0 +1,46 @@
+{
+  "model": "XGBClassifier",
+  "prediction_task": "flow traffic-label classification",
+  "model_version": "vista-xgb-v1",
+  "feature_schema_version": "vista-flow-v1",
+  "training_data_scope": "synthetic development dataset",
+  "training_dataset": "data/sample/synthetic_vista_dataset.parquet",
+  "evaluation_scope": "experiment-aware group holdout; offline synthetic-data evaluation",
+  "probability_calibration": "not evaluated",
+  "feature_columns": [
+    "packet_count",
+    "byte_count",
+    "flow_duration",
+    "mean_packet_size",
+    "std_packet_size",
+    "min_packet_size",
+    "max_packet_size",
+    "mean_inter_arrival_time",
+    "std_inter_arrival_time",
+    "min_inter_arrival_time",
+    "max_inter_arrival_time",
+    "packets_per_second",
+    "bytes_per_second",
+    "forward_packet_count",
+    "backward_packet_count",
+    "forward_bytes",
+    "backward_bytes",
+    "direction_ratio"
+  ],
+  "held_out_evaluation": {
+    "split": "test",
+    "dataset_id": "synthetic_vista_dataset.parquet",
+    "dataset_name": "Synthetic VISTA Testbed Validation Dataset",
+    "dataset_sha256": "65303ba28077fa8e6e52f768b003b252ed2fa11e206b38c4bde1df869773746a",
+    "sample_count": 200,
+    "evaluation_scope": "experiment-aware group holdout; offline synthetic-data evaluation"
+  },
+  "shap_artifact": "reports/shap/top_features.json",
+  "random_seed": 42,
+  "dataset_shape": [
+    750,
+    32
+  ],
+  "train_experiments": 40,
+  "test_experiments": 10
+}

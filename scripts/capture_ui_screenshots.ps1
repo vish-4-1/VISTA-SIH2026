@@ -46,12 +46,13 @@ foreach ($v in $views) {
             "--disable-background-networking",
             "--user-data-dir=$tmpDir",
             "--window-size=1920,1080",
-            "--virtual-time-budget=6000",
+            "--virtual-time-budget=7000",
             "--screenshot=$targetPath",
             $url
         )
 
         $proc = Start-Process -FilePath $edgePath -ArgumentList $edgeArgs -NoNewWindow -PassThru -Wait
+        Start-Sleep -Milliseconds 1500
         
         if (Test-Path $targetPath) {
             $len = (Get-Item $targetPath).Length
