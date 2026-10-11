@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
@@ -33,6 +33,14 @@ function addWorkstation(scene, x, colorHex, nodeId) {
   tower.position.set(-0.55, 0.78, 0.1);
   group.add(tower);
 
+  // Status LED beacon on tower
+  const led = new THREE.Mesh(
+    new THREE.SphereGeometry(0.045, 10, 8),
+    new THREE.MeshBasicMaterial({ color: accent }),
+  );
+  led.position.set(-0.55, 1.45, 0.2);
+  group.add(led);
+
   const monitor = new THREE.Mesh(
     new THREE.BoxGeometry(1.25, 0.84, 0.1),
     new THREE.MeshStandardMaterial({
@@ -51,6 +59,9 @@ function addWorkstation(scene, x, colorHex, nodeId) {
   );
   stand.position.set(0.44, 0.7, -0.18);
   group.add(stand);
+
+  group.userData.monitorMesh = monitor;
+  group.userData.ledMesh = led;
 
   scene.add(group);
   return group;
@@ -86,6 +97,20 @@ export default function ThreeCanvas({
   const tunnelMeshRef = useRef(null);
   const monitorMeshRef = useRef(null);
   const pcapMeshRef = useRef(null);
+  const [autoRotate, setAutoRotate] = useState(true);
+  const autoRotateRef = useRef(autoRotate);
+  const selectedNodeRef = useRef(selectedNode);
+
+  useEffect(() => {
+    selectedNodeRef.current = selectedNode;
+  }, [selectedNode]);
+
+  useEffect(() => {
+    autoRotateRef.current = autoRotate;
+    if (controlsRef.current) {
+      controlsRef.current.autoRotate = autoRotate;
+    }
+  }, [autoRotate]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -115,7 +140,10 @@ export default function ThreeCanvas({
     controls.minDistance = 5;
     controls.maxDistance = 22;
     controls.target.set(0, 0.35, 0);
+    controls.autoRotate = autoRotateRef.current;
+    controls.autoRotateSpeed = 0.55;
     controlsRef.current = controls;
+
     resetCameraRef.current = () => {
       camera.position.set(0, 7.2, 13.2);
       controls.target.set(0, 0.35, 0);
@@ -127,6 +155,11 @@ export default function ThreeCanvas({
     const keyLight = new THREE.DirectionalLight(0xFFFBF2, 2.4);
     keyLight.position.set(-4, 10, 7);
     scene.add(keyLight);
+
+    // Dynamic central tunnel illumination
+    const tunnelPointLight = new THREE.PointLight(0x4E8B72, 1.2, 8);
+    tunnelPointLight.position.set(0, 1.4, 0.4);
+    scene.add(tunnelPointLight);
 
     const grid = new THREE.GridHelper(22, 22, 0xD4CDC0, 0xE4DDD0);
     grid.position.y = 0.005;
@@ -171,8 +204,8 @@ export default function ThreeCanvas({
       color: tunnelColor,
       emissive: tunnelColor,
       emissiveIntensity,
-      roughness: 0.5,
-      metalness: 0.1,
+      roughness: 0.45,
+      metalness: 0.15,
     });
     const tunnel = new THREE.Mesh(
       new THREE.TubeGeometry(tunnelCurve, 32, 0.09, 10, false),
@@ -183,6 +216,40 @@ export default function ThreeCanvas({
     clickTargets.push(tunnel);
     tunnelMeshRef.current = tunnel;
 
+    // Continuous IPsec ESP packet flow stream
+    const packetGeometry = new THREE.SphereGeometry(0.065, 12, 10);
+    const packetStream = [];
+    const packetCount = 6;
+    for (let i = 0; i < packetCount; i++) {
+      const isOutbound = i % 2 === 0;
+      const pColor = isOutbound ? 0x487291 : 0x4E8B72;
+      const pMesh = new THREE.Mesh(
+        packetGeometry,
+        new THREE.MeshStandardMaterial({
+          color: pColor,
+          emissive: pColor,
+          emissiveIntensity: 0.85,
+          roughness: 0.2,
+        }),
+      );
+      pMesh.visible = false;
+      scene.add(pMesh);
+      packetStream.push({ mesh: pMesh, offset: i / packetCount, isOutbound });
+    }
+
+    // Encapsulation wave torus traveling along tunnel
+    const pulseTorus = new THREE.Mesh(
+      new THREE.TorusGeometry(0.18, 0.022, 12, 24),
+      new THREE.MeshBasicMaterial({
+        color: 0x5BA382,
+        transparent: true,
+        opacity: 0.5,
+      }),
+    );
+    pulseTorus.rotation.y = Math.PI / 2;
+    pulseTorus.visible = false;
+    scene.add(pulseTorus);
+
     // eBPF Kernel Observer Mesh - elevated above floor plane in front of tunnel
     const monitorPosition = new THREE.Vector3(0, 0.24, 2.0);
     const monitor = new THREE.Mesh(
@@ -191,7 +258,7 @@ export default function ThreeCanvas({
         color: 0x363D39,
         roughness: 0.7,
         emissive: 0x4E8B72,
-        emissiveIntensity: 0.04,
+        emissiveIntensity: 0.05,
       }),
     );
     monitor.position.copy(monitorPosition);
@@ -200,6 +267,25 @@ export default function ThreeCanvas({
     clickTargets.push(monitor);
     monitorMeshRef.current = monitor;
 
+    // eBPF Telemetry Radar Pulse Rings on ground
+    const ebpfRadarRings = [];
+    for (let r = 0; r < 2; r++) {
+      const ring = new THREE.Mesh(
+        new THREE.RingGeometry(0.35, 0.42, 32),
+        new THREE.MeshBasicMaterial({
+          color: 0x4E8B72,
+          transparent: true,
+          opacity: 0.4,
+          side: THREE.DoubleSide,
+        }),
+      );
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.set(0, 0.02, 2.0);
+      scene.add(ring);
+      ebpfRadarRings.push({ mesh: ring, offset: r * 0.5 });
+    }
+
+    // eBPF collector link lines
     const collectorLinks = new THREE.Group();
     for (const peerPosition of [PEER_POSITIONS.pc1, PEER_POSITIONS.pc2]) {
       const points = [
@@ -213,6 +299,19 @@ export default function ThreeCanvas({
       collectorLinks.add(line);
     }
     scene.add(collectorLinks);
+
+    // Telemetry data beads traveling into eBPF collector
+    const collectorBeads = [
+      new THREE.Mesh(
+        new THREE.SphereGeometry(0.045, 8, 8),
+        new THREE.MeshBasicMaterial({ color: 0x487291 }),
+      ),
+      new THREE.Mesh(
+        new THREE.SphereGeometry(0.045, 8, 8),
+        new THREE.MeshBasicMaterial({ color: 0x4E8B72 }),
+      ),
+    ];
+    collectorBeads.forEach((b) => scene.add(b));
 
     // PCAP Observer Layer Mesh
     const pcapGroup = new THREE.Group();
@@ -259,7 +358,14 @@ export default function ThreeCanvas({
     clickTargets.push(pcapGroup);
     pcapMeshRef.current = pcapGroup;
 
-    // Genuine Evidence-Driven Activity Marker
+    // PCAP packet tap bead
+    const pcapTapBead = new THREE.Mesh(
+      new THREE.SphereGeometry(0.045, 8, 8),
+      new THREE.MeshBasicMaterial({ color: captureActive ? 0x4E8B72 : 0xACB6B0 }),
+    );
+    scene.add(pcapTapBead);
+
+    // Evidence-Driven Activity Marker
     const activityMarker = new THREE.Mesh(
       new THREE.SphereGeometry(0.16, 16, 12),
       new THREE.MeshBasicMaterial({ color: 0x4E8B72 }),
@@ -295,6 +401,100 @@ export default function ThreeCanvas({
       frameId = window.requestAnimationFrame(animate);
       controls.update();
 
+      // 1. Tunnel Breathing & Point Light Modulation
+      if (tunnelMeshRef.current?.material) {
+        const isSelected = selectedNodeRef.current === 'tunnel';
+        const base = isSelected ? 0.25 : (tunnelStatus === 'ESTABLISHED' ? 0.08 : 0.035);
+        tunnelMeshRef.current.material.emissiveIntensity = base + Math.sin(now * 0.003) * 0.03;
+      }
+      tunnelPointLight.intensity = (tunnelStatus === 'ESTABLISHED' ? 1.2 : 0.35) + Math.sin(now * 0.004) * 0.3;
+
+      // 2. Continuous Packet Flow along Tunnel
+      const isEstablished = tunnelStatus === 'ESTABLISHED';
+      const isNegotiating = tunnelStatus === 'NEGOTIATING';
+      packetStream.forEach((p) => {
+        if (isEstablished) {
+          const speed = 0.00038;
+          const phase = ((now * speed) + p.offset) % 1.0;
+          const startX = p.isOutbound ? -2.95 : 2.95;
+          const endX = p.isOutbound ? 2.95 : -2.95;
+          const currentX = startX + (endX - startX) * phase;
+          const waveY = 1.2 + Math.sin(phase * Math.PI * 4) * 0.035;
+          const waveZ = Math.cos(phase * Math.PI * 4) * 0.02;
+          p.mesh.position.set(currentX, waveY, waveZ);
+          p.mesh.visible = true;
+        } else if (isNegotiating) {
+          const phase = ((now * 0.0002) + p.offset) % 1.0;
+          p.mesh.position.set(-1.4 + 2.8 * phase, 1.2, 0);
+          p.mesh.visible = true;
+        } else {
+          p.mesh.visible = false;
+        }
+      });
+
+      // 3. Encapsulation Torus Progression
+      if (isEstablished || isNegotiating) {
+        const torusProg = (now * 0.00045) % 1.0;
+        pulseTorus.position.set(-3.0 + 6.0 * torusProg, 1.2, 0);
+        pulseTorus.material.opacity = Math.sin(torusProg * Math.PI) * 0.65;
+        pulseTorus.visible = true;
+      } else {
+        pulseTorus.visible = false;
+      }
+
+      // 4. eBPF Radar Ripples
+      ebpfRadarRings.forEach(({ mesh, offset }) => {
+        const prog = ((now * 0.00055) + offset) % 1.0;
+        const scale = 0.4 + prog * 2.8;
+        mesh.scale.set(scale, scale, 1);
+        mesh.material.opacity = (1 - prog) * 0.45;
+      });
+
+      // 5. eBPF Collector Ingestion Data Beads
+      const b1Prog = (now * 0.00075) % 1.0;
+      collectorBeads[0].position.set(
+        (-4.2 * 0.78) * (1 - b1Prog),
+        0.22 * (1 - b1Prog) + 0.24 * b1Prog,
+        0.15 * (1 - b1Prog) + 2.0 * b1Prog,
+      );
+      const b2Prog = ((now * 0.00075) + 0.5) % 1.0;
+      collectorBeads[1].position.set(
+        (4.2 * 0.78) * (1 - b2Prog),
+        0.22 * (1 - b2Prog) + 0.24 * b2Prog,
+        0.15 * (1 - b2Prog) + 2.0 * b2Prog,
+      );
+
+      // 6. PCAP Sensor Tap Pulse & Blinking Lens
+      const tapProg = (now * 0.0009) % 1.0;
+      pcapTapBead.position.set(
+        0,
+        1.29 + (1.95 - 1.29) * tapProg,
+        0 + (-0.2 - 0) * tapProg,
+      );
+      if (pcapLens) {
+        const lensBlink = Math.sin(now * 0.008) > 0.15;
+        pcapLens.material.emissiveIntensity = captureActive ? (lensBlink ? 0.75 : 0.15) : 0.08;
+      }
+
+      // 7. Workstation Screen & LED Breathing
+      const pc1Group = peerGroupsRef.current.pc1;
+      if (pc1Group?.userData.monitorMesh) {
+        pc1Group.userData.monitorMesh.material.emissiveIntensity =
+          0.08 + Math.sin(now * 0.003) * 0.035;
+      }
+      if (pc1Group?.userData.ledMesh) {
+        pc1Group.userData.ledMesh.scale.setScalar(1.0 + Math.sin(now * 0.006) * 0.25);
+      }
+      const pc2Group = peerGroupsRef.current.pc2;
+      if (pc2Group?.userData.monitorMesh) {
+        pc2Group.userData.monitorMesh.material.emissiveIntensity =
+          0.08 + Math.cos(now * 0.0035) * 0.035;
+      }
+      if (pc2Group?.userData.ledMesh) {
+        pc2Group.userData.ledMesh.scale.setScalar(1.0 + Math.cos(now * 0.006) * 0.25);
+      }
+
+      // 8. Event Marker Surge Animation
       const anim = activityAnimationRef.current;
       const marker = activityMarkerRef.current;
       if (anim && marker) {
@@ -396,14 +596,29 @@ export default function ThreeCanvas({
   return (
     <div className="three-canvas">
       <div ref={containerRef} className="three-canvas-renderer" />
-      <button
-        className="scene-reset-button"
-        type="button"
-        onClick={() => resetCameraRef.current?.()}
-      >
-        Reset camera
-      </button>
-      <span className="scene-help">Drag to orbit · scroll to zoom · click PC1, PC2, Tunnel, eBPF, or PCAP Observer to inspect</span>
+      <div className="scene-controls-group">
+        <button
+          className={`scene-reset-button${autoRotate ? ' is-active' : ''}`}
+          type="button"
+          onClick={() => {
+            const next = !autoRotate;
+            setAutoRotate(next);
+            if (controlsRef.current) {
+              controlsRef.current.autoRotate = next;
+            }
+          }}
+        >
+          {autoRotate ? 'Pause Orbit' : 'Auto Orbit'}
+        </button>
+        <button
+          className="scene-reset-button"
+          type="button"
+          onClick={() => resetCameraRef.current?.()}
+        >
+          Reset Camera
+        </button>
+        <span className="scene-help">Drag to orbit · scroll to zoom · click nodes to inspect</span>
+      </div>
     </div>
   );
 }

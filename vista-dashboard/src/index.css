@@ -1235,11 +1235,17 @@ a {
   border: 1px solid var(--border-subtle);
 }
 
-.scene-reset-button {
+.scene-controls-group {
   position: absolute;
   z-index: 2;
   bottom: 11px;
   left: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.scene-reset-button {
   padding: 4px 8px;
   color: var(--text-primary);
   font-size: 11px;
@@ -1248,6 +1254,7 @@ a {
   background: #FFFFFF;
   cursor: pointer;
   box-shadow: var(--shadow-sm);
+  transition: all 0.15s ease;
 }
 
 .scene-reset-button:hover {
@@ -1255,13 +1262,18 @@ a {
   border-color: var(--accent-sage);
 }
 
+.scene-reset-button.is-active {
+  background: var(--bg-tertiary);
+  border-color: var(--accent-sage);
+  color: var(--accent-sage);
+  font-weight: 600;
+}
+
 .scene-help {
-  position: absolute;
-  bottom: 15px;
-  left: 110px;
   color: var(--text-secondary);
   font-size: 10px;
   pointer-events: none;
+  margin-left: 6px;
 }
 
 .testbed-inspector {
