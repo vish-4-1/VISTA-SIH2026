@@ -101,8 +101,9 @@ def test_shap_status_endpoint():
     models = data["models"]
     assert "xgboost" in models or "attack_classifier" in models
     assert models["xgboost"]["globalArtifactStatus"] == "AVAILABLE"
-    assert models["xgboost"]["localExplanationEligible"] is False  # Fail-closed
+    assert models["xgboost"]["localExplanationEligible"] is True
     assert models["random_forest"]["globalArtifactStatus"] == "UNAVAILABLE"
+    assert models["random_forest"]["localExplanationEligible"] is False
 
 
 def test_global_shap_xgboost_is_available_with_linked_evidence():
@@ -156,10 +157,10 @@ def test_per_flow_esp_encryption_boundary_blocked():
 
 
 def test_per_flow_unvalidated_model_fail_closed_gate():
-    """Verifies Safeguard: Experimental models are blocked without allow_experimental flag."""
+    """Verifies Safeguard: Experimental models without held-out validation are blocked without allow_experimental flag."""
     payload = {
         "flow_record": SAMPLE_SYN_FLOOD_FLOW,
-        "model_name": "xgboost_classifier",
+        "model_name": "random_forest_baseline",
         "target_class": "DOS",
         "allow_experimental": False,
     }
@@ -170,6 +171,23 @@ def test_per_flow_unvalidated_model_fail_closed_gate():
     assert "Safety Gate" in data["reason"]
     assert "validated_for_inference" in data["reason"]
     assert data["prerequisites"]["modelEligible"] is False
+
+
+def test_per_flow_xgboost_with_held_out_validation_is_eligible():
+    """Verifies XGBoost with audited held-out validation is ELIGIBLE even when allow_experimental is False."""
+    payload = {
+        "flow_record": SAMPLE_SYN_FLOOD_FLOW,
+        "model_name": "xgboost_classifier",
+        "target_class": "DOS",
+        "allow_experimental": False,
+    }
+    res = client.post("/api/ml/shap/explain-flow", json=payload)
+    assert res.status_code == 200
+    data = res.json()
+    assert data["status"] == "ELIGIBLE"
+    assert data["prerequisites"]["modelEligible"] is True
+    assert data["provenance"]["status"] == "ELIGIBLE"
+    assert data["experimental_mode"] is False
 
 
 def test_per_flow_missing_features_rejected():

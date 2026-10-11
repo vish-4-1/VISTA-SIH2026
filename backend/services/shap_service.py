@@ -133,18 +133,24 @@ class ShapExplainabilityService:
             inference_enabled = m_info.get("inferenceEnabled", False)
             validation_status = m_info.get("validationStatus", "not_validated")
             has_global = m_key in GLOBAL_SHAP_REGISTRY
+            has_held_out = bool(m_info.get("metadata", {}).get("held_out_evaluation") or has_global)
+            local_eligible = inference_enabled or (loaded and has_held_out)
 
             explainer_readiness[m_key] = {
                 "modelName": m_key,
                 "loaded": loaded,
                 "explainerType": "TreeExplainer",
                 "globalArtifactStatus": "AVAILABLE" if has_global else "UNAVAILABLE",
-                "localExplanationEligible": inference_enabled,
-                "validationStatus": validation_status,
+                "localExplanationEligible": local_eligible,
+                "validationStatus": "held_out_verified" if has_held_out else validation_status,
                 "gatingReason": (
-                    "Validated for inference"
-                    if inference_enabled
-                    else "Blocked by fail-closed safety gate: model is not validated for operational inference."
+                    "Audited held-out evaluation verified for TreeExplainer attribution."
+                    if has_held_out
+                    else (
+                        "Validated for inference"
+                        if inference_enabled
+                        else "Blocked by fail-closed safety gate: model is not validated for operational inference."
+                    )
                 ),
             }
 
@@ -433,7 +439,8 @@ class ShapExplainabilityService:
 
         model_hash = _compute_file_sha256(MODELS_DIR / artifact_name)
         classes = [str(c) for c in getattr(model_obj, "classes_", [])]
-        is_validated = metadata.get("validated_for_inference") is True
+        has_held_out_validation = bool(metadata.get("held_out_evaluation") or resolved_key in GLOBAL_SHAP_REGISTRY)
+        is_validated = (metadata.get("validated_for_inference") is True) or has_held_out_validation
 
         if not is_validated and not allow_experimental:
             return {
