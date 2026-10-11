@@ -1,0 +1,10 @@
+# Raw binary files - no line ending conversions
+*.pcap binary
+*.pcapng binary
+*.png binary
+*.joblib binary
+*.onnx binary
+
+# Cryptographic and capture evidence preserved byte-exact
+captures/** -text
+*.sha256 text eol=lf

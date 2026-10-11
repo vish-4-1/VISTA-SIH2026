@@ -204,7 +204,7 @@ Alternatively, run individual component test suites:
 .\.venv\Scripts\python.exe -m pytest vista-ml/tests
 ```
 
-Audit run results and environment limitations are recorded in [docs/TEST_RESULTS.md](docs/TEST_RESULTS.md). System boundaries, evidence, and SIH26160 coverage are in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/DATA_PROVENANCE.md](docs/DATA_PROVENANCE.md), and [docs/SIH_REQUIREMENTS.md](docs/SIH_REQUIREMENTS.md). For the controlled demo, see [docs/DEMO_RUNBOOK.md](docs/DEMO_RUNBOOK.md).
+Audit run results and environment limitations are recorded in [docs/TEST_RESULTS.md](docs/TEST_RESULTS.md). System boundaries, evidence, and SIH26160 coverage are in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/DATA_PROVENANCE.md](docs/DATA_PROVENANCE.md), and [docs/SIH_REQUIREMENTS.md](docs/SIH_REQUIREMENTS.md). For prefinals readiness and audit verification, see [docs/PREFINALS_READINESS.md](docs/PREFINALS_READINESS.md).
 
 Verify frontend build and lint:
 ```powershell
