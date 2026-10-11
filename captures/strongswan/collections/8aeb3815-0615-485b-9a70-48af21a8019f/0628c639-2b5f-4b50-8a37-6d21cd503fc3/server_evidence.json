@@ -1,0 +1,28 @@
+{
+  "totalRequestsReceived": 2,
+  "serverPort": 54755,
+  "requests": [
+    {
+      "index": 0,
+      "method": "GET",
+      "path": "/metrics",
+      "clientIp": "172.20.0.2",
+      "requestBodyBytes": 0,
+      "responseStatus": 200,
+      "responseBytes": 59,
+      "responseSha256": "ebca263ec17ef4d6edd41069a5825a0d12ce8a7a66d734e90cb625d4a1e4038a",
+      "timestamp": 1791633795
+    },
+    {
+      "index": 1,
+      "method": "GET",
+      "path": "/metrics",
+      "clientIp": "172.20.0.2",
+      "requestBodyBytes": 0,
+      "responseStatus": 200,
+      "responseBytes": 59,
+      "responseSha256": "e67f15bbd86a5c047c53af7861897b9f92f03d847f7adeb16e31d07c7d31a4f6",
+      "timestamp": 1791633795
+    }
+  ]
+}

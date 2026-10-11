@@ -1,0 +1,106 @@
+{
+  "strategy": "capture-group stratified train/validation split plus separate held-out collection run",
+  "random_state": 42,
+  "validation_size": 0.2,
+  "capture_groups": {
+    "train": [
+      "20261005T155313Z:icmp_normal_00",
+      "20261005T155313Z:icmp_normal_01",
+      "20261005T155313Z:icmp_normal_03",
+      "20261005T155313Z:tcp_normal_00",
+      "20261005T155313Z:tcp_normal_01",
+      "20261005T155313Z:tcp_normal_03"
+    ],
+    "validation": [
+      "20261005T155313Z:icmp_normal_02",
+      "20261005T155313Z:tcp_normal_02"
+    ],
+    "test": [
+      "20261005T155356Z:icmp_normal_00",
+      "20261005T155356Z:icmp_normal_01",
+      "20261005T155356Z:icmp_normal_02",
+      "20261005T155356Z:icmp_normal_03",
+      "20261005T155356Z:icmp_normal_04",
+      "20261005T155356Z:icmp_normal_05",
+      "20261005T155356Z:icmp_normal_06",
+      "20261005T155356Z:icmp_normal_07",
+      "20261005T155356Z:icmp_normal_08",
+      "20261005T155356Z:icmp_normal_09",
+      "20261005T155356Z:icmp_normal_10",
+      "20261005T155356Z:icmp_normal_11",
+      "20261005T155356Z:icmp_normal_12",
+      "20261005T155356Z:icmp_normal_13",
+      "20261005T155356Z:icmp_normal_14",
+      "20261005T155356Z:icmp_normal_15",
+      "20261005T155356Z:icmp_normal_16",
+      "20261005T155356Z:icmp_normal_17",
+      "20261005T155356Z:icmp_normal_18",
+      "20261005T155356Z:icmp_normal_19",
+      "20261005T155356Z:icmp_normal_20",
+      "20261005T155356Z:icmp_normal_21",
+      "20261005T155356Z:icmp_normal_22",
+      "20261005T155356Z:icmp_normal_23",
+      "20261005T155356Z:icmp_normal_24",
+      "20261005T155356Z:tcp_normal_00",
+      "20261005T155356Z:tcp_normal_01",
+      "20261005T155356Z:tcp_normal_02",
+      "20261005T155356Z:tcp_normal_03",
+      "20261005T155356Z:tcp_normal_04",
+      "20261005T155356Z:tcp_normal_05",
+      "20261005T155356Z:tcp_normal_06",
+      "20261005T155356Z:tcp_normal_07",
+      "20261005T155356Z:tcp_normal_08",
+      "20261005T155356Z:tcp_normal_09",
+      "20261005T155356Z:tcp_normal_10",
+      "20261005T155356Z:tcp_normal_11",
+      "20261005T155356Z:tcp_normal_12",
+      "20261005T155356Z:tcp_normal_13",
+      "20261005T155356Z:tcp_normal_14",
+      "20261005T155356Z:tcp_normal_15",
+      "20261005T155356Z:tcp_normal_16",
+      "20261005T155356Z:tcp_normal_17",
+      "20261005T155356Z:tcp_normal_18",
+      "20261005T155356Z:tcp_normal_19",
+      "20261005T155356Z:tcp_normal_20",
+      "20261005T155356Z:tcp_normal_21",
+      "20261005T155356Z:tcp_normal_22",
+      "20261005T155356Z:tcp_normal_23",
+      "20261005T155356Z:tcp_normal_24"
+    ]
+  },
+  "rows": {
+    "train": 6,
+    "validation": 2,
+    "test": 50
+  },
+  "class_distributions": {
+    "train": {
+      "ICMP_NORMAL": 3,
+      "TCP_NORMAL": 3
+    },
+    "validation": {
+      "ICMP_NORMAL": 1,
+      "TCP_NORMAL": 1
+    },
+    "test": {
+      "ICMP_NORMAL": 25,
+      "TCP_NORMAL": 25
+    }
+  },
+  "group_overlap": {
+    "train_validation": 0,
+    "train_test": 0,
+    "validation_test": 0
+  },
+  "exact_feature_vector_overlap_between_splits": {
+    "train_validation": 0,
+    "train_test": 0,
+    "validation_test": 0
+  },
+  "exact_duplicate_feature_rows_within_splits": {
+    "train": 0,
+    "validation": 0,
+    "test": 2
+  },
+  "capture_point": "PC1 outer IPv4 interface; native ESP packets"
+}

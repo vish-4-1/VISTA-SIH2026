@@ -1,0 +1,57 @@
+{
+  "experimentId": "e46a74b0-63c5-4a0e-bb2c-c3aa30a81f18",
+  "sessionId": "73efedbf-feaf-48d0-8270-37bdce60aaa6",
+  "startedAt": "2026-10-10T05:42:02.733945+00:00",
+  "captureStartedAt": "2026-10-10T05:42:03.718363+00:00",
+  "captureEndedAt": "2026-10-10T05:42:07.142801+00:00",
+  "requestedProfiles": [
+    {
+      "count": 2,
+      "interval_seconds": 0.2,
+      "path": "/api/v1/telemetry",
+      "method": "POST",
+      "payload_bytes": 128,
+      "expected_status": 200
+    }
+  ],
+  "senderMeasurements": {
+    "totalRequestsSent": 2,
+    "totalBytesSent": 524,
+    "totalBytesReceived": 170,
+    "requests": [
+      {
+        "index": 0,
+        "path": "/api/v1/telemetry",
+        "method": "POST",
+        "statusCode": 200,
+        "statusLine": "HTTP/1.1 200 OK",
+        "responseBytes": 70,
+        "responseSha256": "74f1b6a783c561b0e78a11b6afccd547912a7bdad916e3ce6828229646753f5f",
+        "durationSeconds": 0
+      },
+      {
+        "index": 1,
+        "path": "/api/v1/telemetry",
+        "method": "POST",
+        "statusCode": 200,
+        "statusLine": "HTTP/1.1 200 OK",
+        "responseBytes": 70,
+        "responseSha256": "4506fe5a54dbcc74e4e2a6e43c27df9ff40e90724ba5d57198f95500e0cd1cbd",
+        "durationSeconds": 0
+      }
+    ]
+  },
+  "independentReceiverEvidence": {
+    "serverEvidencePath": "server_evidence.json",
+    "serverEvidenceSha256": "6c89d8e51c8bd5ba27e257783209af6ac64825d6197f550756cee1849d3ea839",
+    "totalRequestsReceived": 2,
+    "pcapPath": "pc2_receiver_http.pcap",
+    "pcapSha256": "437e83e35b13bc9a0fbb642234ad599b978df203178849c2a58db0728b982b63",
+    "capturedTcpPackets": 12
+  },
+  "pc1OuterCaptureEvidence": {
+    "pcapPath": "pc1_outer_http.pcap",
+    "pcapSha256": "2a825032a52b9899ad1c74a17742b923e1642906529f3eea05c1babeed98a1b9",
+    "espPackets": 23
+  }
+}

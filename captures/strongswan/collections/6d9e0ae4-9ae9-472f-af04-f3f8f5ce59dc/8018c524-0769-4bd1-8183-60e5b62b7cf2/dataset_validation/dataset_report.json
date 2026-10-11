@@ -1,0 +1,98 @@
+{
+  "report_version": 1,
+  "status": "BLOCKED",
+  "dataset_id": "collection-6d9e0ae4-9ae9-472f-af04-f3f8f5ce59dc",
+  "manifest_path": "C:\\vista\\captures\\strongswan\\collections\\6d9e0ae4-9ae9-472f-af04-f3f8f5ce59dc\\8018c524-0769-4bd1-8183-60e5b62b7cf2\\experiment_manifest.json",
+  "manifest_sha256": "aa8277123477b63ce7f6836903ff4add62701f988976d76d53671cb760ab6e14",
+  "manifest_schema": "schemas\\strongswan-experiment-manifest-v2.schema.json",
+  "feature_schema_version": "vista-flow-v1",
+  "extractor_version": "vista-ml-pcap-features-v1",
+  "feature_columns": [
+    "packet_count",
+    "byte_count",
+    "flow_duration",
+    "mean_packet_size",
+    "std_packet_size",
+    "min_packet_size",
+    "max_packet_size",
+    "mean_inter_arrival_time",
+    "std_inter_arrival_time",
+    "min_inter_arrival_time",
+    "max_inter_arrival_time",
+    "packets_per_second",
+    "bytes_per_second",
+    "forward_packet_count",
+    "backward_packet_count",
+    "forward_bytes",
+    "backward_bytes",
+    "direction_ratio"
+  ],
+  "source_observations": 1,
+  "accepted_observations": 0,
+  "quarantined_observations": 1,
+  "independent_session_count": 0,
+  "class_distribution": {},
+  "missingness_by_feature": {
+    "packet_count": 0,
+    "byte_count": 0,
+    "flow_duration": 0,
+    "mean_packet_size": 0,
+    "std_packet_size": 0,
+    "min_packet_size": 0,
+    "max_packet_size": 0,
+    "mean_inter_arrival_time": 0,
+    "std_inter_arrival_time": 0,
+    "min_inter_arrival_time": 0,
+    "max_inter_arrival_time": 0,
+    "packets_per_second": 0,
+    "bytes_per_second": 0,
+    "forward_packet_count": 0,
+    "backward_packet_count": 0,
+    "forward_bytes": 0,
+    "backward_bytes": 0,
+    "direction_ratio": 0
+  },
+  "feature_ranges": {},
+  "duplicate_and_near_duplicate_pairs": [],
+  "exclusions": [
+    {
+      "manifest_index": 0,
+      "experiment_id": "8018c524-0769-4bd1-8183-60e5b62b7cf2",
+      "session_id": "6d9e0ae4-9ae9-472f-af04-f3f8f5ce59dc",
+      "reasons": [
+        "invalid_manifest_path:session_record_path escapes the manifest directory."
+      ]
+    }
+  ],
+  "split_manifest": null,
+  "blocker": "No accepted observations remain after validation and quarantine.",
+  "feature_target_separation": {
+    "target_column": "label",
+    "metadata_columns_excluded_from_features": [
+      "experiment_id",
+      "session_id",
+      "capture_path",
+      "capture_sha256"
+    ],
+    "model_features": [
+      "packet_count",
+      "byte_count",
+      "flow_duration",
+      "mean_packet_size",
+      "std_packet_size",
+      "min_packet_size",
+      "max_packet_size",
+      "mean_inter_arrival_time",
+      "std_inter_arrival_time",
+      "min_inter_arrival_time",
+      "max_inter_arrival_time",
+      "packets_per_second",
+      "bytes_per_second",
+      "forward_packet_count",
+      "backward_packet_count",
+      "forward_bytes",
+      "backward_bytes",
+      "direction_ratio"
+    ]
+  }
+}

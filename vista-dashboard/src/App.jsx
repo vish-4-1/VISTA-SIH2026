@@ -74,6 +74,7 @@ function getTabFromUrl() {
 export default function App() {
   const [activeTab, setActiveTab] = useState(getTabFromUrl);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [datasetJob, setDatasetJob] = useState(null);
 
   useEffect(() => {
     const handlePopState = () => {
@@ -125,7 +126,7 @@ export default function App() {
       case 'reports':
         return <ReportsView />;
       case 'dataset':
-        return <DatasetView />;
+        return <DatasetView generationJob={datasetJob} setGenerationJob={setDatasetJob} />;
       default:
         return <OverviewView refreshKey={refreshKey} />;
     }

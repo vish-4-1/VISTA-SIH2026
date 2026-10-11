@@ -1,0 +1,50 @@
+{
+  "totalRequestsReceived": 4,
+  "serverPort": 41509,
+  "requests": [
+    {
+      "index": 0,
+      "method": "POST",
+      "path": "/log/event",
+      "clientIp": "172.20.0.2",
+      "requestBodyBytes": 64,
+      "responseStatus": 200,
+      "responseBytes": 62,
+      "responseSha256": "fe25ffcc6a20ba7790a0c071bf9bfba311810e7ee0c5812a85d37a1c0508025b",
+      "timestamp": 1791614264
+    },
+    {
+      "index": 1,
+      "method": "POST",
+      "path": "/log/event",
+      "clientIp": "172.20.0.2",
+      "requestBodyBytes": 64,
+      "responseStatus": 200,
+      "responseBytes": 62,
+      "responseSha256": "7c4b4a1b15c9466c82a59dd3b3c028e28a4a026b7b4696701df94f2942bab64b",
+      "timestamp": 1791614265
+    },
+    {
+      "index": 2,
+      "method": "POST",
+      "path": "/log/event",
+      "clientIp": "172.20.0.2",
+      "requestBodyBytes": 64,
+      "responseStatus": 200,
+      "responseBytes": 62,
+      "responseSha256": "a37dd748ff6848cb8514dbf16d4cde19d4867780a7c53989eb702db5bc58d175",
+      "timestamp": 1791614265
+    },
+    {
+      "index": 3,
+      "method": "POST",
+      "path": "/log/event",
+      "clientIp": "172.20.0.2",
+      "requestBodyBytes": 64,
+      "responseStatus": 200,
+      "responseBytes": 62,
+      "responseSha256": "9743eedda7cac88e4590a9d900d8ceb3064b665b1853ae7c11c2216a4315a1a4",
+      "timestamp": 1791614266
+    }
+  ]
+}

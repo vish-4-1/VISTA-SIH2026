@@ -1,4 +1,7 @@
 # Environments
+.env
+.env.*
+!.env.example
 .venv/
 */.venv/
 __pycache__/
@@ -9,6 +12,7 @@ __pycache__/
 # Node / Frontend
 node_modules/
 */node_modules/
+.pnpm-store/
 dist/
 */dist/
 .DS_Store
@@ -26,7 +30,15 @@ vista-ml/data/raw/public/**
 */.pytest_cache/
 *.log
 
-# Scratch scripts
+# Scratch scripts & exports
 scratch/
 configs/generated/
+captures/exports/
 captures/strongswan/experiments/
+
+# Submission exclusions (no demo runbook / video files in git)
+docs/DEMO_RUNBOOK.md
+*.mp4
+*.webm
+*.mov
+*.mkv

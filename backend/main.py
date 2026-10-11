@@ -6,26 +6,32 @@ Smart India Hackathon 2026 · Problem Statement SIH26160 (NTRO)
 
 from __future__ import annotations
 
-import hashlib
 import io
+import hashlib
 import json
 import logging
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
+from pydantic import BaseModel
 from fastapi import FastAPI, File, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
 
 from backend.services.model_service import model_service
+from backend.services.shap_service import shap_service
 from backend.services.pcap_analyzer import pcap_analyzer
 from backend.services.posture_engine import posture_engine
 from backend.services.soc_service import soc_service
 from backend.services.ebpf_service import ebpf_service
+from backend.services.dataset_service import dataset_service
 from backend.services.vpn_testbed import (
     StrongSwanExperimentError,
+    get_testbed_live_status,
+    inspect_runtime_capabilities,
     prepare_capability_report,
     run_experiment,
     validate_configuration,
@@ -96,6 +102,8 @@ async def analyze_pcap_upload(
             filename=filename,
             model_name=model,
         )
+        result["sourceCaptureSha256"] = hashlib.sha256(content).hexdigest()
+        result["sourceCaptureSizeBytes"] = len(content)
         return result
     except HTTPException:
         raise
@@ -118,6 +126,8 @@ async def analyze_csv_upload(
             raise HTTPException(status_code=400, detail="Uploaded CSV has no records.")
 
         records = df_raw.to_dict(orient="records")
+        analyzed_at = datetime.now(timezone.utc).isoformat()
+        analysis_id = f"ANL-{uuid.uuid4().hex[:12].upper()}"
         try:
             features_df = model_service.prepare_feature_dataframe(records)
             predictions = model_service.predict(features_df, model_name=model)
@@ -142,6 +152,9 @@ async def analyze_csv_upload(
 
         for i, rec in enumerate(records):
             pred = predictions[i]
+            flow_id = str(rec.get("flowId") or rec.get("flow_id") or f"FLW-{i + 1:07d}")
+            rec["analysisId"] = analysis_id
+            rec["flowId"] = flow_id
             rec["predictionStatus"] = pred["status"]
             rec["mlPrediction"] = {
                 "status": pred["status"],
@@ -153,6 +166,8 @@ async def analyze_csv_upload(
                 "probabilities": pred.get("probabilities"),
                 "missingFeatures": pred.get("missingFeatures", []),
                 "trainingDataScope": pred.get("trainingDataScope"),
+                "analysisId": analysis_id,
+                "flowId": flow_id,
             }
             if pred.get("modelArtifact"):
                 rec["mlPrediction"]["modelArtifact"] = pred["modelArtifact"]
@@ -188,13 +203,12 @@ async def analyze_csv_upload(
                 rec["predictionError"] = pred["error"]
 
         model_metadata = model_service.get_info()["models"][model]
-        analyzed_at = datetime.now(timezone.utc).isoformat()
-        digest_src = f"{file.filename}:{len(records)}:{analyzed_at}"
-        analysis_id = f"ANL-{hashlib.sha256(digest_src.encode('utf-8')).hexdigest()[:10].upper()}"
         return {
             "analysisId": analysis_id,
             "filename": file.filename,
-            "dataMode": "pcap",
+            "sourceCaptureSha256": hashlib.sha256(content).hexdigest(),
+            "sourceCaptureSizeBytes": len(content),
+            "dataMode": "csv",
             "analyzedAt": analyzed_at,
             "totalFlows": len(records),
             "flows": records,
@@ -280,38 +294,127 @@ def get_audit_summary():
     return posture_engine.compute_summary_posture()
 
 
+class FlowExplainRequest(BaseModel):
+    flow_id: Optional[str] = None
+    features: Optional[Dict[str, Any]] = None
+    flow_record: Optional[Dict[str, Any]] = None
+    model_name: Optional[str] = "xgboost"
+    target_class: Optional[str] = None
+    protocol_family: Optional[str] = None
+    allow_experimental: Optional[bool] = False
+
+
 @app.get("/api/ml/metrics")
 def get_ml_metrics():
     """
-    Returns evaluated model performance metrics and SHAP feature importance.
+    Returns evaluation and explanation artifacts with explicit model provenance.
     """
     metrics_data = {}
     if METRICS_PATH.exists():
-        metrics_data = json.loads(METRICS_PATH.read_text(encoding="utf-8"))
+        candidate_metrics = json.loads(METRICS_PATH.read_text(encoding="utf-8"))
+        if (
+            isinstance(candidate_metrics, dict)
+            and candidate_metrics.get("evaluation_status") == "held_out_verified"
+            and candidate_metrics.get("feature_schema_version") == "vista-flow-v1"
+        ):
+            metrics_data = candidate_metrics.get("models", {})
 
-    shap_data = {}
-    if SHAP_PATH.exists():
-        shap_data = json.loads(SHAP_PATH.read_text(encoding="utf-8"))
+    # Retrieve audited global SHAP importance
+    global_shap = shap_service.get_global_importance("xgboost")
+    shap_data = None
+    if global_shap.get("status") == "AVAILABLE":
+        shap_data = {
+            "scope": "global",
+            "model_id": global_shap["model_id"],
+            "model_version": global_shap["model_version"],
+            "feature_schema_version": global_shap["feature_schema"],
+            "sample_count": global_shap["sample_count"],
+            "dataset_id": global_shap["dataset_id"],
+            "dataset_name": global_shap["dataset_name"],
+            "dataset_hash": global_shap["dataset_hash"],
+            "evaluation_split": global_shap["evaluation_split"],
+            "importance_measure": global_shap["importance_measure"],
+            "top_features": [
+                {
+                    "feature": f["feature"],
+                    "shap_value": f["importance"],
+                    "rank": f["rank"],
+                    "group": f["group"],
+                    "relativeWeight": f.get("relativeWeight", 1.0),
+                }
+                for f in global_shap["top_features"]
+            ],
+            "all_features": global_shap["all_features"],
+            "provenance": global_shap["provenance"],
+        }
 
     return {
         "metrics": metrics_data,
         "shapImportance": shap_data,
         "evaluationProvenance": {
-            "dataset": "Synthetic VISTA development dataset",
-            "method": "Experiment-aware group holdout; offline evaluation, not current-capture accuracy.",
-            "limitations": (
-                "Synthetic labels and label-conditioned features do not establish real-world attack-detection performance."
+            "status": "NOT_VALIDATED" if not metrics_data else "HELD_OUT_VERIFIED",
+            "dataset": (
+                "No eligible held-out evaluation artifact is available."
+                if not metrics_data else "See per-model evaluation artifact provenance."
             ),
-            "trafficDataset": "IPsec Encrypted Traffic Classification & Attack Attribution Dataset (v2)",
-            "trafficMethod": "Session-isolated GroupShuffleSplit (80/20 train/test holdout); 0% session overlap.",
-            "attackDataset": "IPsec Encrypted Traffic Classification & Attack Attribution Dataset (v2)",
-            "attackMethod": "Session-isolated GroupShuffleSplit (80/20 train/test holdout); 0% session overlap.",
+            "method": "Metrics are exposed only when a held-out report declares the canonical schema and validation status.",
+            "limitations": "Checked-in synthetic fixtures are development data, not real-world validation. The legacy attack sample has incomplete origin evidence and is explicitly unverified.",
+            "trafficDataset": "ISCXVPN2016 archive is present, but the current runtime model was not trained/evaluated against an audited leakage-aware split.",
+            "attackDataset": "No compatible public attack dataset has been validated. The legacy VISTA attack sample has unknown origin and unverified labels because source PCAP and endpoint evidence are not packaged.",
         },
         "shapProvenance": {
-            "dataset": "IPsec Encrypted Traffic Classification & Attack Attribution Dataset (v2)",
-            "scope": "Global TreeExplainer SHAP importance evaluated on held-out test flows; reflects side-channel timing/length features.",
+            "status": "AVAILABLE_GLOBAL_ONLY" if shap_data else "NOT_AVAILABLE",
+            "scope": (
+                "Global feature importance with provenance linked to a held-out evaluation artifact; not an explanation of current live capture."
+                if shap_data else "No current SHAP artifact matches a validated model version and feature schema."
+            ),
+            "model": shap_data.get("model_id") if shap_data else None,
+            "dataset": shap_data.get("dataset_name") if shap_data else None,
+            "evaluationDataset": shap_data.get("dataset_id") if shap_data else None,
+            "sampleCount": shap_data.get("sample_count") if shap_data else None,
+        },
+        "perFlowExplanation": {
+            "status": "FAIL_CLOSED_GATED",
+            "limitation": "Per-flow explanation requires an eligible validated model, matching canonical schema, and unencrypted transport.",
         },
     }
+
+
+@app.get("/api/ml/shap/status")
+def get_shap_status():
+    """
+    Returns explainer readiness, model validation gating, and supported SHAP explanation modes.
+    """
+    return shap_service.get_explainer_status()
+
+
+@app.get("/api/ml/shap/global")
+def get_global_shap_importance(model: str = Query("xgboost", description="Model identifier")):
+    """
+    Returns global feature importance ranked by mean absolute SHAP values with evaluation provenance.
+    """
+    return shap_service.get_global_importance(model_id=model)
+
+
+@app.post("/api/ml/shap/explain-flow")
+def explain_individual_flow(request: FlowExplainRequest):
+    """
+    Computes directional feature contributions and baseline value for an individual flow
+    only when all 7 prerequisites are verified.
+    """
+    flow_payload = dict(request.flow_record or request.features or {})
+    if request.flow_id:
+        flow_payload["id"] = request.flow_id
+        flow_payload["flow_id"] = request.flow_id
+    if request.protocol_family:
+        flow_payload["protocolFamily"] = request.protocol_family
+
+    return shap_service.explain_flow(
+        flow_record=flow_payload,
+        model_name=request.model_name or "xgboost",
+        target_class=request.target_class,
+        allow_experimental=bool(request.allow_experimental),
+    )
 
 
 @app.get("/api/soc/status")
@@ -377,8 +480,8 @@ def fuse_flows_with_ebpf(request: Dict[str, Any]):
 @app.get("/api/testbed/profiles")
 def get_testbed_profiles():
     """
-    Returns verified StrongSwan swanctl configuration profiles from the repository,
-    including cryptographic proposal parameters and verified host endpoints.
+    Returns repository StrongSwan profiles with evidence status. A profile is marked
+    executed only when the capability report contains successful runtime evidence.
     """
     profiles = [
         {
@@ -395,8 +498,9 @@ def get_testbed_profiles():
             "ipVersion": "IPv4",
             "pc1Ip": "172.20.0.2",
             "pc2Ip": "172.20.0.3",
-            "status": "VERIFIED_OPERATIONAL",
+            "status": "EXECUTED_WITH_EVIDENCE",
             "configFile": "pc1-swanctl.conf",
+            "evidenceReference": "captures/strongswan/capability_report.json",
             "nistCompliance": "Compliant (NIST SP 800-77 r1)",
         },
         {
@@ -414,8 +518,9 @@ def get_testbed_profiles():
             "ipVersion": "IPv4",
             "pc1Ip": "172.20.0.2",
             "pc2Ip": "172.20.0.3",
-            "status": "VERIFIED_OPERATIONAL",
+            "status": "EXECUTED_WITH_EVIDENCE",
             "configFile": "pc1-cbc-swanctl.conf",
+            "evidenceReference": "captures/strongswan/capability_report.json",
             "nistCompliance": "Compliant with integrity validation",
         },
         {
@@ -432,9 +537,10 @@ def get_testbed_profiles():
             "ipVersion": "IPv4",
             "pc1Ip": "172.20.0.2",
             "pc2Ip": "172.20.0.3",
-            "status": "SUPPORTED_KERNEL",
-            "configFile": "pc1-swanctl.conf",
-            "nistCompliance": "Compliant for host-to-host",
+            "status": "IMPLEMENTED_UNVERIFIED",
+            "configFile": None,
+            "evidenceReference": "captures/strongswan/capability_report.json",
+            "nistCompliance": "Unverified — no successful transport-mode experiment is recorded",
         },
     ]
 
@@ -443,6 +549,7 @@ def get_testbed_profiles():
         "daemon": "strongSwan 5.9.x",
         "kernelSubsystem": "Linux XFRM / netlink xfrm_user",
         "profiles": profiles,
+        "supportScope": "Configuration options and kernel support do not prove negotiated runtime behavior; inspect each profile status and the cited evidence.",
         "supportedMatrix": {
             "modes": ["tunnel", "transport"],
             "ciphers": ["aes256gcm16", "aes128gcm16", "aes256", "aes128"],
@@ -468,7 +575,10 @@ def validate_testbed_configuration(payload: Dict[str, Any]):
     Validates a requested IPsec VPN testbed configuration against installed strongSwan
     capabilities, Linux kernel XFRM transforms, and testbed network constraints.
     """
-    validation = validate_configuration(payload)
+    validation = validate_configuration(
+        payload,
+        runtime_capabilities=inspect_runtime_capabilities(),
+    )
     if validation["valid"]:
         nist = "Compliant"
     else:
@@ -502,6 +612,16 @@ def get_testbed_capability_report():
     return prepare_capability_report()
 
 
+@app.get("/api/testbed/live-status")
+def get_live_testbed_status():
+    """
+    Returns authoritative live runtime status of the IPsec testbed,
+    including Docker container availability and IPs, negotiated StrongSwan
+    IKE/CHILD SAs via swanctl, Linux kernel eBPF probe health, and active capture status.
+    """
+    return get_testbed_live_status()
+
+
 @app.post("/api/reports/generate")
 def generate_audit_report(request: Dict[str, Any]):
     """Generates a report from available audit data and optional uploaded analysis flows."""
@@ -511,6 +631,17 @@ def generate_audit_report(request: Dict[str, Any]):
     filename = request.get("filename")
     if flows is not None and not isinstance(flows, list):
         raise HTTPException(status_code=400, detail="The flows field must be an array.")
+    if analysis_id:
+        mismatched_ids = {
+            str(flow.get("analysisId"))
+            for flow in flows or []
+            if flow.get("analysisId") and str(flow.get("analysisId")) != str(analysis_id)
+        }
+        if mismatched_ids:
+            raise HTTPException(
+                status_code=400,
+                detail="Report flows contain records from a different PCAP analysis ID.",
+            )
 
     posture = posture_engine.compute_summary_posture()
     soc = soc_service.get_soc_status(custom_flows=flows) if flows is not None else soc_service.get_soc_status()
@@ -632,9 +763,150 @@ This report includes repository audit records and flow classifications. It does 
     return {
         "reportType": report_type,
         "format": "markdown",
+        "createdAt": datetime.now(timezone.utc).isoformat(),
         "content": md,
         "score": score,
         "source": soc["source"],
         "analysisId": analysis_id,
         "filename": filename,
     }
+
+
+# ==============================================================================
+# DATASET STUDIO API ENDPOINTS (SIH26160 / NTRO)
+# ==============================================================================
+
+
+@app.get("/api/datasets")
+def list_datasets():
+    """Lists registered campaign and sample datasets in VISTA."""
+    return {
+        "datasets": dataset_service.list_datasets(),
+        "total": len(dataset_service.list_datasets()),
+    }
+
+
+@app.get("/api/datasets/capabilities")
+def get_dataset_capabilities():
+    """Returns verified testbed parameters and limits for dataset generation."""
+    return dataset_service.get_testbed_capabilities()
+
+
+@app.get("/api/datasets/scenarios")
+def list_dataset_scenarios():
+    """Lists implemented dataset scenarios and their evidence/safety contracts."""
+    return {"scenarios": dataset_service.list_scenarios()}
+
+
+@app.get("/api/datasets/scenarios/{scenario_id}")
+def inspect_dataset_scenario(scenario_id: str):
+    scenario = dataset_service.get_scenario(scenario_id)
+    if not scenario:
+        raise HTTPException(status_code=404, detail="Unknown or deferred scenario.")
+    return scenario
+
+
+@app.post("/api/datasets/scenarios/{scenario_id}/validate")
+def validate_dataset_scenario(scenario_id: str, payload: Dict[str, Any]):
+    try:
+        return dataset_service.validate_scenario(scenario_id, payload.get("parameters", {}))
+    except ValueError as err:
+        raise HTTPException(status_code=400, detail=str(err)) from err
+
+
+@app.post("/api/datasets/scenarios/{scenario_id}/runs")
+def start_dataset_scenario(scenario_id: str, payload: Dict[str, Any]):
+    try:
+        return dataset_service.start_scenario_run(
+            scenario_id,
+            payload.get("parameters", {}),
+            confirmed_isolated_lab=payload.get("confirmedIsolatedLab") is True,
+        )
+    except ValueError as err:
+        raise HTTPException(status_code=400, detail=str(err)) from err
+
+
+@app.post("/api/datasets/preflight")
+def run_dataset_preflight(payload: Dict[str, Any]):
+    """Verifies testbed availability and configuration support before running a collection job."""
+    return dataset_service.run_preflight_check(payload)
+
+
+@app.post("/api/datasets/generate")
+def start_dataset_generation(payload: Dict[str, Any]):
+    """Dispatches a real asynchronous testbed-driven dataset generation job."""
+    try:
+        job = dataset_service.start_generation_job(payload)
+        return job
+    except ValueError as err:
+        raise HTTPException(status_code=400, detail=str(err)) from err
+    except Exception as err:
+        logger.exception("Failed to dispatch dataset generation job.")
+        raise HTTPException(status_code=500, detail=f"Job dispatch error: {err}") from err
+
+
+@app.get("/api/datasets/jobs/{job_id}")
+def get_dataset_job_status(job_id: str):
+    """Polls real-time stage progress and completion status of a dataset generation job."""
+    job = dataset_service.get_job_status(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job ID not found.")
+    return job
+
+
+@app.get("/api/datasets/scenario-runs/{job_id}")
+def get_dataset_scenario_run(job_id: str):
+    job = dataset_service.get_job_status(job_id)
+    if not job or not job.get("scenarioId"):
+        raise HTTPException(status_code=404, detail="Scenario run not found.")
+    return job
+
+
+@app.post("/api/datasets/jobs/{job_id}/cancel")
+def cancel_dataset_generation_job(job_id: str):
+    """Requests safe cancellation; active bounded collectors clean up before termination."""
+    cancelled = dataset_service.cancel_job(job_id)
+    if not cancelled:
+        raise HTTPException(status_code=400, detail="Job is not active or cannot be cancelled.")
+    return {"jobId": job_id, "status": "CANCELLING"}
+
+
+@app.get("/api/datasets/{dataset_id}")
+def get_dataset_details(dataset_id: str):
+    """Retrieves deep metadata, schema manifests, quality reports, and sample rows."""
+    details = dataset_service.get_dataset_details(dataset_id)
+    if not details:
+        raise HTTPException(status_code=404, detail="Dataset not found.")
+    return details
+
+
+@app.post("/api/datasets/{dataset_id}/validate")
+def validate_dataset(dataset_id: str):
+    """Executes an exhaustive quality and data-leakage audit on the dataset."""
+    try:
+        report = dataset_service.validate_dataset_quality(dataset_id)
+        return report
+    except ValueError as err:
+        raise HTTPException(status_code=404, detail=str(err)) from err
+    except Exception as err:
+        raise HTTPException(status_code=500, detail=f"Validation failed: {err}") from err
+
+
+@app.get("/api/datasets/{dataset_id}/export")
+def export_dataset(dataset_id: str, format: str = Query("csv", pattern="^(csv|zip)$")):
+    """Safely exports and downloads the versioned dataset file."""
+    try:
+        target_path = dataset_service.export_dataset_file(dataset_id, format_type=format)
+        return FileResponse(
+            target_path,
+            media_type="application/octet-stream",
+            filename=target_path.name,
+        )
+    except FileNotFoundError as err:
+        raise HTTPException(status_code=404, detail=str(err)) from err
+    except ValueError as err:
+        if "not found" in str(err).lower():
+            raise HTTPException(status_code=404, detail=str(err)) from err
+        raise HTTPException(status_code=400, detail=str(err)) from err
+    except Exception as err:
+        raise HTTPException(status_code=500, detail=f"Export failed: {err}") from err

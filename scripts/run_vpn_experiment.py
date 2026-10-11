@@ -30,6 +30,7 @@ def main() -> None:
         default="icmpv4",
         choices=["icmpv4", "icmpv6", "udp_rtp", "http", "https", "smtp", "video", "whatsapp"],
     )
+    parser.add_argument("--scenario-id", help="Optional stable identifier for this experiment's evidence directory.")
     args = parser.parse_args()
 
     payload = {
@@ -40,8 +41,13 @@ def main() -> None:
         "ipVersion": args.ip_version,
         "trafficType": args.traffic_type,
     }
+    if args.scenario_id:
+        payload["scenarioId"] = args.scenario_id
     result = run_experiment(payload)
     print(json.dumps(result, indent=2))
+    if result.get("status") == "PASS":
+        return
+    raise SystemExit(2 if result.get("status") in {"BLOCKED", "NOT TESTED"} else 1)
 
 
 if __name__ == "__main__":

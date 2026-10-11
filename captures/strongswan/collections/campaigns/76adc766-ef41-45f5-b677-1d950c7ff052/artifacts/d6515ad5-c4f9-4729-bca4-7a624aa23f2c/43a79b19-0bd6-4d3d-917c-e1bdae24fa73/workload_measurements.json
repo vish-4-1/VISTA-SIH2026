@@ -1,0 +1,87 @@
+{
+  "experimentId": "43a79b19-0bd6-4d3d-917c-e1bdae24fa73",
+  "sessionId": "d6515ad5-c4f9-4729-bca4-7a624aa23f2c",
+  "startedAt": "2026-10-10T06:31:03.023321+00:00",
+  "captureStartedAt": "2026-10-10T06:31:03.850259+00:00",
+  "captureEndedAt": "2026-10-10T06:31:08.063990+00:00",
+  "requestedProfiles": [
+    {
+      "count": 5,
+      "interval_seconds": 0.3,
+      "path": "/api/v1/status",
+      "method": "GET",
+      "payload_bytes": 0,
+      "expected_status": 200
+    }
+  ],
+  "senderMeasurements": {
+    "totalRequestsSent": 5,
+    "totalBytesSent": 545,
+    "totalBytesReceived": 400,
+    "requests": [
+      {
+        "index": 0,
+        "path": "/api/v1/status",
+        "method": "GET",
+        "statusCode": 200,
+        "statusLine": "HTTP/1.1 200 OK",
+        "responseBytes": 65,
+        "responseSha256": "81bcbbecf6469eed26a845227c43145f681deec230d1f933a7810f01fbfa28a2",
+        "durationSeconds": 0
+      },
+      {
+        "index": 1,
+        "path": "/api/v1/status",
+        "method": "GET",
+        "statusCode": 200,
+        "statusLine": "HTTP/1.1 200 OK",
+        "responseBytes": 65,
+        "responseSha256": "fbceabc357c6d96089fb69214eeabdb43b61f67ff1f748be3db55cf091501a8a",
+        "durationSeconds": 0
+      },
+      {
+        "index": 2,
+        "path": "/api/v1/status",
+        "method": "GET",
+        "statusCode": 200,
+        "statusLine": "HTTP/1.1 200 OK",
+        "responseBytes": 65,
+        "responseSha256": "4e47039b182be0ef1170c6f10857061688608161b1c071e0bb91639c12f5584d",
+        "durationSeconds": 0
+      },
+      {
+        "index": 3,
+        "path": "/api/v1/status",
+        "method": "GET",
+        "statusCode": 200,
+        "statusLine": "HTTP/1.1 200 OK",
+        "responseBytes": 65,
+        "responseSha256": "8c66f6368af9bbec6bde0b74a42a49032aa9a59fbb3f5996fc3ed7e1f5533a24",
+        "durationSeconds": 0
+      },
+      {
+        "index": 4,
+        "path": "/api/v1/status",
+        "method": "GET",
+        "statusCode": 200,
+        "statusLine": "HTTP/1.1 200 OK",
+        "responseBytes": 65,
+        "responseSha256": "0d4d01321cd63b518f9c4d8b80959830ee5124279ead18b4ba1c098729575022",
+        "durationSeconds": 0
+      }
+    ]
+  },
+  "independentReceiverEvidence": {
+    "serverEvidencePath": "server_evidence.json",
+    "serverEvidenceSha256": "c9cea92a9d59c15a0cf2a80568d2e1a1accaaa6f83dd1129bd70903fc3605d8a",
+    "totalRequestsReceived": 5,
+    "pcapPath": "pc2_receiver_http.pcap",
+    "pcapSha256": "de934166c31658fc3aec7eb33d459d9eb823f07d94af727d4bfff48ba12b9746",
+    "capturedTcpPackets": 30
+  },
+  "pc1OuterCaptureEvidence": {
+    "pcapPath": "pc1_outer_http.pcap",
+    "pcapSha256": "4a208feeca5f7bff931366862bf11acb307949aed547e4a9b158308e59effaff",
+    "espPackets": 55
+  }
+}

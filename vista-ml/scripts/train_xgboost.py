@@ -13,6 +13,7 @@ from vista_ml.data.schema import ALL_FEATURE_COLUMNS
 from vista_ml.datasets.splitter import check_group_leakage, experiment_aware_split
 from vista_ml.evaluation.evaluate import evaluate_classifier
 from vista_ml.models.xgboost_model import save_model_bundle, train_xgboost_classifier
+from vista_ml.utils.artifacts import create_candidate_run_dirs
 from vista_ml.utils.reproducibility import set_random_seed
 
 
@@ -41,10 +42,14 @@ def main() -> None:
     y_test = test_df["label"].copy()
 
     model = train_xgboost_classifier(X_train, y_train, random_state=42)
-    save_model_bundle(model, ROOT / "models" / "xgboost_classifier.joblib", {
+    model_dir, report_dir = create_candidate_run_dirs(ROOT, "synthetic-xgboost")
+    save_model_bundle(model, model_dir / "xgboost_classifier.joblib", {
         "model": "XGBClassifier",
         "prediction_task": "flow traffic-label classification",
         "training_data_scope": "synthetic development dataset",
+        "validated_for_inference": False,
+        "feature_schema_version": "vista-flow-v1",
+        "validation_status": "synthetic-development-only",
         "training_dataset": "data/sample/synthetic_vista_dataset.parquet",
         "evaluation_scope": "experiment-aware group holdout; offline synthetic-data evaluation",
         "probability_calibration": "not evaluated",
@@ -60,12 +65,13 @@ def main() -> None:
         X_test,
         y_test,
         sorted(y_test.unique()),
-        ROOT / "reports" / "metrics",
+        report_dir,
         binary_threshold=args.binary_threshold,
     )
     print(f"Dataset shape: {df.shape}")
     print(f"Train experiments={train_df['experiment_id'].nunique()}, test experiments={test_df['experiment_id'].nunique()}")
-    print(f"XGBoost metrics: {metrics}")
+    print(f"Candidate model: {model_dir / 'xgboost_classifier.joblib'}")
+    print(f"Synthetic development metrics: {metrics}")
 
 
 if __name__ == "__main__":

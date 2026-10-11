@@ -38,14 +38,29 @@ def _ensure_flow_id(frame: pd.DataFrame) -> pd.DataFrame:
             col for col in ["src_ip", "dst_ip", "src_port", "dst_port", "protocol"]
             if col in frame.columns
         ]
-        if source_cols:
-            frame = frame.copy()
-            frame["flow_id"] = (
-                frame[source_cols].fillna("-").astype(str).agg(lambda row: "|".join(row), axis=1)
+        required = {"src_ip", "dst_ip", "protocol"}
+        if not required.issubset(source_cols):
+            raise ValueError(
+                "Packet rows need flow_id or source/destination IP addresses and protocol."
             )
-        else:
-            frame = frame.copy()
-            frame["flow_id"] = "unknown_flow_" + np.arange(len(frame)).astype(str)
+        frame = frame.copy()
+        for column in ("src_port", "dst_port"):
+            if column not in frame.columns:
+                frame[column] = 0
+        flow_ids = []
+        for row in frame.itertuples(index=False):
+            values = row._asdict()
+            endpoints = sorted(
+                (
+                    (str(values["src_ip"]), int(values["src_port"])),
+                    (str(values["dst_ip"]), int(values["dst_port"])),
+                )
+            )
+            flow_ids.append(
+                f"{values['protocol']}|{endpoints[0][0]}:{endpoints[0][1]}"
+                f"|{endpoints[1][0]}:{endpoints[1][1]}"
+            )
+        frame["flow_id"] = flow_ids
     return frame
 
 
@@ -53,93 +68,119 @@ def _compute_flow_features(packet_df: pd.DataFrame) -> pd.DataFrame:
     data = packet_df.copy()
     data = _ensure_flow_id(data)
 
-    if "timestamp" in data.columns:
-        data["timestamp"] = pd.to_datetime(data["timestamp"], errors="coerce")
-    else:
-        data["timestamp"] = pd.NaT
+    if "timestamp" not in data.columns:
+        raise ValueError("Packet rows need timestamps to match the runtime flow schema.")
+    data["timestamp"] = pd.to_datetime(
+        data["timestamp"], errors="coerce", utc=True, format="mixed"
+    )
+    if data["timestamp"].isna().any():
+        raise ValueError("Packet rows contain missing or invalid timestamps.")
 
     if "packet_length" not in data.columns and "packet_len" in data.columns:
         data["packet_length"] = data["packet_len"]
     if "packet_length" not in data.columns and "length" in data.columns:
         data["packet_length"] = data["length"]
     if "packet_length" not in data.columns:
-        data["packet_length"] = 0
+        raise ValueError("Packet rows need packet_length, packet_len, or length.")
 
-    data["packet_length"] = pd.to_numeric(data["packet_length"], errors="coerce").fillna(0)
+    data["packet_length"] = pd.to_numeric(data["packet_length"], errors="coerce")
+    if data["packet_length"].isna().any() or (data["packet_length"] <= 0).any():
+        raise ValueError("Packet rows contain missing, invalid, or non-positive packet lengths.")
+    if "direction" not in data.columns:
+        if not {"src_ip", "dst_ip"}.issubset(data.columns):
+            raise ValueError("Packet rows need direction or source/destination IP addresses.")
+        if "src_port" not in data.columns:
+            data["src_port"] = 0
+        if "dst_port" not in data.columns:
+            data["dst_port"] = 0
+        data["direction"] = np.where(
+            [
+                (str(src_ip), int(src_port)) <= (str(dst_ip), int(dst_port))
+                for src_ip, dst_ip, src_port, dst_port in zip(
+                    data["src_ip"], data["dst_ip"], data["src_port"], data["dst_port"]
+                )
+            ],
+            "forward",
+            "backward",
+        )
+    if not data["direction"].isin({"forward", "backward"}).all():
+        raise ValueError("Packet direction must be 'forward' or 'backward'.")
+    data["forward_length"] = np.where(
+        data["direction"] == "forward", data["packet_length"], 0
+    )
+    data["backward_length"] = np.where(
+        data["direction"] == "backward", data["packet_length"], 0
+    )
 
     grouped = (
-        data.groupby("flow_id", dropna=False)
+        data.groupby("flow_id", dropna=False, sort=False)
         .agg(
             packet_count=("packet_length", "size"),
             byte_count=("packet_length", "sum"),
             timestamp_start=("timestamp", "min"),
             timestamp_end=("timestamp", "max"),
             mean_packet_size=("packet_length", "mean"),
-            std_packet_size=("packet_length", "std"),
+            std_packet_size=("packet_length", lambda values: values.std(ddof=0)),
             min_packet_size=("packet_length", "min"),
             max_packet_size=("packet_length", "max"),
+            forward_packet_count=("direction", lambda values: int((values == "forward").sum())),
+            backward_packet_count=("direction", lambda values: int((values == "backward").sum())),
+            forward_bytes=("forward_length", "sum"),
+            backward_bytes=("backward_length", "sum"),
         )
         .reset_index()
     )
 
     grouped["flow_duration"] = (
-        (grouped["timestamp_end"] - grouped["timestamp_start"]).dt.total_seconds()
-        .fillna(0.0)
+        (grouped["timestamp_end"] - grouped["timestamp_start"])
+        .dt.total_seconds()
+        .round(4)
     )
+    grouped["mean_packet_size"] = grouped["mean_packet_size"].round(1)
+    grouped["std_packet_size"] = grouped["std_packet_size"].round(1)
     grouped["packets_per_second"] = np.where(
         grouped["flow_duration"] > 0,
         grouped["packet_count"] / grouped["flow_duration"],
-        0.0,
+        np.nan,
     )
     grouped["bytes_per_second"] = np.where(
         grouped["flow_duration"] > 0,
         grouped["byte_count"] / grouped["flow_duration"],
-        0.0,
+        np.nan,
     )
-
-    if "direction" in data.columns:
-        direction_summary = (
-            data.groupby("flow_id")
-            .agg(
-                forward_packet_count=("direction", lambda s: int((s == "forward").sum())),
-                backward_packet_count=("direction", lambda s: int((s == "backward").sum())),
-            )
-            .reset_index()
-        )
-        grouped = grouped.merge(direction_summary, on="flow_id", how="left")
-        grouped["forward_bytes"] = grouped.get("forward_packet_count", 0).fillna(0) * grouped["mean_packet_size"]
-        grouped["backward_bytes"] = grouped.get("backward_packet_count", 0).fillna(0) * grouped["mean_packet_size"]
-    else:
-        grouped["forward_packet_count"] = 0
-        grouped["backward_packet_count"] = 0
-        grouped["forward_bytes"] = 0.0
-        grouped["backward_bytes"] = 0.0
 
     grouped["direction_ratio"] = np.where(
         grouped["forward_packet_count"] + grouped["backward_packet_count"] > 0,
-        grouped["forward_packet_count"] / (grouped["forward_packet_count"] + grouped["backward_packet_count"]),
+        grouped["forward_packet_count"] / grouped["packet_count"],
         0.0,
-    )
+    ).round(3)
 
-    if "inter_arrival_time" in data.columns:
-        inter_summary = data.groupby("flow_id")["inter_arrival_time"].agg([
-            "mean",
-            "std",
-            "min",
-            "max",
-        ])
-        inter_summary = inter_summary.rename(columns={
-            "mean": "mean_inter_arrival_time",
-            "std": "std_inter_arrival_time",
-            "min": "min_inter_arrival_time",
-            "max": "max_inter_arrival_time",
-        })
-        grouped = grouped.merge(inter_summary, on="flow_id", how="left")
-    else:
-        grouped["mean_inter_arrival_time"] = 0.0
-        grouped["std_inter_arrival_time"] = 0.0
-        grouped["min_inter_arrival_time"] = 0.0
-        grouped["max_inter_arrival_time"] = 0.0
+    inter_summary = data.groupby("flow_id", sort=False)["timestamp"].apply(
+        lambda values: values.sort_values().diff().dt.total_seconds().dropna().to_numpy()
+    )
+    inter_stats = []
+    for flow_id, deltas in inter_summary.items():
+        if len(deltas):
+            inter_stats.append(
+                {
+                    "flow_id": flow_id,
+                    "mean_inter_arrival_time": round(float(np.mean(deltas)), 5),
+                    "std_inter_arrival_time": round(float(np.std(deltas)), 5),
+                    "min_inter_arrival_time": round(float(np.min(deltas)), 5),
+                    "max_inter_arrival_time": round(float(np.max(deltas)), 5),
+                }
+            )
+        else:
+            inter_stats.append(
+                {
+                    "flow_id": flow_id,
+                    "mean_inter_arrival_time": np.nan,
+                    "std_inter_arrival_time": np.nan,
+                    "min_inter_arrival_time": np.nan,
+                    "max_inter_arrival_time": np.nan,
+                }
+            )
+    grouped = grouped.merge(pd.DataFrame(inter_stats), on="flow_id", how="left")
 
     grouped["experiment_id"] = "pcap_experiment"
     grouped["scenario_id"] = "pcap_scenario"

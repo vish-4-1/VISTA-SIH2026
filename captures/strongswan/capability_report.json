@@ -1,5 +1,6 @@
 {
-  "timestamp": "2026-10-09T18:48:15.534612+00:00",
+  "timestamp": "2026-10-10T20:27:11.933930+00:00",
+  "status": "PARTIAL",
   "runtime": {
     "docker": true,
     "containers": {
@@ -11,11 +12,11 @@
       14,
       15
     ],
-    "supported_modes": [
+    "configuration_mode_options": [
       "tunnel",
       "transport"
     ],
-    "supported_ciphers": [
+    "configuration_cipher_options": [
       "aes128",
       "aes256",
       "aes128gcm16",
@@ -28,53 +29,1411 @@
         14,
         15
       ],
-      "ciphers": [
-        "aes128",
-        "aes256",
-        "aes128gcm16",
-        "aes256gcm16"
-      ]
-    }
+      "aes_cbc_transform": true,
+      "aes_gcm_transform": false
+    },
+    "strongswan_version": "strongSwan swanctl 5.9.8"
   },
-  "capabilities": {
-    "tunnel_mode": true,
-    "transport_mode": "configured but not live verified",
-    "aes128": false,
-    "aes256": true,
-    "aes128gcm": false,
-    "aes256gcm": true,
-    "dh_group_modp_2048": true,
-    "dh_group_modp_3072": true,
-    "dh_group_ecp_256": false,
-    "ipv4": true,
-    "ipv6": false,
-    "pfs_enabled": true,
-    "pfs_disabled": "configured but not live verified",
-    "traffic_workloads": [
-      "icmpv4",
-      "udp_rtp",
-      "http",
-      "https",
-      "smtp",
-      "whatsapp",
-      "video",
-      "icmpv6"
+  "configurationSupport": {
+    "modes": [
+      "tunnel",
+      "transport"
     ],
-    "status": {
-      "tunnel_mode": "PASS",
-      "transport_mode": "PARTIAL",
-      "aes128": "PASS",
-      "aes256": "PASS",
-      "aes128gcm": "PARTIAL",
-      "aes256gcm": "PASS",
-      "dh_group_modp_2048": "PASS",
-      "dh_group_modp_3072": "PASS",
-      "dh_group_ecp_256": "NOT_TESTED",
-      "ipv4": "PASS",
-      "ipv6": "BLOCKED",
-      "pfs_enabled": "PASS",
-      "pfs_disabled": "PARTIAL"
-    }
+    "cipherOptions": [
+      "aes128",
+      "aes128gcm",
+      "aes128gcm16",
+      "aes256",
+      "aes256gcm",
+      "aes256gcm16"
+    ],
+    "dhGroupOptions": [
+      14,
+      15,
+      19,
+      20
+    ]
   },
-  "status": "PARTIAL"
+  "runtimeAvailability": {
+    "ikeDhGroups": [
+      14,
+      15
+    ],
+    "aesCbcTransformListed": true,
+    "aesGcmTransformListed": false,
+    "note": "Algorithm-list visibility is not treated as proof of negotiation; PASS requires a live experiment record."
+  },
+  "capabilityStatus": {
+    "tunnel_mode": "PASS",
+    "aes128gcm": "PASS",
+    "aes256gcm": "PASS",
+    "aes128cbc_hmac": "PASS",
+    "aes256cbc_hmac": "PASS",
+    "dh_group_modp_2048": "PASS",
+    "dh_group_modp_3072": "PASS",
+    "dh_group_ecp_256": "BLOCKED",
+    "pfs_enabled": "PASS",
+    "pfs_disabled": "PASS",
+    "ipv4_icmp": "PASS",
+    "transport_mode": "NOT TESTED",
+    "ipv6": "BLOCKED",
+    "pcap_capture": "PASS"
+  },
+  "experiments": [
+    {
+      "scenarioId": "20261009T184749Z",
+      "status": "NOT TESTED",
+      "reportedStatus": "verified",
+      "configuration": {
+        "mode": "tunnel",
+        "cipher": "aes256gcm16",
+        "dhGroup": 14,
+        "pfs": true,
+        "ipVersion": "IPv4",
+        "trafficType": "icmpv4"
+      },
+      "negotiatedSa": {
+        "ike": null,
+        "child": null
+      },
+      "trafficVerification": null,
+      "artifacts": null,
+      "errors": []
+    },
+    {
+      "scenarioId": "20261009T185740Z",
+      "status": "NOT TESTED",
+      "reportedStatus": "verified",
+      "configuration": {
+        "mode": "tunnel",
+        "cipher": "aes256gcm16",
+        "dhGroup": 14,
+        "pfs": true,
+        "ipVersion": "IPv4",
+        "trafficType": "icmpv4"
+      },
+      "negotiatedSa": {
+        "ike": null,
+        "child": null
+      },
+      "trafficVerification": null,
+      "artifacts": null,
+      "errors": []
+    },
+    {
+      "scenarioId": "final-baseline-aes256-gcm-pfs",
+      "status": "PASS",
+      "reportedStatus": "PASS",
+      "configuration": {
+        "mode": "tunnel",
+        "cipher": "aes256gcm16",
+        "dhGroup": 14,
+        "pfs": true,
+        "ipVersion": "IPv4",
+        "trafficType": "icmpv4"
+      },
+      "negotiatedSa": {
+        "ike": {
+          "version": 2,
+          "encryption": "AES_CBC",
+          "encryptionKeySize": 256,
+          "integrity": "HMAC_SHA2_256_128",
+          "prf": "PRF_HMAC_SHA2_256",
+          "dhGroup": 14,
+          "dhGroupName": "MODP_2048"
+        },
+        "child": {
+          "name": "pc-tunnel",
+          "state": "INSTALLED",
+          "mode": "TUNNEL",
+          "protocol": "ESP",
+          "encryption": "AES_GCM_16",
+          "encryptionKeySize": 256,
+          "integrity": null,
+          "pfsGroup": 14,
+          "pfsGroupName": "MODP_2048",
+          "localTrafficSelector": "172.20.0.2/32",
+          "remoteTrafficSelector": "172.20.0.3/32",
+          "bytesIn": 0,
+          "bytesOut": 0,
+          "packetsIn": 0,
+          "packetsOut": 0,
+          "spiIn": "c7286219",
+          "spiOut": "cce02d39"
+        }
+      },
+      "trafficVerification": {
+        "allIcmpRepliesReceived": true,
+        "childSaCountersIncreased": true
+      },
+      "artifacts": {
+        "pcap": "C:\\vista\\captures\\strongswan\\experiments\\final-baseline-aes256-gcm-pfs\\traffic.pcap",
+        "result": "C:\\vista\\captures\\strongswan\\experiments\\final-baseline-aes256-gcm-pfs\\experiment_result.json"
+      },
+      "errors": []
+    },
+    {
+      "scenarioId": "final-baseline-no-host-secret-configs",
+      "status": "PASS",
+      "reportedStatus": "PASS",
+      "configuration": {
+        "mode": "tunnel",
+        "cipher": "aes256gcm16",
+        "dhGroup": 14,
+        "pfs": true,
+        "ipVersion": "IPv4",
+        "trafficType": "icmpv4"
+      },
+      "negotiatedSa": {
+        "ike": {
+          "version": 2,
+          "encryption": "AES_CBC",
+          "encryptionKeySize": 256,
+          "integrity": "HMAC_SHA2_256_128",
+          "prf": "PRF_HMAC_SHA2_256",
+          "dhGroup": 14,
+          "dhGroupName": "MODP_2048"
+        },
+        "child": {
+          "name": "pc-tunnel",
+          "state": "INSTALLED",
+          "mode": "TUNNEL",
+          "protocol": "ESP",
+          "encryption": "AES_GCM_16",
+          "encryptionKeySize": 256,
+          "integrity": null,
+          "pfsGroup": 14,
+          "pfsGroupName": "MODP_2048",
+          "localTrafficSelector": "172.20.0.2/32",
+          "remoteTrafficSelector": "172.20.0.3/32",
+          "bytesIn": 0,
+          "bytesOut": 0,
+          "packetsIn": 0,
+          "packetsOut": 0,
+          "spiIn": "ce09d07a",
+          "spiOut": "c94f5306"
+        }
+      },
+      "trafficVerification": {
+        "allIcmpRepliesReceived": true,
+        "childSaCountersIncreased": true
+      },
+      "artifacts": {
+        "pcap": "C:\\vista\\captures\\strongswan\\experiments\\final-baseline-no-host-secret-configs\\traffic.pcap",
+        "result": "C:\\vista\\captures\\strongswan\\experiments\\final-baseline-no-host-secret-configs\\experiment_result.json"
+      },
+      "errors": []
+    },
+    {
+      "scenarioId": "live-aes128-cbc-hmac-modp2048-pfs",
+      "status": "PASS",
+      "reportedStatus": "PASS",
+      "configuration": {
+        "mode": "tunnel",
+        "cipher": "aes128",
+        "dhGroup": 14,
+        "pfs": true,
+        "ipVersion": "IPv4",
+        "trafficType": "icmpv4"
+      },
+      "negotiatedSa": {
+        "ike": {
+          "version": 2,
+          "encryption": "AES_CBC",
+          "encryptionKeySize": 256,
+          "integrity": "HMAC_SHA2_256_128",
+          "prf": "PRF_HMAC_SHA2_256",
+          "dhGroup": 14,
+          "dhGroupName": "MODP_2048"
+        },
+        "child": {
+          "name": "pc-tunnel",
+          "state": "INSTALLED",
+          "mode": "TUNNEL",
+          "protocol": "ESP",
+          "encryption": "AES_CBC",
+          "encryptionKeySize": 128,
+          "integrity": "HMAC_SHA2_256_128",
+          "pfsGroup": 14,
+          "pfsGroupName": "MODP_2048",
+          "localTrafficSelector": "172.20.0.2/32",
+          "remoteTrafficSelector": "172.20.0.3/32",
+          "bytesIn": 0,
+          "bytesOut": 0,
+          "packetsIn": 0,
+          "packetsOut": 0,
+          "spiIn": "c47065f9",
+          "spiOut": "c07844fa"
+        }
+      },
+      "trafficVerification": {
+        "allIcmpRepliesReceived": true,
+        "childSaCountersIncreased": true
+      },
+      "artifacts": {
+        "pcap": "C:\\vista\\captures\\strongswan\\experiments\\live-aes128-cbc-hmac-modp2048-pfs\\traffic.pcap",
+        "result": "C:\\vista\\captures\\strongswan\\experiments\\live-aes128-cbc-hmac-modp2048-pfs\\experiment_result.json"
+      },
+      "errors": []
+    },
+    {
+      "scenarioId": "live-aes128-gcm-modp2048-pfs",
+      "status": "FAIL",
+      "reportedStatus": "FAIL",
+      "configuration": {
+        "mode": "tunnel",
+        "cipher": "aes128gcm16",
+        "dhGroup": 14,
+        "pfs": true,
+        "ipVersion": "IPv4",
+        "trafficType": "icmpv4"
+      },
+      "negotiatedSa": {
+        "ike": {
+          "version": 2,
+          "encryption": "AES_CBC",
+          "encryptionKeySize": 256,
+          "integrity": "HMAC_SHA2_256_128",
+          "prf": "PRF_HMAC_SHA2_256",
+          "dhGroup": 14,
+          "dhGroupName": "MODP_2048"
+        },
+        "child": {
+          "name": "pc-tunnel",
+          "state": "INSTALLED",
+          "mode": "TUNNEL",
+          "protocol": "ESP",
+          "encryption": "AES_GCM_16",
+          "encryptionKeySize": 128,
+          "integrity": null,
+          "pfsGroup": null,
+          "pfsGroupName": null,
+          "localTrafficSelector": "172.20.0.2/32",
+          "remoteTrafficSelector": "172.20.0.3/32",
+          "bytesIn": 0,
+          "bytesOut": 0,
+          "packetsIn": 0,
+          "packetsOut": 0,
+          "spiIn": "ce63463b",
+          "spiOut": "cc39aec1"
+        }
+      },
+      "trafficVerification": null,
+      "artifacts": null,
+      "errors": [
+        "Negotiated child pfsGroup was None; expected 14.",
+        "Negotiated CHILD_SA PFS was False; expected True."
+      ]
+    },
+    {
+      "scenarioId": "live-aes128-gcm-modp2048-pfs-capture",
+      "status": "PASS",
+      "reportedStatus": "PASS",
+      "configuration": {
+        "mode": "tunnel",
+        "cipher": "aes128gcm16",
+        "dhGroup": 14,
+        "pfs": true,
+        "ipVersion": "IPv4",
+        "trafficType": "icmpv4"
+      },
+      "negotiatedSa": {
+        "ike": {
+          "version": 2,
+          "encryption": "AES_CBC",
+          "encryptionKeySize": 256,
+          "integrity": "HMAC_SHA2_256_128",
+          "prf": "PRF_HMAC_SHA2_256",
+          "dhGroup": 14,
+          "dhGroupName": "MODP_2048"
+        },
+        "child": {
+          "name": "pc-tunnel",
+          "state": "INSTALLED",
+          "mode": "TUNNEL",
+          "protocol": "ESP",
+          "encryption": "AES_GCM_16",
+          "encryptionKeySize": 128,
+          "integrity": null,
+          "pfsGroup": 14,
+          "pfsGroupName": "MODP_2048",
+          "localTrafficSelector": "172.20.0.2/32",
+          "remoteTrafficSelector": "172.20.0.3/32",
+          "bytesIn": 0,
+          "bytesOut": 0,
+          "packetsIn": 0,
+          "packetsOut": 0,
+          "spiIn": "c75c6011",
+          "spiOut": "ca574075"
+        }
+      },
+      "trafficVerification": {
+        "allIcmpRepliesReceived": true,
+        "childSaCountersIncreased": true
+      },
+      "artifacts": {
+        "pcap": "C:\\vista\\captures\\strongswan\\experiments\\live-aes128-gcm-modp2048-pfs-capture\\traffic.pcap",
+        "result": "C:\\vista\\captures\\strongswan\\experiments\\live-aes128-gcm-modp2048-pfs-capture\\experiment_result.json"
+      },
+      "errors": []
+    },
+    {
+      "scenarioId": "live-aes128-gcm-modp2048-pfs-retest",
+      "status": "FAIL",
+      "reportedStatus": "FAIL",
+      "configuration": {
+        "mode": "tunnel",
+        "cipher": "aes128gcm16",
+        "dhGroup": 14,
+        "pfs": true,
+        "ipVersion": "IPv4",
+        "trafficType": "icmpv4"
+      },
+      "negotiatedSa": {
+        "ike": {
+          "version": 2,
+          "encryption": "AES_CBC",
+          "encryptionKeySize": 256,
+          "integrity": "HMAC_SHA2_256_128",
+          "prf": "PRF_HMAC_SHA2_256",
+          "dhGroup": 14,
+          "dhGroupName": "MODP_2048"
+        },
+        "child": {
+          "name": "pc-tunnel",
+          "state": "INSTALLED",
+          "mode": "TUNNEL",
+          "protocol": "ESP",
+          "encryption": "AES_GCM_16",
+          "encryptionKeySize": 128,
+          "integrity": null,
+          "pfsGroup": 14,
+          "pfsGroupName": "MODP_2048",
+          "localTrafficSelector": "172.20.0.2/32",
+          "remoteTrafficSelector": "172.20.0.3/32",
+          "bytesIn": 0,
+          "bytesOut": 0,
+          "packetsIn": 0,
+          "packetsOut": 0,
+          "spiIn": "c8d45b0f",
+          "spiOut": "cffb75f9"
+        }
+      },
+      "trafficVerification": null,
+      "artifacts": null,
+      "errors": [
+        "tcpdump capture failed: capture command did not complete"
+      ]
+    },
+    {
+      "scenarioId": "live-aes256-cbc-hmac-modp2048-pfs",
+      "status": "PASS",
+      "reportedStatus": "PASS",
+      "configuration": {
+        "mode": "tunnel",
+        "cipher": "aes256",
+        "dhGroup": 14,
+        "pfs": true,
+        "ipVersion": "IPv4",
+        "trafficType": "icmpv4"
+      },
+      "negotiatedSa": {
+        "ike": {
+          "version": 2,
+          "encryption": "AES_CBC",
+          "encryptionKeySize": 256,
+          "integrity": "HMAC_SHA2_256_128",
+          "prf": "PRF_HMAC_SHA2_256",
+          "dhGroup": 14,
+          "dhGroupName": "MODP_2048"
+        },
+        "child": {
+          "name": "pc-tunnel",
+          "state": "INSTALLED",
+          "mode": "TUNNEL",
+          "protocol": "ESP",
+          "encryption": "AES_CBC",
+          "encryptionKeySize": 256,
+          "integrity": "HMAC_SHA2_256_128",
+          "pfsGroup": 14,
+          "pfsGroupName": "MODP_2048",
+          "localTrafficSelector": "172.20.0.2/32",
+          "remoteTrafficSelector": "172.20.0.3/32",
+          "bytesIn": 0,
+          "bytesOut": 0,
+          "packetsIn": 0,
+          "packetsOut": 0,
+          "spiIn": "ce5b0fe4",
+          "spiOut": "cf6d0890"
+        }
+      },
+      "trafficVerification": {
+        "allIcmpRepliesReceived": true,
+        "childSaCountersIncreased": true
+      },
+      "artifacts": {
+        "pcap": "C:\\vista\\captures\\strongswan\\experiments\\live-aes256-cbc-hmac-modp2048-pfs\\traffic.pcap",
+        "result": "C:\\vista\\captures\\strongswan\\experiments\\live-aes256-cbc-hmac-modp2048-pfs\\experiment_result.json"
+      },
+      "errors": []
+    },
+    {
+      "scenarioId": "live-aes256-gcm-ecp256-blocked",
+      "status": "BLOCKED",
+      "reportedStatus": "BLOCKED",
+      "configuration": {
+        "mode": "tunnel",
+        "cipher": "aes256gcm16",
+        "dhGroup": 19,
+        "pfs": true,
+        "ipVersion": "IPv4",
+        "trafficType": "icmpv4"
+      },
+      "negotiatedSa": {
+        "ike": null,
+        "child": null
+      },
+      "trafficVerification": null,
+      "artifacts": null,
+      "errors": [
+        "DH group '19' is not available in the running strongSwan installation."
+      ]
+    },
+    {
+      "scenarioId": "live-aes256-gcm-modp2048-no-pfs",
+      "status": "PASS",
+      "reportedStatus": "PASS",
+      "configuration": {
+        "mode": "tunnel",
+        "cipher": "aes256gcm16",
+        "dhGroup": 14,
+        "pfs": false,
+        "ipVersion": "IPv4",
+        "trafficType": "icmpv4"
+      },
+      "negotiatedSa": {
+        "ike": {
+          "version": 2,
+          "encryption": "AES_CBC",
+          "encryptionKeySize": 256,
+          "integrity": "HMAC_SHA2_256_128",
+          "prf": "PRF_HMAC_SHA2_256",
+          "dhGroup": 14,
+          "dhGroupName": "MODP_2048"
+        },
+        "child": {
+          "name": "pc-tunnel",
+          "state": "INSTALLED",
+          "mode": "TUNNEL",
+          "protocol": "ESP",
+          "encryption": "AES_GCM_16",
+          "encryptionKeySize": 256,
+          "integrity": null,
+          "pfsGroup": null,
+          "pfsGroupName": null,
+          "localTrafficSelector": "172.20.0.2/32",
+          "remoteTrafficSelector": "172.20.0.3/32",
+          "bytesIn": 0,
+          "bytesOut": 0,
+          "packetsIn": 0,
+          "packetsOut": 0,
+          "spiIn": "ce1926f1",
+          "spiOut": "c4127487"
+        }
+      },
+      "trafficVerification": {
+        "allIcmpRepliesReceived": true,
+        "childSaCountersIncreased": true
+      },
+      "artifacts": {
+        "pcap": "C:\\vista\\captures\\strongswan\\experiments\\live-aes256-gcm-modp2048-no-pfs\\traffic.pcap",
+        "result": "C:\\vista\\captures\\strongswan\\experiments\\live-aes256-gcm-modp2048-no-pfs\\experiment_result.json"
+      },
+      "errors": []
+    },
+    {
+      "scenarioId": "live-aes256-gcm-modp2048-pfs",
+      "status": "PASS",
+      "reportedStatus": "PASS",
+      "configuration": {
+        "mode": "tunnel",
+        "cipher": "aes256gcm16",
+        "dhGroup": 14,
+        "pfs": true,
+        "ipVersion": "IPv4",
+        "trafficType": "icmpv4"
+      },
+      "negotiatedSa": {
+        "ike": {
+          "version": 2,
+          "encryption": "AES_CBC",
+          "encryptionKeySize": 256,
+          "integrity": "HMAC_SHA2_256_128",
+          "prf": "PRF_HMAC_SHA2_256",
+          "dhGroup": 14,
+          "dhGroupName": "MODP_2048"
+        },
+        "child": {
+          "name": "pc-tunnel",
+          "state": "INSTALLED",
+          "mode": "TUNNEL",
+          "protocol": "ESP",
+          "encryption": "AES_GCM_16",
+          "encryptionKeySize": 256,
+          "integrity": null,
+          "pfsGroup": 14,
+          "pfsGroupName": "MODP_2048",
+          "localTrafficSelector": "172.20.0.2/32",
+          "remoteTrafficSelector": "172.20.0.3/32",
+          "bytesIn": 0,
+          "bytesOut": 0,
+          "packetsIn": 0,
+          "packetsOut": 0,
+          "spiIn": "cecb09be",
+          "spiOut": "c8668f5c"
+        }
+      },
+      "trafficVerification": {
+        "allIcmpRepliesReceived": true,
+        "childSaCountersIncreased": true
+      },
+      "artifacts": {
+        "pcap": "C:\\vista\\captures\\strongswan\\experiments\\live-aes256-gcm-modp2048-pfs\\traffic.pcap",
+        "result": "C:\\vista\\captures\\strongswan\\experiments\\live-aes256-gcm-modp2048-pfs\\experiment_result.json"
+      },
+      "errors": []
+    },
+    {
+      "scenarioId": "live-aes256-gcm-modp3072-pfs",
+      "status": "PASS",
+      "reportedStatus": "PASS",
+      "configuration": {
+        "mode": "tunnel",
+        "cipher": "aes256gcm16",
+        "dhGroup": 15,
+        "pfs": true,
+        "ipVersion": "IPv4",
+        "trafficType": "icmpv4"
+      },
+      "negotiatedSa": {
+        "ike": {
+          "version": 2,
+          "encryption": "AES_CBC",
+          "encryptionKeySize": 256,
+          "integrity": "HMAC_SHA2_256_128",
+          "prf": "PRF_HMAC_SHA2_256",
+          "dhGroup": 15,
+          "dhGroupName": "MODP_3072"
+        },
+        "child": {
+          "name": "pc-tunnel",
+          "state": "INSTALLED",
+          "mode": "TUNNEL",
+          "protocol": "ESP",
+          "encryption": "AES_GCM_16",
+          "encryptionKeySize": 256,
+          "integrity": null,
+          "pfsGroup": 15,
+          "pfsGroupName": "MODP_3072",
+          "localTrafficSelector": "172.20.0.2/32",
+          "remoteTrafficSelector": "172.20.0.3/32",
+          "bytesIn": 0,
+          "bytesOut": 0,
+          "packetsIn": 0,
+          "packetsOut": 0,
+          "spiIn": "ccf51ccd",
+          "spiOut": "c7c60a2b"
+        }
+      },
+      "trafficVerification": {
+        "allIcmpRepliesReceived": true,
+        "childSaCountersIncreased": true
+      },
+      "artifacts": {
+        "pcap": "C:\\vista\\captures\\strongswan\\experiments\\live-aes256-gcm-modp3072-pfs\\traffic.pcap",
+        "result": "C:\\vista\\captures\\strongswan\\experiments\\live-aes256-gcm-modp3072-pfs\\experiment_result.json"
+      },
+      "errors": []
+    },
+    {
+      "scenarioId": "tunnel_aes128_dh14_pfs_20261009T190939.088341Z",
+      "status": "PASS",
+      "reportedStatus": "PASS",
+      "configuration": {
+        "mode": "tunnel",
+        "cipher": "aes128",
+        "dhGroup": 14,
+        "pfs": true,
+        "ipVersion": "IPv4",
+        "trafficType": "icmpv4"
+      },
+      "negotiatedSa": {
+        "ike": {
+          "version": 2,
+          "encryption": "AES_CBC",
+          "encryptionKeySize": 256,
+          "integrity": "HMAC_SHA2_256_128",
+          "prf": "PRF_HMAC_SHA2_256",
+          "dhGroup": 14,
+          "dhGroupName": "MODP_2048"
+        },
+        "child": {
+          "name": "pc-tunnel",
+          "state": "INSTALLED",
+          "mode": "TUNNEL",
+          "protocol": "ESP",
+          "encryption": "AES_CBC",
+          "encryptionKeySize": 128,
+          "integrity": "HMAC_SHA2_256_128",
+          "pfsGroup": 14,
+          "pfsGroupName": "MODP_2048",
+          "localTrafficSelector": "172.20.0.2/32",
+          "remoteTrafficSelector": "172.20.0.3/32",
+          "bytesIn": 0,
+          "bytesOut": 0,
+          "packetsIn": 0,
+          "packetsOut": 0,
+          "spiIn": "c7f0d851",
+          "spiOut": "c69a8376"
+        }
+      },
+      "trafficVerification": {
+        "allIcmpRepliesReceived": true,
+        "childSaCountersIncreased": true
+      },
+      "artifacts": {
+        "pcap": "C:\\vista\\captures\\strongswan\\experiments\\tunnel_aes128_dh14_pfs_20261009T190939.088341Z\\traffic.pcap",
+        "result": "C:\\vista\\captures\\strongswan\\experiments\\tunnel_aes128_dh14_pfs_20261009T190939.088341Z\\experiment_result.json"
+      },
+      "errors": []
+    },
+    {
+      "scenarioId": "tunnel_aes128_dh14_pfs_20261009T191339.301466Z",
+      "status": "PASS",
+      "reportedStatus": "PASS",
+      "configuration": {
+        "mode": "tunnel",
+        "cipher": "aes128",
+        "dhGroup": 14,
+        "pfs": true,
+        "ipVersion": "IPv4",
+        "trafficType": "icmpv4"
+      },
+      "negotiatedSa": {
+        "ike": {
+          "version": 2,
+          "encryption": "AES_CBC",
+          "encryptionKeySize": 256,
+          "integrity": "HMAC_SHA2_256_128",
+          "prf": "PRF_HMAC_SHA2_256",
+          "dhGroup": 14,
+          "dhGroupName": "MODP_2048"
+        },
+        "child": {
+          "name": "pc-tunnel",
+          "state": "INSTALLED",
+          "mode": "TUNNEL",
+          "protocol": "ESP",
+          "encryption": "AES_CBC",
+          "encryptionKeySize": 128,
+          "integrity": "HMAC_SHA2_256_128",
+          "pfsGroup": 14,
+          "pfsGroupName": "MODP_2048",
+          "localTrafficSelector": "172.20.0.2/32",
+          "remoteTrafficSelector": "172.20.0.3/32",
+          "bytesIn": 0,
+          "bytesOut": 0,
+          "packetsIn": 0,
+          "packetsOut": 0,
+          "spiIn": "c3a07b75",
+          "spiOut": "c558be30"
+        }
+      },
+      "trafficVerification": {
+        "allIcmpRepliesReceived": true,
+        "childSaCountersIncreased": true
+      },
+      "artifacts": {
+        "pcap": "C:\\vista\\captures\\strongswan\\experiments\\tunnel_aes128_dh14_pfs_20261009T191339.301466Z\\traffic.pcap",
+        "result": "C:\\vista\\captures\\strongswan\\experiments\\tunnel_aes128_dh14_pfs_20261009T191339.301466Z\\experiment_result.json"
+      },
+      "errors": []
+    },
+    {
+      "scenarioId": "tunnel_aes128gcm16_dh14_pfs_20261009T190918.254938Z",
+      "status": "PASS",
+      "reportedStatus": "PASS",
+      "configuration": {
+        "mode": "tunnel",
+        "cipher": "aes128gcm16",
+        "dhGroup": 14,
+        "pfs": true,
+        "ipVersion": "IPv4",
+        "trafficType": "icmpv4"
+      },
+      "negotiatedSa": {
+        "ike": {
+          "version": 2,
+          "encryption": "AES_CBC",
+          "encryptionKeySize": 256,
+          "integrity": "HMAC_SHA2_256_128",
+          "prf": "PRF_HMAC_SHA2_256",
+          "dhGroup": 14,
+          "dhGroupName": "MODP_2048"
+        },
+        "child": {
+          "name": "pc-tunnel",
+          "state": "INSTALLED",
+          "mode": "TUNNEL",
+          "protocol": "ESP",
+          "encryption": "AES_GCM_16",
+          "encryptionKeySize": 128,
+          "integrity": null,
+          "pfsGroup": 14,
+          "pfsGroupName": "MODP_2048",
+          "localTrafficSelector": "172.20.0.2/32",
+          "remoteTrafficSelector": "172.20.0.3/32",
+          "bytesIn": 0,
+          "bytesOut": 0,
+          "packetsIn": 0,
+          "packetsOut": 0,
+          "spiIn": "c9e319bc",
+          "spiOut": "c458ce7f"
+        }
+      },
+      "trafficVerification": {
+        "allIcmpRepliesReceived": true,
+        "childSaCountersIncreased": true
+      },
+      "artifacts": {
+        "pcap": "C:\\vista\\captures\\strongswan\\experiments\\tunnel_aes128gcm16_dh14_pfs_20261009T190918.254938Z\\traffic.pcap",
+        "result": "C:\\vista\\captures\\strongswan\\experiments\\tunnel_aes128gcm16_dh14_pfs_20261009T190918.254938Z\\experiment_result.json"
+      },
+      "errors": []
+    },
+    {
+      "scenarioId": "tunnel_aes128gcm16_dh14_pfs_20261009T191315.848129Z",
+      "status": "PASS",
+      "reportedStatus": "PASS",
+      "configuration": {
+        "mode": "tunnel",
+        "cipher": "aes128gcm16",
+        "dhGroup": 14,
+        "pfs": true,
+        "ipVersion": "IPv4",
+        "trafficType": "icmpv4"
+      },
+      "negotiatedSa": {
+        "ike": {
+          "version": 2,
+          "encryption": "AES_CBC",
+          "encryptionKeySize": 256,
+          "integrity": "HMAC_SHA2_256_128",
+          "prf": "PRF_HMAC_SHA2_256",
+          "dhGroup": 14,
+          "dhGroupName": "MODP_2048"
+        },
+        "child": {
+          "name": "pc-tunnel",
+          "state": "INSTALLED",
+          "mode": "TUNNEL",
+          "protocol": "ESP",
+          "encryption": "AES_GCM_16",
+          "encryptionKeySize": 128,
+          "integrity": null,
+          "pfsGroup": 14,
+          "pfsGroupName": "MODP_2048",
+          "localTrafficSelector": "172.20.0.2/32",
+          "remoteTrafficSelector": "172.20.0.3/32",
+          "bytesIn": 0,
+          "bytesOut": 0,
+          "packetsIn": 0,
+          "packetsOut": 0,
+          "spiIn": "c54ae89c",
+          "spiOut": "cd166eca"
+        }
+      },
+      "trafficVerification": {
+        "allIcmpRepliesReceived": true,
+        "childSaCountersIncreased": true
+      },
+      "artifacts": {
+        "pcap": "C:\\vista\\captures\\strongswan\\experiments\\tunnel_aes128gcm16_dh14_pfs_20261009T191315.848129Z\\traffic.pcap",
+        "result": "C:\\vista\\captures\\strongswan\\experiments\\tunnel_aes128gcm16_dh14_pfs_20261009T191315.848129Z\\experiment_result.json"
+      },
+      "errors": []
+    },
+    {
+      "scenarioId": "tunnel_aes256_dh14_pfs_20261009T190949.719644Z",
+      "status": "PASS",
+      "reportedStatus": "PASS",
+      "configuration": {
+        "mode": "tunnel",
+        "cipher": "aes256",
+        "dhGroup": 14,
+        "pfs": true,
+        "ipVersion": "IPv4",
+        "trafficType": "icmpv4"
+      },
+      "negotiatedSa": {
+        "ike": {
+          "version": 2,
+          "encryption": "AES_CBC",
+          "encryptionKeySize": 256,
+          "integrity": "HMAC_SHA2_256_128",
+          "prf": "PRF_HMAC_SHA2_256",
+          "dhGroup": 14,
+          "dhGroupName": "MODP_2048"
+        },
+        "child": {
+          "name": "pc-tunnel",
+          "state": "INSTALLED",
+          "mode": "TUNNEL",
+          "protocol": "ESP",
+          "encryption": "AES_CBC",
+          "encryptionKeySize": 256,
+          "integrity": "HMAC_SHA2_256_128",
+          "pfsGroup": 14,
+          "pfsGroupName": "MODP_2048",
+          "localTrafficSelector": "172.20.0.2/32",
+          "remoteTrafficSelector": "172.20.0.3/32",
+          "bytesIn": 0,
+          "bytesOut": 0,
+          "packetsIn": 0,
+          "packetsOut": 0,
+          "spiIn": "c8a4f1f1",
+          "spiOut": "c765e7a7"
+        }
+      },
+      "trafficVerification": {
+        "allIcmpRepliesReceived": true,
+        "childSaCountersIncreased": true
+      },
+      "artifacts": {
+        "pcap": "C:\\vista\\captures\\strongswan\\experiments\\tunnel_aes256_dh14_pfs_20261009T190949.719644Z\\traffic.pcap",
+        "result": "C:\\vista\\captures\\strongswan\\experiments\\tunnel_aes256_dh14_pfs_20261009T190949.719644Z\\experiment_result.json"
+      },
+      "errors": []
+    },
+    {
+      "scenarioId": "tunnel_aes256_dh14_pfs_20261009T191351.090433Z",
+      "status": "PASS",
+      "reportedStatus": "PASS",
+      "configuration": {
+        "mode": "tunnel",
+        "cipher": "aes256",
+        "dhGroup": 14,
+        "pfs": true,
+        "ipVersion": "IPv4",
+        "trafficType": "icmpv4"
+      },
+      "negotiatedSa": {
+        "ike": {
+          "version": 2,
+          "encryption": "AES_CBC",
+          "encryptionKeySize": 256,
+          "integrity": "HMAC_SHA2_256_128",
+          "prf": "PRF_HMAC_SHA2_256",
+          "dhGroup": 14,
+          "dhGroupName": "MODP_2048"
+        },
+        "child": {
+          "name": "pc-tunnel",
+          "state": "INSTALLED",
+          "mode": "TUNNEL",
+          "protocol": "ESP",
+          "encryption": "AES_CBC",
+          "encryptionKeySize": 256,
+          "integrity": "HMAC_SHA2_256_128",
+          "pfsGroup": 14,
+          "pfsGroupName": "MODP_2048",
+          "localTrafficSelector": "172.20.0.2/32",
+          "remoteTrafficSelector": "172.20.0.3/32",
+          "bytesIn": 0,
+          "bytesOut": 0,
+          "packetsIn": 0,
+          "packetsOut": 0,
+          "spiIn": "c5f7f69c",
+          "spiOut": "c4712b08"
+        }
+      },
+      "trafficVerification": {
+        "allIcmpRepliesReceived": true,
+        "childSaCountersIncreased": true
+      },
+      "artifacts": {
+        "pcap": "C:\\vista\\captures\\strongswan\\experiments\\tunnel_aes256_dh14_pfs_20261009T191351.090433Z\\traffic.pcap",
+        "result": "C:\\vista\\captures\\strongswan\\experiments\\tunnel_aes256_dh14_pfs_20261009T191351.090433Z\\experiment_result.json"
+      },
+      "errors": []
+    },
+    {
+      "scenarioId": "tunnel_aes256gcm16_dh14_no-pfs_20261009T191010.943512Z",
+      "status": "PASS",
+      "reportedStatus": "PASS",
+      "configuration": {
+        "mode": "tunnel",
+        "cipher": "aes256gcm16",
+        "dhGroup": 14,
+        "pfs": false,
+        "ipVersion": "IPv4",
+        "trafficType": "icmpv4"
+      },
+      "negotiatedSa": {
+        "ike": {
+          "version": 2,
+          "encryption": "AES_CBC",
+          "encryptionKeySize": 256,
+          "integrity": "HMAC_SHA2_256_128",
+          "prf": "PRF_HMAC_SHA2_256",
+          "dhGroup": 14,
+          "dhGroupName": "MODP_2048"
+        },
+        "child": {
+          "name": "pc-tunnel",
+          "state": "INSTALLED",
+          "mode": "TUNNEL",
+          "protocol": "ESP",
+          "encryption": "AES_GCM_16",
+          "encryptionKeySize": 256,
+          "integrity": null,
+          "pfsGroup": null,
+          "pfsGroupName": null,
+          "localTrafficSelector": "172.20.0.2/32",
+          "remoteTrafficSelector": "172.20.0.3/32",
+          "bytesIn": 0,
+          "bytesOut": 0,
+          "packetsIn": 0,
+          "packetsOut": 0,
+          "spiIn": "c785da26",
+          "spiOut": "c987aa20"
+        }
+      },
+      "trafficVerification": {
+        "allIcmpRepliesReceived": true,
+        "childSaCountersIncreased": true
+      },
+      "artifacts": {
+        "pcap": "C:\\vista\\captures\\strongswan\\experiments\\tunnel_aes256gcm16_dh14_no-pfs_20261009T191010.943512Z\\traffic.pcap",
+        "result": "C:\\vista\\captures\\strongswan\\experiments\\tunnel_aes256gcm16_dh14_no-pfs_20261009T191010.943512Z\\experiment_result.json"
+      },
+      "errors": []
+    },
+    {
+      "scenarioId": "tunnel_aes256gcm16_dh14_no-pfs_20261009T191413.627246Z",
+      "status": "PASS",
+      "reportedStatus": "PASS",
+      "configuration": {
+        "mode": "tunnel",
+        "cipher": "aes256gcm16",
+        "dhGroup": 14,
+        "pfs": false,
+        "ipVersion": "IPv4",
+        "trafficType": "icmpv4"
+      },
+      "negotiatedSa": {
+        "ike": {
+          "version": 2,
+          "encryption": "AES_CBC",
+          "encryptionKeySize": 256,
+          "integrity": "HMAC_SHA2_256_128",
+          "prf": "PRF_HMAC_SHA2_256",
+          "dhGroup": 14,
+          "dhGroupName": "MODP_2048"
+        },
+        "child": {
+          "name": "pc-tunnel",
+          "state": "INSTALLED",
+          "mode": "TUNNEL",
+          "protocol": "ESP",
+          "encryption": "AES_GCM_16",
+          "encryptionKeySize": 256,
+          "integrity": null,
+          "pfsGroup": null,
+          "pfsGroupName": null,
+          "localTrafficSelector": "172.20.0.2/32",
+          "remoteTrafficSelector": "172.20.0.3/32",
+          "bytesIn": 0,
+          "bytesOut": 0,
+          "packetsIn": 0,
+          "packetsOut": 0,
+          "spiIn": "cf3d5f32",
+          "spiOut": "cdda5abc"
+        }
+      },
+      "trafficVerification": {
+        "allIcmpRepliesReceived": true,
+        "childSaCountersIncreased": true
+      },
+      "artifacts": {
+        "pcap": "C:\\vista\\captures\\strongswan\\experiments\\tunnel_aes256gcm16_dh14_no-pfs_20261009T191413.627246Z\\traffic.pcap",
+        "result": "C:\\vista\\captures\\strongswan\\experiments\\tunnel_aes256gcm16_dh14_no-pfs_20261009T191413.627246Z\\experiment_result.json"
+      },
+      "errors": []
+    },
+    {
+      "scenarioId": "tunnel_aes256gcm16_dh14_pfs_20261009T190928.676101Z",
+      "status": "PASS",
+      "reportedStatus": "PASS",
+      "configuration": {
+        "mode": "tunnel",
+        "cipher": "aes256gcm16",
+        "dhGroup": 14,
+        "pfs": true,
+        "ipVersion": "IPv4",
+        "trafficType": "icmpv4"
+      },
+      "negotiatedSa": {
+        "ike": {
+          "version": 2,
+          "encryption": "AES_CBC",
+          "encryptionKeySize": 256,
+          "integrity": "HMAC_SHA2_256_128",
+          "prf": "PRF_HMAC_SHA2_256",
+          "dhGroup": 14,
+          "dhGroupName": "MODP_2048"
+        },
+        "child": {
+          "name": "pc-tunnel",
+          "state": "INSTALLED",
+          "mode": "TUNNEL",
+          "protocol": "ESP",
+          "encryption": "AES_GCM_16",
+          "encryptionKeySize": 256,
+          "integrity": null,
+          "pfsGroup": 14,
+          "pfsGroupName": "MODP_2048",
+          "localTrafficSelector": "172.20.0.2/32",
+          "remoteTrafficSelector": "172.20.0.3/32",
+          "bytesIn": 0,
+          "bytesOut": 0,
+          "packetsIn": 0,
+          "packetsOut": 0,
+          "spiIn": "c25a6618",
+          "spiOut": "c06c3465"
+        }
+      },
+      "trafficVerification": {
+        "allIcmpRepliesReceived": true,
+        "childSaCountersIncreased": true
+      },
+      "artifacts": {
+        "pcap": "C:\\vista\\captures\\strongswan\\experiments\\tunnel_aes256gcm16_dh14_pfs_20261009T190928.676101Z\\traffic.pcap",
+        "result": "C:\\vista\\captures\\strongswan\\experiments\\tunnel_aes256gcm16_dh14_pfs_20261009T190928.676101Z\\experiment_result.json"
+      },
+      "errors": []
+    },
+    {
+      "scenarioId": "tunnel_aes256gcm16_dh14_pfs_20261009T191021.197854Z",
+      "status": "PASS",
+      "reportedStatus": "PASS",
+      "configuration": {
+        "mode": "tunnel",
+        "cipher": "aes256gcm16",
+        "dhGroup": 14,
+        "pfs": true,
+        "ipVersion": "IPv4",
+        "trafficType": "icmpv4"
+      },
+      "negotiatedSa": {
+        "ike": {
+          "version": 2,
+          "encryption": "AES_CBC",
+          "encryptionKeySize": 256,
+          "integrity": "HMAC_SHA2_256_128",
+          "prf": "PRF_HMAC_SHA2_256",
+          "dhGroup": 14,
+          "dhGroupName": "MODP_2048"
+        },
+        "child": {
+          "name": "pc-tunnel",
+          "state": "INSTALLED",
+          "mode": "TUNNEL",
+          "protocol": "ESP",
+          "encryption": "AES_GCM_16",
+          "encryptionKeySize": 256,
+          "integrity": null,
+          "pfsGroup": 14,
+          "pfsGroupName": "MODP_2048",
+          "localTrafficSelector": "172.20.0.2/32",
+          "remoteTrafficSelector": "172.20.0.3/32",
+          "bytesIn": 0,
+          "bytesOut": 0,
+          "packetsIn": 0,
+          "packetsOut": 0,
+          "spiIn": "cf82900d",
+          "spiOut": "c5fd1684"
+        }
+      },
+      "trafficVerification": {
+        "allIcmpRepliesReceived": true,
+        "childSaCountersIncreased": true
+      },
+      "artifacts": {
+        "pcap": "C:\\vista\\captures\\strongswan\\experiments\\tunnel_aes256gcm16_dh14_pfs_20261009T191021.197854Z\\traffic.pcap",
+        "result": "C:\\vista\\captures\\strongswan\\experiments\\tunnel_aes256gcm16_dh14_pfs_20261009T191021.197854Z\\experiment_result.json"
+      },
+      "errors": []
+    },
+    {
+      "scenarioId": "tunnel_aes256gcm16_dh14_pfs_20261009T191327.596931Z",
+      "status": "PASS",
+      "reportedStatus": "PASS",
+      "configuration": {
+        "mode": "tunnel",
+        "cipher": "aes256gcm16",
+        "dhGroup": 14,
+        "pfs": true,
+        "ipVersion": "IPv4",
+        "trafficType": "icmpv4"
+      },
+      "negotiatedSa": {
+        "ike": {
+          "version": 2,
+          "encryption": "AES_CBC",
+          "encryptionKeySize": 256,
+          "integrity": "HMAC_SHA2_256_128",
+          "prf": "PRF_HMAC_SHA2_256",
+          "dhGroup": 14,
+          "dhGroupName": "MODP_2048"
+        },
+        "child": {
+          "name": "pc-tunnel",
+          "state": "INSTALLED",
+          "mode": "TUNNEL",
+          "protocol": "ESP",
+          "encryption": "AES_GCM_16",
+          "encryptionKeySize": 256,
+          "integrity": null,
+          "pfsGroup": 14,
+          "pfsGroupName": "MODP_2048",
+          "localTrafficSelector": "172.20.0.2/32",
+          "remoteTrafficSelector": "172.20.0.3/32",
+          "bytesIn": 0,
+          "bytesOut": 0,
+          "packetsIn": 0,
+          "packetsOut": 0,
+          "spiIn": "cdb8b0b3",
+          "spiOut": "c481df36"
+        }
+      },
+      "trafficVerification": {
+        "allIcmpRepliesReceived": true,
+        "childSaCountersIncreased": true
+      },
+      "artifacts": {
+        "pcap": "C:\\vista\\captures\\strongswan\\experiments\\tunnel_aes256gcm16_dh14_pfs_20261009T191327.596931Z\\traffic.pcap",
+        "result": "C:\\vista\\captures\\strongswan\\experiments\\tunnel_aes256gcm16_dh14_pfs_20261009T191327.596931Z\\experiment_result.json"
+      },
+      "errors": []
+    },
+    {
+      "scenarioId": "tunnel_aes256gcm16_dh14_pfs_20261009T191424.407169Z",
+      "status": "PASS",
+      "reportedStatus": "PASS",
+      "configuration": {
+        "mode": "tunnel",
+        "cipher": "aes256gcm16",
+        "dhGroup": 14,
+        "pfs": true,
+        "ipVersion": "IPv4",
+        "trafficType": "icmpv4"
+      },
+      "negotiatedSa": {
+        "ike": {
+          "version": 2,
+          "encryption": "AES_CBC",
+          "encryptionKeySize": 256,
+          "integrity": "HMAC_SHA2_256_128",
+          "prf": "PRF_HMAC_SHA2_256",
+          "dhGroup": 14,
+          "dhGroupName": "MODP_2048"
+        },
+        "child": {
+          "name": "pc-tunnel",
+          "state": "INSTALLED",
+          "mode": "TUNNEL",
+          "protocol": "ESP",
+          "encryption": "AES_GCM_16",
+          "encryptionKeySize": 256,
+          "integrity": null,
+          "pfsGroup": 14,
+          "pfsGroupName": "MODP_2048",
+          "localTrafficSelector": "172.20.0.2/32",
+          "remoteTrafficSelector": "172.20.0.3/32",
+          "bytesIn": 0,
+          "bytesOut": 0,
+          "packetsIn": 0,
+          "packetsOut": 0,
+          "spiIn": "c3c9e959",
+          "spiOut": "c82b6c5d"
+        }
+      },
+      "trafficVerification": {
+        "allIcmpRepliesReceived": true,
+        "childSaCountersIncreased": true
+      },
+      "artifacts": {
+        "pcap": "C:\\vista\\captures\\strongswan\\experiments\\tunnel_aes256gcm16_dh14_pfs_20261009T191424.407169Z\\traffic.pcap",
+        "result": "C:\\vista\\captures\\strongswan\\experiments\\tunnel_aes256gcm16_dh14_pfs_20261009T191424.407169Z\\experiment_result.json"
+      },
+      "errors": []
+    },
+    {
+      "scenarioId": "tunnel_aes256gcm16_dh14_pfs_20261010T202701.502614Z",
+      "status": "PASS",
+      "reportedStatus": "PASS",
+      "configuration": {
+        "mode": "tunnel",
+        "cipher": "aes256gcm16",
+        "dhGroup": 14,
+        "pfs": true,
+        "ipVersion": "IPv4",
+        "trafficType": "icmpv4"
+      },
+      "negotiatedSa": {
+        "ike": {
+          "version": 2,
+          "encryption": "AES_CBC",
+          "encryptionKeySize": 256,
+          "integrity": "HMAC_SHA2_256_128",
+          "prf": "PRF_HMAC_SHA2_256",
+          "dhGroup": 14,
+          "dhGroupName": "MODP_2048"
+        },
+        "child": {
+          "name": "pc-tunnel",
+          "state": "INSTALLED",
+          "mode": "TUNNEL",
+          "protocol": "ESP",
+          "encryption": "AES_GCM_16",
+          "encryptionKeySize": 256,
+          "integrity": null,
+          "pfsGroup": 14,
+          "pfsGroupName": "MODP_2048",
+          "localTrafficSelector": "172.20.0.2/32",
+          "remoteTrafficSelector": "172.20.0.3/32",
+          "bytesIn": 0,
+          "bytesOut": 0,
+          "packetsIn": 0,
+          "packetsOut": 0,
+          "spiIn": "c89156b0",
+          "spiOut": "c72f10e3"
+        }
+      },
+      "trafficVerification": {
+        "allIcmpRepliesReceived": true,
+        "childSaCountersIncreased": true
+      },
+      "artifacts": {
+        "pcap": "C:\\vista\\captures\\strongswan\\experiments\\tunnel_aes256gcm16_dh14_pfs_20261010T202701.502614Z\\traffic.pcap",
+        "result": "C:\\vista\\captures\\strongswan\\experiments\\tunnel_aes256gcm16_dh14_pfs_20261010T202701.502614Z\\experiment_result.json"
+      },
+      "errors": []
+    },
+    {
+      "scenarioId": "tunnel_aes256gcm16_dh15_pfs_20261009T191000.561939Z",
+      "status": "PASS",
+      "reportedStatus": "PASS",
+      "configuration": {
+        "mode": "tunnel",
+        "cipher": "aes256gcm16",
+        "dhGroup": 15,
+        "pfs": true,
+        "ipVersion": "IPv4",
+        "trafficType": "icmpv4"
+      },
+      "negotiatedSa": {
+        "ike": {
+          "version": 2,
+          "encryption": "AES_CBC",
+          "encryptionKeySize": 256,
+          "integrity": "HMAC_SHA2_256_128",
+          "prf": "PRF_HMAC_SHA2_256",
+          "dhGroup": 15,
+          "dhGroupName": "MODP_3072"
+        },
+        "child": {
+          "name": "pc-tunnel",
+          "state": "INSTALLED",
+          "mode": "TUNNEL",
+          "protocol": "ESP",
+          "encryption": "AES_GCM_16",
+          "encryptionKeySize": 256,
+          "integrity": null,
+          "pfsGroup": 15,
+          "pfsGroupName": "MODP_3072",
+          "localTrafficSelector": "172.20.0.2/32",
+          "remoteTrafficSelector": "172.20.0.3/32",
+          "bytesIn": 0,
+          "bytesOut": 0,
+          "packetsIn": 0,
+          "packetsOut": 0,
+          "spiIn": "cf6ad0b9",
+          "spiOut": "c3e86889"
+        }
+      },
+      "trafficVerification": {
+        "allIcmpRepliesReceived": true,
+        "childSaCountersIncreased": true
+      },
+      "artifacts": {
+        "pcap": "C:\\vista\\captures\\strongswan\\experiments\\tunnel_aes256gcm16_dh15_pfs_20261009T191000.561939Z\\traffic.pcap",
+        "result": "C:\\vista\\captures\\strongswan\\experiments\\tunnel_aes256gcm16_dh15_pfs_20261009T191000.561939Z\\experiment_result.json"
+      },
+      "errors": []
+    },
+    {
+      "scenarioId": "tunnel_aes256gcm16_dh15_pfs_20261009T191402.689502Z",
+      "status": "PASS",
+      "reportedStatus": "PASS",
+      "configuration": {
+        "mode": "tunnel",
+        "cipher": "aes256gcm16",
+        "dhGroup": 15,
+        "pfs": true,
+        "ipVersion": "IPv4",
+        "trafficType": "icmpv4"
+      },
+      "negotiatedSa": {
+        "ike": {
+          "version": 2,
+          "encryption": "AES_CBC",
+          "encryptionKeySize": 256,
+          "integrity": "HMAC_SHA2_256_128",
+          "prf": "PRF_HMAC_SHA2_256",
+          "dhGroup": 15,
+          "dhGroupName": "MODP_3072"
+        },
+        "child": {
+          "name": "pc-tunnel",
+          "state": "INSTALLED",
+          "mode": "TUNNEL",
+          "protocol": "ESP",
+          "encryption": "AES_GCM_16",
+          "encryptionKeySize": 256,
+          "integrity": null,
+          "pfsGroup": 15,
+          "pfsGroupName": "MODP_3072",
+          "localTrafficSelector": "172.20.0.2/32",
+          "remoteTrafficSelector": "172.20.0.3/32",
+          "bytesIn": 0,
+          "bytesOut": 0,
+          "packetsIn": 0,
+          "packetsOut": 0,
+          "spiIn": "cc36fa88",
+          "spiOut": "c04afcdc"
+        }
+      },
+      "trafficVerification": {
+        "allIcmpRepliesReceived": true,
+        "childSaCountersIncreased": true
+      },
+      "artifacts": {
+        "pcap": "C:\\vista\\captures\\strongswan\\experiments\\tunnel_aes256gcm16_dh15_pfs_20261009T191402.689502Z\\traffic.pcap",
+        "result": "C:\\vista\\captures\\strongswan\\experiments\\tunnel_aes256gcm16_dh15_pfs_20261009T191402.689502Z\\experiment_result.json"
+      },
+      "errors": []
+    }
+  ]
 }

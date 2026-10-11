@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Shield,
   Activity,
@@ -6,14 +6,15 @@ import {
   Lock,
   Radio,
   Network,
-  Server,
 } from 'lucide-react';
 import { usePcapAnalysis } from '../../context/usePcapAnalysis';
+import ThreeCanvas from '../ThreeCanvas';
 import {
+  checkBackendStatus,
   fetchAuditSummary,
   fetchEbpfEvents,
   fetchEbpfStatus,
-  fetchSocStatus,
+  fetchTestbedLiveStatus,
 } from '../../utils/apiClient';
 
 const EMPTY_VALUE = '—';
@@ -29,7 +30,56 @@ function formatTimestamp(value) {
   return Number.isNaN(timestamp.getTime()) ? String(value) : timestamp.toLocaleTimeString();
 }
 
-function EventTable({ events, loading, error }) {
+function getEventId(event) {
+  if (!event) return '';
+  if (event.id) return String(event.id);
+  if (event.timestamp_ns) return `EBPF-${event.timestamp_ns}-${event.pid || 0}`;
+  return `${event.timestamp || ''}:${event.eventType || ''}:${event.pid || ''}:${event.bytes || ''}`;
+}
+
+function getFreshnessState(lastUpdated, now, error) {
+  if (error) {
+    return {
+      label: 'Telemetry Disconnected',
+      indicatorClass: 'is-offline',
+      isStale: true,
+      description: 'Testbed collector API is unreachable or returned an error.',
+    };
+  }
+  if (!lastUpdated) {
+    return {
+      label: 'Connecting to testbed…',
+      indicatorClass: 'is-offline',
+      isStale: false,
+      description: 'Querying live runtime status from backend.',
+    };
+  }
+  const seconds = Math.max(0, Math.floor((now - lastUpdated) / 1000));
+  if (seconds < 5) {
+    return {
+      label: 'Live · Verified',
+      indicatorClass: 'is-online',
+      isStale: false,
+      description: 'Operational status confirmed via live daemon & kernel telemetry.',
+    };
+  }
+  if (seconds < 12) {
+    return {
+      label: `Live · Updated ${seconds}s ago`,
+      indicatorClass: 'is-online',
+      isStale: false,
+      description: 'Telemetry freshly verified.',
+    };
+  }
+  return {
+    label: `Stale · Last update ${seconds}s ago`,
+    indicatorClass: 'is-warning',
+    isStale: true,
+    description: 'Telemetry update delayed. Rendering last-known confirmed state.',
+  };
+}
+
+function EventTable({ events, loading, error, onSelectEvent, selectedEventId }) {
   if (events.length === 0) {
     return (
       <div className="dashboard-empty" role="status">
@@ -61,6 +111,7 @@ function EventTable({ events, loading, error }) {
         <thead>
           <tr>
             <th scope="col">Event Type</th>
+            <th scope="col">Direction / Target</th>
             <th scope="col">Observed Time</th>
             <th scope="col">Process</th>
             <th scope="col">PID</th>
@@ -69,22 +120,39 @@ function EventTable({ events, loading, error }) {
           </tr>
         </thead>
         <tbody>
-          {events.slice(0, 8).map((event, index) => (
-            <tr key={`${event.timestamp || 'event'}-${event.pid ?? 'pid'}-${index}`}>
-              <td>
-                <span className={`event-badge ${getEventBadgeClass(event.eventType)}`}>
-                  {displayValue(event.eventType)}
-                </span>
-              </td>
-              <td className="monospace">{formatTimestamp(event.timestamp)}</td>
-              <td>
-                <span className="process-pill">{displayValue(event.process_name)}</span>
-              </td>
-              <td className="monospace text-muted">{displayValue(event.pid)}</td>
-              <td className="monospace font-semibold">{displayValue(event.bytes)}</td>
-              <td className="monospace font-semibold">{displayValue(event.packets)}</td>
-            </tr>
-          ))}
+          {events.slice(0, 10).map((event) => {
+            const id = getEventId(event);
+            const isSelected = selectedEventId === id;
+            return (
+              <tr
+                key={id}
+                className={isSelected ? 'is-selected-row' : ''}
+                onClick={() => onSelectEvent?.(event)}
+                style={{ cursor: 'pointer' }}
+                title="Click to inspect event details in drawer"
+              >
+                <td>
+                  <span className={`event-badge ${getEventBadgeClass(event.eventType)}`}>
+                    {displayValue(event.eventType)}
+                  </span>
+                </td>
+                <td className="monospace text-muted">
+                  {event.eventType === 'XFRM_OUT'
+                    ? 'Outbound ESP (host-wide; endpoint not correlated)'
+                    : event.eventType === 'XFRM_IN'
+                      ? 'Inbound ESP (host-wide; endpoint not correlated)'
+                      : displayValue(event.fn || event.target)}
+                </td>
+                <td className="monospace">{formatTimestamp(event.timestamp)}</td>
+                <td>
+                  <span className="process-pill">{displayValue(event.process_name)}</span>
+                </td>
+                <td className="monospace text-muted">{displayValue(event.pid)}</td>
+                <td className="monospace font-semibold">{displayValue(event.bytes)}</td>
+                <td className="monospace font-semibold">{displayValue(event.packets)}</td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
@@ -95,62 +163,139 @@ export default function OverviewView({ refreshKey = 0 }) {
   const { analysisResult, file, analysisId, clearAnalysis } = usePcapAnalysis();
   const [events, setEvents] = useState([]);
   const [collectorStatus, setCollectorStatus] = useState(null);
-  const [socStatus, setSocStatus] = useState(null);
   const [auditSummary, setAuditSummary] = useState(null);
+  const [liveStatus, setLiveStatus] = useState(null);
+  const [modelReadiness, setModelReadiness] = useState('checking');
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [statusError, setStatusError] = useState('');
   const [summaryError, setSummaryError] = useState('');
+  const [liveStatusError, setLiveStatusError] = useState('');
 
-  const loadEvents = useCallback(async () => {
-    const [eventsResult, statusResult] = await Promise.allSettled([
+  const [selectedNodeId, setSelectedNodeId] = useState('tunnel');
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [activity, setActivity] = useState(null);
+
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [now, setNow] = useState(() => Date.now());
+
+  const seenEventIdsRef = useRef(new Set());
+  const isInitialLoadRef = useRef(true);
+  const activitySequence = useRef(0);
+  const refreshInFlight = useRef(false);
+  const abortControllerRef = useRef(null);
+
+  // Time ticker for data freshness calculations
+  useEffect(() => {
+    const ticker = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(ticker);
+  }, []);
+
+  const refreshTelemetry = useCallback(async () => {
+    if (refreshInFlight.current) return;
+    refreshInFlight.current = true;
+
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    const [eventsResult, statusResult, liveStatusResult] = await Promise.allSettled([
       fetchEbpfEvents(50),
       fetchEbpfStatus(),
+      fetchTestbedLiveStatus(controller.signal),
     ]);
+
     if (eventsResult.status === 'fulfilled') {
-      setEvents(Array.isArray(eventsResult.value?.events) ? eventsResult.value.events : []);
+      const nextEvents = Array.isArray(eventsResult.value?.events)
+        ? [...eventsResult.value.events].sort((left, right) => {
+            const leftTime = Date.parse(left.timestamp);
+            const rightTime = Date.parse(right.timestamp);
+            if (Number.isNaN(leftTime) || Number.isNaN(rightTime)) return 0;
+            return rightTime - leftTime;
+          })
+        : [];
+      setEvents(nextEvents);
       setError('');
+
+      if (isInitialLoadRef.current) {
+        // Seed initial events so existing buffered events do not falsely animate on initial load
+        for (const ev of nextEvents) {
+          seenEventIdsRef.current.add(getEventId(ev));
+        }
+        isInitialLoadRef.current = false;
+      } else {
+        // Genuine evidence-driven activity marker: only animate when a genuinely new event arrives
+        const newEvents = nextEvents.filter((ev) => {
+          const id = getEventId(ev);
+          const isNew = !seenEventIdsRef.current.has(id);
+          if (isNew) {
+            seenEventIdsRef.current.add(id);
+          }
+          // Kernel hook events are host-wide unless the collector verifies testbed correlation.
+          return isNew && ev.correlation?.scope === 'testbed' && ev.correlation?.verified === true;
+        });
+
+        if (newEvents.length > 0) {
+          const newest = newEvents[0];
+          activitySequence.current += 1;
+          setActivity({ event: newest, sequence: activitySequence.current });
+        }
+      }
     } else {
       setError(eventsResult.reason instanceof Error ? eventsResult.reason.message : String(eventsResult.reason));
     }
+
     if (statusResult.status === 'fulfilled') {
       setCollectorStatus(statusResult.value);
       setStatusError('');
     } else {
       setStatusError(statusResult.reason instanceof Error ? statusResult.reason.message : String(statusResult.reason));
     }
+
+    if (liveStatusResult.status === 'fulfilled') {
+      setLiveStatus(liveStatusResult.value);
+      setLiveStatusError('');
+      setLastUpdated(Date.now());
+    } else {
+      const isAbort = liveStatusResult.reason?.name === 'AbortError';
+      if (!isAbort) {
+        setLiveStatusError(liveStatusResult.reason instanceof Error ? liveStatusResult.reason.message : String(liveStatusResult.reason));
+      }
+    }
+
     setLoading(false);
+    refreshInFlight.current = false;
   }, []);
 
   const loadSummaries = useCallback(async () => {
-    const [socResult, auditResult] = await Promise.allSettled([
-      fetchSocStatus(),
-      fetchAuditSummary(),
-    ]);
-    const failures = [];
-    if (socResult.status === 'fulfilled') {
-      setSocStatus(socResult.value);
-    } else {
-      failures.push(socResult.reason instanceof Error ? socResult.reason.message : String(socResult.reason));
+    try {
+      const summary = await fetchAuditSummary();
+      setAuditSummary(summary);
+      setSummaryError('');
+    } catch (err) {
+      setSummaryError(err instanceof Error ? err.message : String(err));
     }
-    if (auditResult.status === 'fulfilled') {
-      setAuditSummary(auditResult.value);
-    } else {
-      failures.push(auditResult.reason instanceof Error ? auditResult.reason.message : String(auditResult.reason));
-    }
-    setSummaryError(failures.join(' '));
   }, []);
 
   useEffect(() => {
+    isInitialLoadRef.current = true;
+    seenEventIdsRef.current.clear();
+
     const initialPoll = window.setTimeout(() => {
-      void loadEvents();
+      void refreshTelemetry();
     }, 0);
-    const interval = window.setInterval(loadEvents, EVENT_POLL_INTERVAL_MS);
+    const interval = window.setInterval(refreshTelemetry, EVENT_POLL_INTERVAL_MS);
     return () => {
       window.clearTimeout(initialPoll);
       window.clearInterval(interval);
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
     };
-  }, [loadEvents, refreshKey]);
+  }, [refreshTelemetry, refreshKey]);
 
   useEffect(() => {
     const initialSummaryLoad = window.setTimeout(() => {
@@ -159,21 +304,73 @@ export default function OverviewView({ refreshKey = 0 }) {
     return () => window.clearTimeout(initialSummaryLoad);
   }, [loadSummaries, refreshKey]);
 
+  useEffect(() => {
+    let active = true;
+    checkBackendStatus().then((status) => {
+      if (!active) return;
+      if (!status.online) {
+        setModelReadiness('unavailable');
+        return;
+      }
+      const models = Object.values(status.models || {});
+      const hasEligibleModel = models.some((model) => model?.inferenceEnabled === true);
+      const hasLoadedModel = models.some((model) => model?.loaded === true);
+      setModelReadiness(hasEligibleModel ? 'ready' : hasLoadedModel ? 'gated' : 'unavailable');
+    });
+    return () => {
+      active = false;
+    };
+  }, [refreshKey]);
+
   const observedXfrm = events.some(
     (event) => event.eventType === 'XFRM_IN' || event.eventType === 'XFRM_OUT',
   );
   const isCollectorConnected = collectorStatus?.status === 'RUNNING' && collectorStatus?.mode === 'NATIVE_KERNEL_EBPF';
+  const freshness = getFreshnessState(lastUpdated, now, liveStatusError);
 
-  // Strict separation of Live Telemetry vs PCAP metrics
-  const totalFlows = analysisResult?.flows?.length ?? (events.length > 0 ? events.length : socStatus?.totalFlows ?? 0);
-  const totalPackets = analysisResult?.totalPackets ?? analysisResult?.summary?.totalPackets ?? (events.reduce((acc, e) => acc + (Number(e.packets) || 0), 0) || socStatus?.rawPacketsCount || 0);
-  const attackCount = analysisResult?.summary?.attackFlows ?? (analysisResult?.flows?.filter((f) => f.isAttack === 1).length) ?? (socStatus?.attackFlows ?? 0);
-  const benignCount = analysisResult?.summary?.benignFlows ?? (analysisResult?.flows?.filter((f) => f.isAttack === 0).length) ?? (socStatus?.benignFlows ?? 0);
+  // Authoritative operational tunnel state: comes strictly from StrongSwan / XFRM SA status
+  const tunnelState = liveStatus?.tunnel?.state || (liveStatusError ? 'UNAVAILABLE' : 'CONNECTING');
+
+  // Operational traffic metrics:
+  // In PCAP mode: from parsed PCAP analysis
+  // In Live mode use CHILD_SA counters only. Kernel events are host-wide and are not a tunnel counter.
+  const isPcapMode = Boolean(analysisResult);
+  const totalFlows = isPcapMode ? (analysisResult.flows?.length ?? 0) : null;
+
+  const totalPackets = isPcapMode
+    ? (analysisResult.totalPackets ?? analysisResult.summary?.totalPackets ?? null)
+    : (liveStatus?.tunnel?.child?.packetsIn != null && liveStatus?.tunnel?.child?.packetsOut != null)
+      ? (liveStatus.tunnel.child.packetsIn + liveStatus.tunnel.child.packetsOut)
+      : null;
+
+  const attackCount = isPcapMode
+    ? (analysisResult.summary?.attackFlows ?? analysisResult.flows?.filter((f) => f.isAttack === 1).length ?? 0)
+    : null;
+  const benignCount = isPcapMode
+    ? (analysisResult.summary?.benignFlows ?? analysisResult.flows?.filter((f) => f.isAttack === 0).length ?? 0)
+    : null;
+
   const primaryFlow = analysisResult?.flows?.[0];
   const observedProposal = analysisResult?.ikeNegotiations?.[0]?.proposals
     || analysisResult?.predictions?.encryption?.value;
 
   const currentAnalysisId = analysisId || analysisResult?.analysisId;
+
+  const handleSelectNode = (nodeId, eventData) => {
+    setSelectedNodeId(nodeId);
+    if (nodeId === 'event' && eventData) {
+      setSelectedEvent(eventData);
+    }
+  };
+
+  const handleSelectEvent = (event) => {
+    setSelectedEvent(event);
+    setSelectedNodeId('event');
+    if (event?.correlation?.scope === 'testbed' && event.correlation.verified === true) {
+      activitySequence.current += 1;
+      setActivity({ event, sequence: activitySequence.current });
+    }
+  };
 
   return (
     <div className="dashboard-content">
@@ -181,23 +378,25 @@ export default function OverviewView({ refreshKey = 0 }) {
       <section className="dashboard-section session-provenance-banner">
         <div className="provenance-banner-content">
           <div className="provenance-info">
-            <span className={`provenance-mode-badge ${analysisResult ? 'is-pcap' : 'is-live'}`}>
-              {analysisResult ? 'Mode B · Uploaded PCAP Analysis' : 'Mode A · Live Testbed Monitor'}
+            <span className={`provenance-mode-badge ${isPcapMode ? 'is-pcap' : 'is-live'}`}>
+              {isPcapMode ? 'Mode B · Uploaded PCAP Analysis' : 'Mode A · Live Testbed Monitor'}
             </span>
             <div className="provenance-title-wrap">
               <h3 className="provenance-title">
-                {analysisResult
+                {isPcapMode
                   ? `Active Analysis Session: ${file?.name || 'Uploaded Capture'}`
                   : 'Active Environment: PC1 ⇄ IPsec ESP Tunnel ⇄ PC2'}
               </h3>
               <span className="provenance-meta">
-                {analysisResult
-                  ? `Session ID: ${currentAnalysisId || 'ANL-ACTIVE'} · Flows: ${analysisResult.flows?.length || 0} extracted`
-                  : 'Subnet: 172.20.0.0/24 · strongSwan 5.9.x · Linux XFRM'}
+                {isPcapMode
+                  ? `Session ID: ${currentAnalysisId || '—'} · Flows: ${analysisResult.flows?.length ?? '—'} extracted`
+                  : (liveStatus?.endpoints?.pc1?.subnet
+                      ? `Subnet: ${liveStatus.endpoints.pc1.subnet} · strongSwan 5.9.x · Linux XFRM`
+                      : 'Subnet: Querying runtime configuration… · strongSwan 5.9.x · Linux XFRM')}
               </span>
             </div>
           </div>
-          {analysisResult && (
+          {isPcapMode && (
             <button
               type="button"
               className="soc-btn"
@@ -211,6 +410,11 @@ export default function OverviewView({ refreshKey = 0 }) {
       </section>
 
       {summaryError && <div className="dashboard-empty" role="alert">{summaryError}</div>}
+      {liveStatusError && (
+        <div className="dashboard-empty is-warning" role="alert">
+          Testbed status notice: {liveStatusError} (Showing last-known or offline state)
+        </div>
+      )}
 
       {/* Top Technical Telemetry KPI Cards Banner */}
       <section className="overview-kpi-grid" aria-label="System status metrics">
@@ -222,11 +426,21 @@ export default function OverviewView({ refreshKey = 0 }) {
             </div>
           </div>
           <div className="kpi-body">
-            <div className="kpi-value">{totalPackets ? Number(totalPackets).toLocaleString() : '—'}</div>
+            <div className="kpi-value">
+              {liveStatusError && !isPcapMode
+                ? 'Unavailable'
+                : totalPackets != null
+                  ? Number(totalPackets).toLocaleString()
+                  : '—'}
+            </div>
             <div className="kpi-sub">
-              {analysisResult
+              {isPcapMode
                 ? `${totalFlows} flows extracted from ${file?.name || 'PCAP'}`
-                : `${events.length} kernel XFRM events in buffer`}
+                : liveStatus?.tunnel?.child?.packetsIn != null
+                  ? `${liveStatus.tunnel.child.packetsIn} in / ${liveStatus.tunnel.child.packetsOut} out (Linux XFRM SA)`
+                  : liveStatusError
+                    ? 'XFRM SA counters unavailable'
+                    : 'XFRM events are host-wide and not tunnel-correlated'}
             </div>
           </div>
         </div>
@@ -240,10 +454,18 @@ export default function OverviewView({ refreshKey = 0 }) {
           </div>
           <div className="kpi-body">
             <div className="kpi-value">
-              {statusError ? 'Unavailable' : isCollectorConnected ? 'Active' : collectorStatus?.mode || 'Offline'}
+              {statusError
+                ? 'Unavailable'
+                : isCollectorConnected
+                  ? 'Active (Native CO-RE)'
+                  : collectorStatus?.mode || (statusError ? 'Unavailable' : 'Loading')}
             </div>
             <div className="kpi-sub">
-              {observedXfrm ? 'XFRM transform events observed' : 'Monitoring Linux kernel ring buffer'}
+              {isCollectorConnected
+                ? `${collectorStatus.probes?.length ?? '—'} kprobes · ${collectorStatus.ringEventsSeen == null ? '—' : Number(collectorStatus.ringEventsSeen).toLocaleString()} ring events`
+                  : observedXfrm
+                  ? 'Host-wide transform events recorded; not attributed to this tunnel'
+                  : 'Linux kernel ring buffer observer'}
             </div>
           </div>
         </div>
@@ -257,12 +479,26 @@ export default function OverviewView({ refreshKey = 0 }) {
           </div>
           <div className="kpi-body">
             <div className="kpi-value">
-              {attackCount > 0 ? `${attackCount} Attacked` : benignCount > 0 ? 'Benign' : 'Ready'}
+              {isPcapMode
+                ? (attackCount > 0 ? `${attackCount} Attack` : benignCount > 0 ? 'Benign' : 'Analyzed')
+                : modelReadiness === 'ready'
+                  ? 'Ready'
+                  : modelReadiness === 'checking'
+                    ? 'Checking'
+                    : modelReadiness === 'gated'
+                      ? 'Gated'
+                      : 'Unavailable'}
             </div>
             <div className="kpi-sub">
-              {analysisResult
-                ? `${benignCount} benign, ${attackCount} attack flows classified`
-                : 'XGBoost Threat + Encrypted App Profiler'}
+              {isPcapMode
+                ? `${benignCount ?? 0} benign, ${attackCount ?? 0} attack flows classified`
+                : modelReadiness === 'ready'
+                  ? 'At least one validated model is enabled for inference'
+                  : modelReadiness === 'checking'
+                    ? 'Checking backend model eligibility'
+                    : modelReadiness === 'gated'
+                      ? 'Loaded models are gated until validation requirements pass'
+                      : 'Backend model eligibility is unavailable'}
             </div>
           </div>
         </div>
@@ -287,77 +523,441 @@ export default function OverviewView({ refreshKey = 0 }) {
         </div>
       </section>
 
-      {/* End-to-End Tunnel Architecture Diagram */}
+      {/* Dynamic 3D IPsec Testbed Topology & Refined Glass Inspector */}
       <section className="dashboard-section topology-visual-card" aria-labelledby="connection-title">
         <div className="section-heading">
           <div>
             <h2 id="connection-title" className="section-title-with-icon">
               <Network size={16} className="section-heading-icon text-sage" />
-              IPsec End-to-End Tunnel Architecture
+              IPsec End-to-End Testbed Topology
             </h2>
-            <p>Authoritative PC1 ⇄ PC2 tunnel endpoint state and observed cryptographic transform headers.</p>
+            <p>Authoritative PC1 ⇄ IPsec ESP Tunnel ⇄ PC2 runtime state, negotiated SAs, and Linux kernel telemetry.</p>
           </div>
-          <span className={`tunnel-status-pill ${observedXfrm ? 'is-active' : ''}`}>
-            <span className="pill-dot-core" />
-            {observedXfrm ? 'XFRM SA Active' : 'Idle / Listening'}
-          </span>
-        </div>
-
-        <div className="tunnel-interactive-diagram" aria-label="PC1 to PC2 IPsec topology diagram">
-          {/* Peer 1: PC1 */}
-          <div className="diagram-node left-node">
-            <div className="diagram-node-icon-box">
-              <Server size={20} />
-            </div>
-            <div className="diagram-node-name">PC1 Initiator</div>
-            <div className="diagram-node-ip">{primaryFlow?.src || '172.20.0.2'}</div>
-            <div className="diagram-node-badge">{primaryFlow ? 'Observed Peer' : 'Docker Host 1'}</div>
-          </div>
-
-          {/* Central Encrypted IPsec Tunnel Channel */}
-          <div className="diagram-tunnel-channel">
-            <div className="tunnel-crypto-chip">
-              <Lock size={13} className="crypto-lock-icon" />
-              <span>
-                {primaryFlow?.spi
-                  ? `ESP Tunnel (SPI: ${primaryFlow.spi})`
-                  : observedXfrm
-                    ? 'Kernel XFRM Tunnel Active'
-                    : 'Tunnel unobserved in window'}
-              </span>
-            </div>
-            <div className="tunnel-telemetry-badge">
-              {observedProposal || (observedXfrm ? 'Linux XFRM IPsec Transform' : 'Proposals unobserved in capture')}
-            </div>
-          </div>
-
-          {/* Peer 2: PC2 */}
-          <div className="diagram-node right-node">
-            <div className="diagram-node-icon-box">
-              <Server size={20} />
-            </div>
-            <div className="diagram-node-name">PC2 Responder</div>
-            <div className="diagram-node-ip">{primaryFlow?.dst || '172.20.0.3'}</div>
-            <div className="diagram-node-badge">{primaryFlow ? 'Observed Peer' : 'Docker Host 2'}</div>
+          <div className="overview-status-group">
+            <span
+              className={`tunnel-status-pill ${
+                freshness.isStale
+                  ? 'is-warning'
+                  : tunnelState === 'ESTABLISHED'
+                    ? 'is-active'
+                    : tunnelState === 'DOWN'
+                      ? 'is-danger'
+                      : tunnelState === 'NEGOTIATING'
+                        ? 'is-warning'
+                        : ''
+              }`}
+            >
+              <span className="pill-dot-core" />
+              {freshness.isStale
+                ? `Last Known: ${tunnelState}`
+                : tunnelState === 'ESTABLISHED'
+                  ? 'Tunnel Established'
+                  : tunnelState === 'DOWN'
+                    ? 'Tunnel Down'
+                    : tunnelState === 'NEGOTIATING'
+                      ? 'Negotiating'
+                      : 'State Unavailable'}
+            </span>
+            <span className="glass-pill" title={freshness.description}>
+              <span className={`status-indicator ${freshness.indicatorClass}`} />
+              {freshness.label}
+            </span>
           </div>
         </div>
 
+        <div className="overview-testbed-workspace">
+          {/* 3D Scene Container */}
+          <div className="testbed-scene overview-scene" aria-label="Interactive 3D PC1 to PC2 IPsec testbed">
+            <div className="scene-identities scene-identities-glass" aria-hidden="true">
+              <span>PC1 · {displayValue(liveStatus?.endpoints?.pc1?.ip)}</span>
+              <span>IPsec ESP · {displayValue(tunnelState)}</span>
+              <span>PC2 · {displayValue(liveStatus?.endpoints?.pc2?.ip)}</span>
+            </div>
+
+            <ThreeCanvas
+              selectedNode={selectedNodeId}
+              onSelectNode={handleSelectNode}
+              activity={activity}
+              tunnelState={tunnelState}
+              isStale={freshness.isStale}
+              telemetryError={Boolean(liveStatusError)}
+              endpoints={liveStatus?.endpoints}
+              captureActive={Boolean(liveStatus?.capture?.active)}
+            />
+
+            <div className="scene-state scene-state-glass">
+              <span className={`status-indicator${isCollectorConnected ? ' is-online' : ''}`} />
+              eBPF Ring Buffer · {isCollectorConnected ? 'Live Kernel Observer' : collectorStatus ? 'Unavailable' : 'Connecting…'}
+            </div>
+
+            {liveStatus?.capture?.active && (
+              <div className="scene-capture-badge glass-panel" role="status">
+                <Activity size={12} className="text-sage" />
+                <span>Capture: {displayValue(liveStatus.capture.workload)} ({displayValue(liveStatus.capture.stage)})</span>
+              </div>
+            )}
+          </div>
+
+          {/* Frosted Glass Inspector Drawer */}
+          <aside className="overview-inspector glass-panel" aria-label="Selected testbed entity details">
+            <nav className="overview-inspector-tabs" aria-label="Inspection target tabs">
+              <button
+                type="button"
+                className={`inspector-tab-btn ${selectedNodeId === 'pc1' ? 'is-active' : ''}`}
+                onClick={() => setSelectedNodeId('pc1')}
+              >
+                PC1
+              </button>
+              <button
+                type="button"
+                className={`inspector-tab-btn ${selectedNodeId === 'tunnel' ? 'is-active' : ''}`}
+                onClick={() => setSelectedNodeId('tunnel')}
+              >
+                Tunnel
+              </button>
+              <button
+                type="button"
+                className={`inspector-tab-btn ${selectedNodeId === 'pc2' ? 'is-active' : ''}`}
+                onClick={() => setSelectedNodeId('pc2')}
+              >
+                PC2
+              </button>
+              <button
+                type="button"
+                className={`inspector-tab-btn ${selectedNodeId === 'ebpf' ? 'is-active' : ''}`}
+                onClick={() => setSelectedNodeId('ebpf')}
+              >
+                eBPF
+              </button>
+              <button
+                type="button"
+                className={`inspector-tab-btn ${selectedNodeId === 'pcap' ? 'is-active' : ''}`}
+                onClick={() => setSelectedNodeId('pcap')}
+              >
+                PCAP
+              </button>
+              {selectedEvent && (
+                <button
+                  type="button"
+                  className={`inspector-tab-btn ${selectedNodeId === 'event' ? 'is-active' : ''}`}
+                  onClick={() => setSelectedNodeId('event')}
+                >
+                  Event
+                </button>
+              )}
+            </nav>
+
+            <div className="overview-inspector-body">
+              {/* PC1 Inspector */}
+              {selectedNodeId === 'pc1' && (
+                <>
+                  <div className="inspector-entity-header">
+                    <span className="inspector-entity-title">PC1 (Initiator)</span>
+                    <span className={`inspector-tag ${liveStatus?.endpoints?.pc1?.status === 'running' ? 'is-online' : 'is-offline'}`}>
+                      {displayValue(liveStatus?.endpoints?.pc1?.status)}
+                    </span>
+                  </div>
+                  <dl className="inspector-kv-table">
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">Container IP</dt>
+                      <dd className="inspector-kv-value font-semibold">{displayValue(liveStatus?.endpoints?.pc1?.ip)}</dd>
+                    </div>
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">Subnet</dt>
+                      <dd className="inspector-kv-value">{displayValue(liveStatus?.endpoints?.pc1?.subnet)}</dd>
+                    </div>
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">Gateway</dt>
+                      <dd className="inspector-kv-value">{displayValue(liveStatus?.endpoints?.pc1?.gateway)}</dd>
+                    </div>
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">MAC Address</dt>
+                      <dd className="inspector-kv-value monospace text-muted">{displayValue(liveStatus?.endpoints?.pc1?.mac)}</dd>
+                    </div>
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">IKE Daemon</dt>
+                      <dd className="inspector-kv-value">{displayValue(liveStatus?.endpoints?.pc1?.daemon)}</dd>
+                    </div>
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">Role</dt>
+                      <dd className="inspector-kv-value">IKEv2 Initiator / Client</dd>
+                    </div>
+                  </dl>
+                </>
+              )}
+
+              {/* PC2 Inspector */}
+              {selectedNodeId === 'pc2' && (
+                <>
+                  <div className="inspector-entity-header">
+                    <span className="inspector-entity-title">PC2 (Responder)</span>
+                    <span className={`inspector-tag ${liveStatus?.endpoints?.pc2?.status === 'running' ? 'is-online' : 'is-offline'}`}>
+                      {displayValue(liveStatus?.endpoints?.pc2?.status)}
+                    </span>
+                  </div>
+                  <dl className="inspector-kv-table">
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">Container IP</dt>
+                      <dd className="inspector-kv-value font-semibold">{displayValue(liveStatus?.endpoints?.pc2?.ip)}</dd>
+                    </div>
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">Subnet</dt>
+                      <dd className="inspector-kv-value">{displayValue(liveStatus?.endpoints?.pc2?.subnet)}</dd>
+                    </div>
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">Gateway</dt>
+                      <dd className="inspector-kv-value">{displayValue(liveStatus?.endpoints?.pc2?.gateway)}</dd>
+                    </div>
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">MAC Address</dt>
+                      <dd className="inspector-kv-value monospace text-muted">{displayValue(liveStatus?.endpoints?.pc2?.mac)}</dd>
+                    </div>
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">IKE Daemon</dt>
+                      <dd className="inspector-kv-value">{displayValue(liveStatus?.endpoints?.pc2?.daemon)}</dd>
+                    </div>
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">Role</dt>
+                      <dd className="inspector-kv-value">IKEv2 Responder / Server</dd>
+                    </div>
+                  </dl>
+                </>
+              )}
+
+              {/* Tunnel Inspector */}
+              {selectedNodeId === 'tunnel' && (
+                <>
+                  <div className="inspector-entity-header">
+                    <span className="inspector-entity-title">IPsec ESP Tunnel</span>
+                    <span className={`inspector-tag ${tunnelState === 'ESTABLISHED' ? 'is-online' : 'is-offline'}`}>
+                      {displayValue(tunnelState)}
+                    </span>
+                  </div>
+                  <dl className="inspector-kv-table">
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">Connection</dt>
+                      <dd className="inspector-kv-value">{displayValue(liveStatus?.tunnel?.connectionName)}</dd>
+                    </div>
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">CHILD SA Protocol</dt>
+                      <dd className="inspector-kv-value">{displayValue(liveStatus?.tunnel?.child?.protocol)} ({displayValue(liveStatus?.tunnel?.child?.mode)})</dd>
+                    </div>
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">CHILD Cipher</dt>
+                      <dd className="inspector-kv-value font-semibold">{displayValue(liveStatus?.tunnel?.child?.encryption)} {liveStatus?.tunnel?.child?.encryptionKeySize ? `(${liveStatus.tunnel.child.encryptionKeySize}-bit)` : ''}</dd>
+                    </div>
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">PFS / DH Group</dt>
+                      <dd className="inspector-kv-value">{displayValue(liveStatus?.tunnel?.child?.pfsGroupName)} {liveStatus?.tunnel?.child?.pfsGroup ? `(Group ${liveStatus.tunnel.child.pfsGroup})` : ''}</dd>
+                    </div>
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">Inbound SPI</dt>
+                      <dd className="inspector-kv-value monospace font-semibold text-sage">
+                        {liveStatus?.tunnel?.child?.spiIn ? `0x${liveStatus.tunnel.child.spiIn}` : EMPTY_VALUE}
+                      </dd>
+                    </div>
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">Outbound SPI</dt>
+                      <dd className="inspector-kv-value monospace font-semibold text-sage">
+                        {liveStatus?.tunnel?.child?.spiOut ? `0x${liveStatus.tunnel.child.spiOut}` : EMPTY_VALUE}
+                      </dd>
+                    </div>
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">Packets (In / Out)</dt>
+                      <dd className="inspector-kv-value monospace">
+                        {displayValue(liveStatus?.tunnel?.child?.packetsIn)} in / {displayValue(liveStatus?.tunnel?.child?.packetsOut)} out
+                      </dd>
+                    </div>
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">Bytes (In / Out)</dt>
+                      <dd className="inspector-kv-value monospace">
+                        {displayValue(liveStatus?.tunnel?.child?.bytesIn)} B / {displayValue(liveStatus?.tunnel?.child?.bytesOut)} B
+                      </dd>
+                    </div>
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">Traffic Selectors</dt>
+                      <dd className="inspector-kv-value monospace text-muted">
+                        {displayValue(liveStatus?.tunnel?.child?.localTs)} ⇄ {displayValue(liveStatus?.tunnel?.child?.remoteTs)}
+                      </dd>
+                    </div>
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">IKEv2 Initiator SPI</dt>
+                      <dd className="inspector-kv-value monospace text-muted">{displayValue(liveStatus?.tunnel?.ike?.initiatorSpi)}</dd>
+                    </div>
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">Established Duration</dt>
+                      <dd className="inspector-kv-value monospace text-muted">
+                        {liveStatus?.tunnel?.ike?.establishedSeconds != null ? `${liveStatus.tunnel.ike.establishedSeconds}s` : EMPTY_VALUE}
+                      </dd>
+                    </div>
+                  </dl>
+                </>
+              )}
+
+              {/* eBPF Inspector */}
+              {selectedNodeId === 'ebpf' && (
+                <>
+                  <div className="inspector-entity-header">
+                    <span className="inspector-entity-title">eBPF Kernel Monitor</span>
+                    <span className={`inspector-tag ${isCollectorConnected ? 'is-online' : 'is-offline'}`}>
+                      {isCollectorConnected ? 'Active' : displayValue(liveStatus?.ebpf?.status)}
+                    </span>
+                  </div>
+                  <dl className="inspector-kv-table">
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">Collector Mode</dt>
+                      <dd className="inspector-kv-value font-semibold">{displayValue(liveStatus?.ebpf?.mode || collectorStatus?.mode)}</dd>
+                    </div>
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">Attached Probes</dt>
+                      <dd className="inspector-kv-value">{liveStatus?.ebpf?.probes?.length ?? collectorStatus?.probes?.length ?? '—'} kernel kprobes</dd>
+                    </div>
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">Ring Events Seen</dt>
+                      <dd className="inspector-kv-value font-semibold monospace">
+                        {liveStatus?.ebpf?.ringEventsSeen != null ? Number(liveStatus.ebpf.ringEventsSeen).toLocaleString() : EMPTY_VALUE}
+                      </dd>
+                    </div>
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">XFRM Inbound Hits</dt>
+                      <dd className="inspector-kv-value monospace">{displayValue(liveStatus?.ebpf?.hookHits?.XFRM_IN ?? collectorStatus?.hookHits?.XFRM_IN)}</dd>
+                    </div>
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">XFRM Outbound Hits</dt>
+                      <dd className="inspector-kv-value monospace">{displayValue(liveStatus?.ebpf?.hookHits?.XFRM_OUT ?? collectorStatus?.hookHits?.XFRM_OUT)}</dd>
+                    </div>
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">Socket Sends</dt>
+                      <dd className="inspector-kv-value monospace">{displayValue(liveStatus?.ebpf?.hookHits?.SOCK_SEND ?? collectorStatus?.hookHits?.SOCK_SEND)}</dd>
+                    </div>
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">Last Kernel Event</dt>
+                      <dd className="inspector-kv-value monospace">{formatTimestamp(liveStatus?.ebpf?.lastEventTimestamp)}</dd>
+                    </div>
+                  </dl>
+                </>
+              )}
+
+              {/* PCAP Inspector */}
+              {selectedNodeId === 'pcap' && (
+                <>
+                  <div className="inspector-entity-header">
+                    <span className="inspector-entity-title">PCAP Observer</span>
+                    <span className={`inspector-tag ${liveStatus?.capture?.active === true ? 'is-online' : 'is-offline'}`}>
+                      {!liveStatus?.capture ? 'Unavailable' : liveStatus.capture.active === true ? 'Active' : liveStatus.capture.active === false ? 'Standby' : 'Unknown'}
+                    </span>
+                  </div>
+                  <dl className="inspector-kv-table">
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">Active Capture Job</dt>
+                      <dd className="inspector-kv-value font-semibold monospace">{displayValue(liveStatus?.capture?.jobId)}</dd>
+                    </div>
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">Target Workload</dt>
+                      <dd className="inspector-kv-value">{displayValue(liveStatus?.capture?.workload)}</dd>
+                    </div>
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">Generation Stage</dt>
+                      <dd className="inspector-kv-value">{displayValue(liveStatus?.capture?.stage)}</dd>
+                    </div>
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">Analysis Mode</dt>
+                      <dd className="inspector-kv-value">{isPcapMode ? `Mode B (File: ${file?.name})` : 'Mode A (Live Testbed Monitor)'}</dd>
+                    </div>
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">Observed Flows</dt>
+                      <dd className="inspector-kv-value monospace">{totalFlows ?? '—'}</dd>
+                    </div>
+                  </dl>
+                </>
+              )}
+
+              {/* Event Inspector */}
+              {selectedNodeId === 'event' && selectedEvent && (
+                <>
+                  <div className="inspector-entity-header">
+                    <span className="inspector-entity-title">Kernel Event Detail</span>
+                    <span className="inspector-tag is-online">
+                      {displayValue(selectedEvent.eventType)}
+                    </span>
+                  </div>
+                  <dl className="inspector-kv-table">
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">Event ID</dt>
+                      <dd className="inspector-kv-value monospace text-muted">{displayValue(selectedEvent.id)}</dd>
+                    </div>
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">Direction</dt>
+                      <dd className="inspector-kv-value font-semibold">
+                        {selectedEvent.eventType === 'XFRM_OUT'
+                          ? 'Outbound ESP (host-wide; endpoint not correlated)'
+                          : selectedEvent.eventType === 'XFRM_IN'
+                            ? 'Inbound ESP (host-wide; endpoint not correlated)'
+                            : displayValue(selectedEvent.fn)}
+                      </dd>
+                    </div>
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">Kernel Hook</dt>
+                      <dd className="inspector-kv-value monospace">{displayValue(selectedEvent.fn)}</dd>
+                    </div>
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">Process Name</dt>
+                      <dd className="inspector-kv-value font-semibold">{displayValue(selectedEvent.process_name)}</dd>
+                    </div>
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">PID</dt>
+                      <dd className="inspector-kv-value monospace text-muted">{displayValue(selectedEvent.pid)}</dd>
+                    </div>
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">Payload Size</dt>
+                      <dd className="inspector-kv-value monospace">{displayValue(selectedEvent.bytes)} Bytes</dd>
+                    </div>
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">Observed Packets</dt>
+                      <dd className="inspector-kv-value monospace">{displayValue(selectedEvent.packets)}</dd>
+                    </div>
+                    <div className="inspector-kv-row">
+                      <dt className="inspector-kv-label">Observed Timestamp</dt>
+                      <dd className="inspector-kv-value monospace">{formatTimestamp(selectedEvent.timestamp)}</dd>
+                    </div>
+                  </dl>
+                </>
+              )}
+            </div>
+          </aside>
+        </div>
+
+        {/* Technical Parameter Chips / Connection Details */}
         <div className="connection-details-grid">
           <div className="detail-box">
             <span className="detail-label">Observed Protocol</span>
-            <span className="detail-val">{analysisResult?.predictions?.protocol?.value || (observedXfrm ? 'ESP / XFRM' : '—')}</span>
+            <span className="detail-val">
+              {analysisResult?.predictions?.protocol?.value || (liveStatus?.tunnel?.child?.protocol ? `${liveStatus.tunnel.child.protocol} (${liveStatus.tunnel.child.mode || 'TUNNEL'})` : '—')}
+            </span>
           </div>
           <div className="detail-box">
-            <span className="detail-label">Detected IKE Negotiations</span>
-            <span className="detail-val">{analysisResult?.summary?.detectedIkeNegotiations != null ? String(analysisResult.summary.detectedIkeNegotiations) : '—'}</span>
+            <span className="detail-label">Negotiated IKE/CHILD SA</span>
+            <span className="detail-val text-sage monospace">
+              {liveStatus?.tunnel?.child?.spiIn
+                ? `SPI In: 0x${liveStatus.tunnel.child.spiIn} · Out: 0x${liveStatus.tunnel.child.spiOut}`
+                : primaryFlow?.spi
+                  ? `SPI 0x${primaryFlow.spi}`
+                  : '—'}
+            </span>
           </div>
           <div className="detail-box">
             <span className="detail-label">eBPF Monitoring Hook</span>
-            <span className="detail-val">xfrm_input / xfrm_output</span>
+            <span className="detail-val">
+              {isCollectorConnected ? 'xfrm_input / xfrm_output (Attached)' : 'Collector Unattached'}
+            </span>
           </div>
           <div className="detail-box">
-            <span className="detail-label">Security Association</span>
-            <span className="detail-val text-sage">{primaryFlow?.spi ? `SPI ${primaryFlow.spi}` : observedXfrm ? 'Active in window' : '—'}</span>
+            <span className="detail-label">Active Cryptographic Suite</span>
+            <span className="detail-val">
+              {liveStatus?.tunnel?.child?.encryption
+                ? `${liveStatus.tunnel.child.encryption} (${liveStatus.tunnel.child.pfsGroupName || 'PFS'})`
+                : observedProposal || '—'}
+            </span>
           </div>
         </div>
       </section>
@@ -370,13 +970,19 @@ export default function OverviewView({ refreshKey = 0 }) {
               <Radio size={16} className="section-heading-icon text-sage" />
               Live Kernel Telemetry Stream
             </h2>
-            <p>Authoritative Linux eBPF ring buffer event stream capturing live IPsec transforms.</p>
+            <p>Authoritative Linux eBPF ring buffer event stream capturing live IPsec transforms. Click any event to inspect.</p>
           </div>
           <span className="section-meta-pill">
             {events.length} events in buffer
           </span>
         </div>
-        <EventTable events={events} loading={loading} error={error} />
+        <EventTable
+          events={events}
+          loading={loading}
+          error={error}
+          onSelectEvent={handleSelectEvent}
+          selectedEventId={selectedEvent ? getEventId(selectedEvent) : null}
+        />
       </section>
     </div>
   );

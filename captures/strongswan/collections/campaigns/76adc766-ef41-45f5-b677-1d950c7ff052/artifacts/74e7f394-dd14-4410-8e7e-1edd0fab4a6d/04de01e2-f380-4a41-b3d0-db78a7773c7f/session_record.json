@@ -1,0 +1,41 @@
+{
+  "sessionId": "74e7f394-dd14-4410-8e7e-1edd0fab4a6d",
+  "sessionIdSource": "locally generated UUIDv4 or caller-supplied UUIDv4 recorded by this collector",
+  "sessionStartedAt": "2026-10-10T06:40:33.973072+00:00",
+  "sessionObservedThroughAt": "2026-10-10T06:41:06.110651+00:00",
+  "sessionScope": "One IKE_SA lifecycle on the direct PC1-PC2 testbed; container infrastructure may be reused.",
+  "experimentIds": [
+    "04de01e2-f380-4a41-b3d0-db78a7773c7f",
+    "d791e2a6-9777-4c28-9bd9-27dab0d22427",
+    "d879f6a7-4ff0-4b2f-a2cc-3b8715b9a41b"
+  ],
+  "containerIds": {
+    "pc1": "68c0da1113cb9646ec329f5d470bc7a08b6350810deb0e968c0e2ae59ae3693b",
+    "pc2": "ef1f7407e7d5b2dc0871b0fd3f55ab207db0d468dce8eda8424872b1e1465a47"
+  },
+  "containerImageIds": {
+    "pc1": "sha256:770e746a34009f6123b93e17e84e01b3f3359197f6dec393a56530fe87732083",
+    "pc2": "sha256:e7c265590f9b3249eee79c5cccbad92baf845a86869176129e5abefd3e77de0b"
+  },
+  "ipv4Addresses": {
+    "pc1": "172.20.0.2",
+    "pc2": "172.20.0.3"
+  },
+  "containerInfrastructureReused": true,
+  "repositoryRevision": "fe556314022348b9f6f1b93bd6ead64300d39f84",
+  "worktreeDirty": true,
+  "strongSwanVersion": "strongSwan swanctl 5.9.8",
+  "vpnLifecycle": {
+    "ikeSaIdentitySha256": "29ff0402f0d38ffb003b70c4ffd9ba8f1f30322e9b01bf85f5bbfffc790cacc7",
+    "ikeSaAgeSeconds": 27,
+    "connection": "pc1-pc2",
+    "reestablishment": {
+      "independenceStatus": "VERIFIED_DISTINCT_IKE_SA",
+      "previousIkeSaIdentitySha256": "1727582d69864ea4f7c57db2821c107e0bdb49ce09db98797855203953591ad6",
+      "ikeSaIdentitySha256": "29ff0402f0d38ffb003b70c4ffd9ba8f1f30322e9b01bf85f5bbfffc790cacc7",
+      "reestablishedAt": "2026-10-10T06:40:33.973072+00:00",
+      "observedWithinSeconds": 25.816751
+    },
+    "independenceBasis": "different observed IKE SPI pair after explicit termination and re-initiation"
+  }
+}

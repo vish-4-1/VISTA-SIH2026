@@ -4,6 +4,7 @@ import {
   fetchEbpfEvents,
   fetchEbpfStatus,
   fetchTestbedProfiles,
+  fetchTestbedLiveStatus,
   validateTestbedConfig,
 } from '../../utils/apiClient';
 
@@ -51,6 +52,9 @@ function ProbeLine({ status, name, label }) {
 export default function TestbedView({ refreshKey = 0 }) {
   const [collectorStatus, setCollectorStatus] = useState(null);
   const [events, setEvents] = useState([]);
+  const [liveStatus, setLiveStatus] = useState(null);
+  const [liveStatusError, setLiveStatusError] = useState('');
+  const [lastStatusUpdated, setLastStatusUpdated] = useState(null);
   const [statusError, setStatusError] = useState('');
   const [eventError, setEventError] = useState('');
   const [selectedNodeId, setSelectedNodeId] = useState('pc1');
@@ -80,9 +84,10 @@ export default function TestbedView({ refreshKey = 0 }) {
   const refreshTelemetry = useCallback(async () => {
     if (refreshInFlight.current) return;
     refreshInFlight.current = true;
-    const [statusResult, eventsResult] = await Promise.allSettled([
+    const [statusResult, eventsResult, liveStatusResult] = await Promise.allSettled([
       fetchEbpfStatus(),
       fetchEbpfEvents(50),
+      fetchTestbedLiveStatus(),
     ]);
 
     if (statusResult.status === 'fulfilled') {
@@ -92,6 +97,21 @@ export default function TestbedView({ refreshKey = 0 }) {
       setStatusError(statusResult.reason instanceof Error
         ? statusResult.reason.message
         : String(statusResult.reason));
+    }
+
+    if (liveStatusResult.status === 'fulfilled') {
+      const result = liveStatusResult.value;
+      if (result?.tunnel && typeof result.tunnel.state === 'string' && result?.endpoints) {
+        setLiveStatus(result);
+        setLiveStatusError('');
+        setLastStatusUpdated(Date.now());
+      } else {
+        setLiveStatusError('The live-status response did not match the expected testbed schema.');
+      }
+    } else {
+      setLiveStatusError(liveStatusResult.reason instanceof Error
+        ? liveStatusResult.reason.message
+        : String(liveStatusResult.reason));
     }
 
     if (eventsResult.status === 'fulfilled') {
@@ -107,7 +127,7 @@ export default function TestbedView({ refreshKey = 0 }) {
       setEventError('');
 
       const newest = nextEvents[0];
-      if (newest) {
+      if (newest?.correlation?.scope === 'testbed' && newest.correlation.verified === true) {
         const identity = eventIdentity(newest);
         if (latestEventKey.current !== null && identity !== latestEventKey.current) {
           activitySequence.current += 1;
@@ -172,18 +192,24 @@ export default function TestbedView({ refreshKey = 0 }) {
 
   const collectorConnected = collectorStatus?.status === 'RUNNING'
     && collectorStatus?.mode === 'NATIVE_KERNEL_EBPF';
-  const observedTunnelActive = events.some(
-    (e) => e.eventType === 'XFRM_IN' || e.eventType === 'XFRM_OUT',
-  );
-  const tunnelState = observedTunnelActive ? 'ESTABLISHED' : collectorConnected ? 'NEGOTIATING' : 'UNKNOWN';
+  const tunnelState = liveStatus?.tunnel?.state
+    || (liveStatusError ? (liveStatus ? 'STALE' : 'UNAVAILABLE') : 'UNKNOWN');
 
   const inspectEvent = (event) => {
     setSelectedEvent(event);
-    activitySequence.current += 1;
-    setActivity({ event, sequence: activitySequence.current });
+    setSelectedNodeId('event');
+    if (event?.correlation?.scope === 'testbed' && event.correlation.verified === true) {
+      activitySequence.current += 1;
+      setActivity({ event, sequence: activitySequence.current });
+    }
   };
 
-  const selectedProfile = profilesData?.profiles?.[0];
+  const handleSelectNode = (nodeId, eventData) => {
+    setSelectedNodeId(nodeId);
+    if (nodeId === 'event' && eventData) {
+      setSelectedEvent(eventData);
+    }
+  };
 
   return (
     <div className="testbed-page">
@@ -191,7 +217,7 @@ export default function TestbedView({ refreshKey = 0 }) {
         <div>
           <h2>3D IPsec Testbed Monitor</h2>
           <p>
-            Authoritative topology: <strong>PC1 (172.20.0.2) ⇄ IPsec ESP Tunnel ⇄ PC2 (172.20.0.3)</strong> · Linux XFRM &amp; strongSwan.
+            Authoritative topology: <strong>PC1 ⇄ IPsec ESP Tunnel ⇄ PC2</strong> · Linux XFRM &amp; strongSwan.
           </p>
         </div>
         <div className={`testbed-collector-status${collectorConnected ? ' is-online' : ''}`}>
@@ -201,18 +227,29 @@ export default function TestbedView({ refreshKey = 0 }) {
         </div>
       </div>
 
+      {liveStatusError && (
+        <div className="dashboard-empty is-warning" role="alert">
+          Live testbed status unavailable: {liveStatusError}.
+          {liveStatus ? ` Showing last observation from ${formatTimestamp(liveStatus.timestamp || liveStatus.tunnel?.lastObserved || lastStatusUpdated)}.` : ' Endpoint and tunnel state are unavailable.'}
+        </div>
+      )}
+
       <div className="testbed-main">
         <section className="testbed-scene" aria-label="Interactive 3D PC1 to PC2 IPsec testbed">
           <div className="scene-identities" aria-hidden="true">
-            <span>PC1 · 172.20.0.2</span>
-            <span>IPsec ESP · {tunnelState}</span>
-            <span>PC2 · 172.20.0.3</span>
+            <span>PC1 · {fieldValue(liveStatus?.endpoints?.pc1?.ip)}</span>
+            <span>IPsec ESP · {liveStatusError && liveStatus ? `Last known ${tunnelState}` : tunnelState}</span>
+            <span>PC2 · {fieldValue(liveStatus?.endpoints?.pc2?.ip)}</span>
           </div>
           <ThreeCanvas
             selectedNode={selectedNodeId}
-            onSelectNode={setSelectedNodeId}
+            onSelectNode={handleSelectNode}
             activity={activity}
             tunnelState={tunnelState}
+            isStale={Boolean(liveStatusError && liveStatus)}
+            telemetryError={Boolean(liveStatusError && !liveStatus)}
+            endpoints={liveStatus?.endpoints}
+            captureActive={Boolean(liveStatus?.capture?.active)}
           />
           <div className="scene-state">
             <span className={`status-indicator${collectorConnected ? ' is-online' : ''}`} />
@@ -220,35 +257,194 @@ export default function TestbedView({ refreshKey = 0 }) {
           </div>
         </section>
 
-        <aside className="testbed-inspector" aria-label="Selected endpoint and collector details">
-          <section className="inspector-section">
-            <h3>Selected Endpoint</h3>
-            <p className="inspector-endpoint">
-              {selectedNodeId.toUpperCase()} {selectedNodeId === 'pc1' ? '(Initiator / Client)' : '(Responder / Gateway)'}
-            </p>
-            <dl className="inspector-fields">
-              <div>
-                <dt>Observed IP</dt>
-                <dd>{selectedNodeId === 'pc1' ? (selectedProfile?.pc1Ip || '172.20.0.2') : (selectedProfile?.pc2Ip || '172.20.0.3')}</dd>
-              </div>
-              <div>
-                <dt>Subnet</dt>
-                <dd>172.20.0.0/24 (Docker)</dd>
-              </div>
-              <div>
-                <dt>Subsystem</dt>
-                <dd>Linux XFRM / netlink</dd>
-              </div>
-              <div>
-                <dt>IKE Daemon</dt>
-                <dd>strongSwan 5.9.x</dd>
-              </div>
-              <div>
-                <dt>Tunnel State</dt>
-                <dd className={tunnelState === 'ESTABLISHED' ? 'text-sage' : undefined}>{tunnelState}</dd>
-              </div>
-            </dl>
-          </section>
+        <aside className="testbed-inspector" aria-label="Selected entity and telemetry details">
+          <nav className="testbed-inspector-tabs" aria-label="Testbed entities">
+            <button
+              type="button"
+              className={`testbed-inspector-tab-btn${selectedNodeId === 'pc1' ? ' is-active' : ''}`}
+              onClick={() => setSelectedNodeId('pc1')}
+            >
+              PC1
+            </button>
+            <button
+              type="button"
+              className={`testbed-inspector-tab-btn${selectedNodeId === 'tunnel' ? ' is-active' : ''}`}
+              onClick={() => setSelectedNodeId('tunnel')}
+            >
+              Tunnel
+            </button>
+            <button
+              type="button"
+              className={`testbed-inspector-tab-btn${selectedNodeId === 'pc2' ? ' is-active' : ''}`}
+              onClick={() => setSelectedNodeId('pc2')}
+            >
+              PC2
+            </button>
+            <button
+              type="button"
+              className={`testbed-inspector-tab-btn${selectedNodeId === 'ebpf' ? ' is-active' : ''}`}
+              onClick={() => setSelectedNodeId('ebpf')}
+            >
+              eBPF
+            </button>
+            <button
+              type="button"
+              className={`testbed-inspector-tab-btn${selectedNodeId === 'pcap' ? ' is-active' : ''}`}
+              onClick={() => setSelectedNodeId('pcap')}
+            >
+              PCAP
+            </button>
+            {selectedEvent && (
+              <button
+                type="button"
+                className={`testbed-inspector-tab-btn${selectedNodeId === 'event' ? ' is-active' : ''}`}
+                onClick={() => setSelectedNodeId('event')}
+              >
+                Event
+              </button>
+            )}
+          </nav>
+
+          {(selectedNodeId === 'pc1' || selectedNodeId === 'pc2') && (
+            <section className="inspector-section">
+              <h3>Selected Endpoint</h3>
+              <p className="inspector-endpoint">
+                {selectedNodeId.toUpperCase()} {selectedNodeId === 'pc1' ? '(Initiator / Client)' : '(Responder / Gateway)'}
+              </p>
+              <dl className="inspector-fields">
+                <div>
+                  <dt>Observed IP</dt>
+                  <dd>{selectedNodeId === 'pc1' ? fieldValue(liveStatus?.endpoints?.pc1?.ip) : fieldValue(liveStatus?.endpoints?.pc2?.ip)}</dd>
+                </div>
+                <div>
+                  <dt>Subnet</dt>
+                  <dd>{fieldValue(selectedNodeId === 'pc1' ? liveStatus?.endpoints?.pc1?.subnet : liveStatus?.endpoints?.pc2?.subnet)}</dd>
+                </div>
+                <div>
+                  <dt>Subsystem</dt>
+                  <dd>Linux XFRM / netlink</dd>
+                </div>
+                <div>
+                  <dt>IKE Daemon</dt>
+                  <dd>{fieldValue(selectedNodeId === 'pc1' ? liveStatus?.endpoints?.pc1?.daemon : liveStatus?.endpoints?.pc2?.daemon)}</dd>
+                </div>
+                <div>
+                  <dt>Tunnel State</dt>
+                  <dd className={tunnelState === 'ESTABLISHED' && !liveStatusError ? 'text-sage' : undefined}>{liveStatusError && liveStatus ? `STALE · ${tunnelState}` : tunnelState}</dd>
+                </div>
+              </dl>
+            </section>
+          )}
+
+          {selectedNodeId === 'tunnel' && (
+            <section className="inspector-section">
+              <h3>IPsec ESP Tunnel</h3>
+              <p className="inspector-endpoint">
+                PC1 ⇄ ESP Tunnel ⇄ PC2
+              </p>
+              <dl className="inspector-fields">
+                <div>
+                  <dt>Protocol</dt>
+                  <dd>ESP (IP Proto 50) / IKEv2</dd>
+                </div>
+                <div>
+                  <dt>Tunnel State</dt>
+                  <dd className={tunnelState === 'ESTABLISHED' && !liveStatusError ? 'text-sage' : undefined}>{liveStatusError && liveStatus ? `STALE · ${tunnelState}` : tunnelState}</dd>
+                </div>
+                <div>
+                  <dt>Initiator (PC1)</dt>
+                  <dd>{fieldValue(liveStatus?.endpoints?.pc1?.ip)}</dd>
+                </div>
+                <div>
+                  <dt>Responder (PC2)</dt>
+                  <dd>{fieldValue(liveStatus?.endpoints?.pc2?.ip)}</dd>
+                </div>
+                <div>
+                  <dt>Security Assoc</dt>
+                  <dd>XFRM State (SA) &amp; Policy (SP)</dd>
+                </div>
+                <div>
+                  <dt>Encapsulation</dt>
+                  <dd>Tunnel Mode (RFC 4301 / 4303)</dd>
+                </div>
+              </dl>
+            </section>
+          )}
+
+          {selectedNodeId === 'ebpf' && (
+            <section className="inspector-section">
+              <h3>eBPF Telemetry Core</h3>
+              <p className="inspector-endpoint">
+                Kernel Ring Buffer Probes
+              </p>
+              <dl className="inspector-fields">
+                <div>
+                  <dt>Mode</dt>
+                  <dd>{fieldValue(collectorStatus?.mode || (collectorConnected ? 'NATIVE_KERNEL_EBPF' : 'UNKNOWN'))}</dd>
+                </div>
+                <div>
+                  <dt>Status</dt>
+                  <dd className={collectorConnected ? 'text-sage' : undefined}>
+                    {statusError ? 'OFFLINE' : collectorConnected ? 'RUNNING' : 'UNAVAILABLE'}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Ring Buffer</dt>
+                  <dd>{collectorConnected ? 'Lossless RingBuf' : 'Standby'}</dd>
+                </div>
+                <div>
+                  <dt>Target Subsystem</dt>
+                  <dd>net/xfrm &amp; net/ipv4</dd>
+                </div>
+              </dl>
+            </section>
+          )}
+
+          {selectedNodeId === 'pcap' && (
+            <section className="inspector-section">
+              <h3>PCAP Packet Capture</h3>
+              <p className="inspector-endpoint">
+                Wire &amp; Synthetic Traffic Tap
+              </p>
+              <dl className="inspector-fields">
+                <div>
+                  <dt>Capture State</dt>
+                  <dd className={liveStatus?.capture?.active ? 'text-sage' : undefined}>
+                    {liveStatus?.capture?.active ? 'ACTIVE' : 'READY / IDLE'}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Interface</dt>
+                  <dd>{fieldValue(liveStatus?.capture?.interface || 'eth0 / docker0')}</dd>
+                </div>
+                <div>
+                  <dt>Packets</dt>
+                  <dd>{fieldValue(liveStatus?.capture?.packets ?? '0')}</dd>
+                </div>
+                <div>
+                  <dt>Format</dt>
+                  <dd>pcapng / libpcap</dd>
+                </div>
+              </dl>
+            </section>
+          )}
+
+          {selectedNodeId === 'event' && selectedEvent && (
+            <section className="inspector-section">
+              <h3>Active 3D Telemetry Event</h3>
+              <p className="inspector-endpoint">
+                {selectedEvent.eventType || 'Kernel Event'}
+              </p>
+              <dl className="inspector-fields">
+                <div><dt>Type</dt><dd>{fieldValue(selectedEvent.eventType)}</dd></div>
+                <div><dt>Process</dt><dd>{fieldValue(selectedEvent.process_name)}</dd></div>
+                <div><dt>PID</dt><dd>{fieldValue(selectedEvent.pid)}</dd></div>
+                <div><dt>Bytes</dt><dd>{fieldValue(selectedEvent.bytes)}</dd></div>
+                <div><dt>Packets</dt><dd>{fieldValue(selectedEvent.packets)}</dd></div>
+                <div><dt>Timestamp</dt><dd>{formatTimestamp(selectedEvent.timestamp)}</dd></div>
+              </dl>
+            </section>
+          )}
 
           <section className="inspector-section">
             <h3>eBPF Kernel Probes</h3>
@@ -265,66 +461,87 @@ export default function TestbedView({ refreshKey = 0 }) {
             )}
           </section>
 
-          <section className="inspector-section selected-event">
-            <h3>Selected Event</h3>
-            {selectedEvent ? (
-              <dl className="inspector-fields">
-                <div><dt>Type</dt><dd>{fieldValue(selectedEvent.eventType)}</dd></div>
-                <div><dt>Process</dt><dd>{fieldValue(selectedEvent.process_name)}</dd></div>
-                <div><dt>PID</dt><dd>{fieldValue(selectedEvent.pid)}</dd></div>
-                <div><dt>Bytes</dt><dd>{fieldValue(selectedEvent.bytes)}</dd></div>
-                <div><dt>Packets</dt><dd>{fieldValue(selectedEvent.packets)}</dd></div>
-                <div><dt>Timestamp</dt><dd>{formatTimestamp(selectedEvent.timestamp)}</dd></div>
-              </dl>
-            ) : (
-              <p className="inspector-message">Select any event below to inspect and project in 3D.</p>
-            )}
-          </section>
+          {selectedNodeId !== 'event' && (
+            <section className="inspector-section selected-event">
+              <h3>Selected Event</h3>
+              {selectedEvent ? (
+                <dl className="inspector-fields">
+                  <div><dt>Type</dt><dd>{fieldValue(selectedEvent.eventType)}</dd></div>
+                  <div><dt>Process</dt><dd>{fieldValue(selectedEvent.process_name)}</dd></div>
+                  <div><dt>PID</dt><dd>{fieldValue(selectedEvent.pid)}</dd></div>
+                  <div><dt>Bytes</dt><dd>{fieldValue(selectedEvent.bytes)}</dd></div>
+                  <div><dt>Packets</dt><dd>{fieldValue(selectedEvent.packets)}</dd></div>
+                  <div><dt>Timestamp</dt><dd>{formatTimestamp(selectedEvent.timestamp)}</dd></div>
+                </dl>
+              ) : (
+                <p className="inspector-message">Select any event below to inspect and project in 3D.</p>
+              )}
+            </section>
+          )}
         </aside>
       </div>
 
-      {/* Verified Configuration Profiles & Real Validation Matrix Section */}
+      {/* Profile Evidence & Configuration Validation Section */}
       <section className="dashboard-section testbed-config-matrix" aria-labelledby="testbed-config-title">
         <div className="section-heading">
           <div>
-            <h2 id="testbed-config-title">Verified StrongSwan Profiles &amp; Configuration Validator</h2>
+            <h2 id="testbed-config-title">StrongSwan Profile Evidence &amp; Configuration Validator</h2>
             <p>
-              Pre-verified repository profiles (<code>pc1-swanctl.conf</code>) and parameter validation against strongSwan cryptographic plugins and NIST SP 800-77 r1 rules.
+              Profile status reflects recorded experiment evidence. Parameter validation checks configuration compatibility; it does not prove negotiation or data-plane operation.
             </p>
           </div>
           <span className="section-meta">
-            {profilesData?.profiles?.length || 0} verified profiles available
+            {profilesLoading
+              ? 'Loading profile evidence…'
+              : profilesError
+                ? 'Profile evidence unavailable'
+                : `${profilesData?.profiles?.filter((profile) => ['EXECUTED_WITH_EVIDENCE', 'VERIFIED_OPERATIONAL'].includes(profile.status)).length ?? '—'} of ${profilesData?.profiles?.length ?? '—'} profiles have runtime evidence`}
           </span>
         </div>
 
         <div className="config-matrix-layout">
-          {/* Left: Verified Repository Profiles */}
+          {/* Left: Repository Profile Evidence */}
           <div className="config-profiles-list">
-            <h4 className="config-subsection-title">Repository Verified Swanctl Profiles</h4>
+            <h4 className="config-subsection-title">Repository Profile Inventory</h4>
             {profilesLoading ? (
-              <p className="inspector-message">Loading verified profiles…</p>
+              <p className="inspector-message">Loading profile inventory…</p>
             ) : profilesError ? (
               <p className="inspector-message">Unable to load profiles: {profilesError}</p>
             ) : (
               <div className="profile-cards-grid">
-                {profilesData?.profiles?.map((profile) => (
-                  <div key={profile.id} className="profile-card">
-                    <div className="profile-card-header">
-                      <strong>{profile.name}</strong>
-                      <span className="profile-badge verified">{profile.status}</span>
+                {profilesData?.profiles?.map((profile) => {
+                  const hasRuntimeEvidence = ['EXECUTED_WITH_EVIDENCE', 'VERIFIED_OPERATIONAL'].includes(profile.status);
+                  const statusLabel = hasRuntimeEvidence
+                    ? 'Executed with evidence'
+                    : ['IMPLEMENTED_UNVERIFIED', 'SUPPORTED_KERNEL'].includes(profile.status)
+                      ? 'Implemented · unverified'
+                      : 'Configuration only';
+                  const configLabel = profile.mode === 'transport' && !hasRuntimeEvidence
+                    ? 'No verified profile'
+                    : profile.configFile
+                      || (['IMPLEMENTED_UNVERIFIED', 'SUPPORTED_KERNEL'].includes(profile.status) ? 'No verified profile' : '—');
+                  return (
+                    <div key={profile.id} className="profile-card">
+                      <div className="profile-card-header">
+                        <strong>{profile.name}</strong>
+                        <span className={`profile-badge ${hasRuntimeEvidence ? 'verified' : 'unverified'}`}>{statusLabel}</span>
+                      </div>
+                      <div className="profile-card-specs">
+                        <div><span>Mode:</span> <strong>{profile.mode}</strong></div>
+                        <div><span>IKE:</span> <strong>v{profile.ikeVersion}</strong></div>
+                        <div><span>Cipher:</span> <strong>{profile.encryption}</strong></div>
+                        <div><span>ESP:</span> <code className="monospace">{profile.espProposals}</code></div>
+                        <div><span>DH Group:</span> <strong>{profile.dhGroupName} (Group {profile.dhGroup})</strong></div>
+                        <div><span>PFS:</span> <strong>{profile.pfs ? 'Enabled' : 'Disabled'}</strong></div>
+                        <div><span>Config:</span> <code>{configLabel}</code></div>
+                      </div>
+                      <div className="profile-compliance-tag">{profile.nistCompliance}</div>
+                      {profile.evidenceReference && (
+                        <div className="profile-evidence-ref">Evidence: <code>{profile.evidenceReference}</code></div>
+                      )}
                     </div>
-                    <div className="profile-card-specs">
-                      <div><span>Mode:</span> <strong>{profile.mode}</strong></div>
-                      <div><span>IKE:</span> <strong>v{profile.ikeVersion}</strong></div>
-                      <div><span>Cipher:</span> <strong>{profile.encryption}</strong></div>
-                      <div><span>ESP:</span> <code className="monospace">{profile.espProposals}</code></div>
-                      <div><span>DH Group:</span> <strong>{profile.dhGroupName} (Group {profile.dhGroup})</strong></div>
-                      <div><span>PFS:</span> <strong>{profile.pfs ? 'Enabled' : 'Disabled'}</strong></div>
-                      <div><span>Config:</span> <code>{profile.configFile}</code></div>
-                    </div>
-                    <div className="profile-compliance-tag">{profile.nistCompliance}</div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -470,7 +687,7 @@ export default function TestbedView({ refreshKey = 0 }) {
           <div>
             <h3 id="testbed-events-title">Live eBPF Telemetry &amp; Ring Buffer Stream</h3>
             <p>
-              Authoritative records from Linux kernel probes: <code>kprobe:xfrm_input</code>, <code>kprobe:xfrm_output</code>, <code>kprobe:sock_sendmsg</code>.
+              Host-wide records from Linux kernel probes: <code>kprobe:xfrm_input</code>, <code>kprobe:xfrm_output</code>, <code>kprobe:sock_sendmsg</code>. Events are not attributed to PC1, PC2, or this tunnel without verified correlation.
             </p>
           </div>
           <span className="section-meta">{events.length} observed events in buffer</span>
@@ -481,7 +698,7 @@ export default function TestbedView({ refreshKey = 0 }) {
           <p className="inspector-message">
             {!eventError && !collectorStatus
               ? 'Loading collector events…'
-              : 'No recent IPsec events in ring buffer. Generate traffic between PC1 and PC2 to observe live XFRM transforms.'}
+              : 'No events are buffered. This does not establish whether the PC1 ↔ PC2 tunnel carried traffic.'}
           </p>
         ) : (
           <div className="testbed-event-scroll">

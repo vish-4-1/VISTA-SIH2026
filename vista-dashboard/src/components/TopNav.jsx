@@ -23,7 +23,7 @@ const TAB_TITLES = {
   security: { label: 'NIST Security Assessment', icon: ShieldCheck },
   threat: { label: 'Threat Intelligence', icon: AlertTriangle },
   reports: { label: 'Compliance Reports', icon: FileText },
-  dataset: { label: 'Datasets & Provenance', icon: Database },
+  dataset: { label: 'Dataset Studio', icon: Database },
 };
 
 function ConnectionPill({ label, connected, detail, icon: Icon }) {

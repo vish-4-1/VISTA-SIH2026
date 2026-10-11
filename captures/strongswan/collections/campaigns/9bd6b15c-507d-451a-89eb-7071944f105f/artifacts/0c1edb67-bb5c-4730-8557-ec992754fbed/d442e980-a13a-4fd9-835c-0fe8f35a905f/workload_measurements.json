@@ -1,0 +1,87 @@
+{
+  "experimentId": "d442e980-a13a-4fd9-835c-0fe8f35a905f",
+  "sessionId": "0c1edb67-bb5c-4730-8557-ec992754fbed",
+  "startedAt": "2026-10-10T05:49:39.381096+00:00",
+  "captureStartedAt": "2026-10-10T05:49:40.172202+00:00",
+  "captureEndedAt": "2026-10-10T05:49:44.537122+00:00",
+  "requestedProfiles": [
+    {
+      "count": 5,
+      "interval_seconds": 0.3,
+      "path": "/metrics",
+      "method": "GET",
+      "payload_bytes": 0,
+      "expected_status": 200
+    }
+  ],
+  "senderMeasurements": {
+    "totalRequestsSent": 5,
+    "totalBytesSent": 515,
+    "totalBytesReceived": 370,
+    "requests": [
+      {
+        "index": 0,
+        "path": "/metrics",
+        "method": "GET",
+        "statusCode": 200,
+        "statusLine": "HTTP/1.1 200 OK",
+        "responseBytes": 59,
+        "responseSha256": "ebca263ec17ef4d6edd41069a5825a0d12ce8a7a66d734e90cb625d4a1e4038a",
+        "durationSeconds": 0
+      },
+      {
+        "index": 1,
+        "path": "/metrics",
+        "method": "GET",
+        "statusCode": 200,
+        "statusLine": "HTTP/1.1 200 OK",
+        "responseBytes": 59,
+        "responseSha256": "e67f15bbd86a5c047c53af7861897b9f92f03d847f7adeb16e31d07c7d31a4f6",
+        "durationSeconds": 0
+      },
+      {
+        "index": 2,
+        "path": "/metrics",
+        "method": "GET",
+        "statusCode": 200,
+        "statusLine": "HTTP/1.1 200 OK",
+        "responseBytes": 59,
+        "responseSha256": "68094a9428a991e468d92b5d0a1d802061c098698e65b173d6210e43b66582c3",
+        "durationSeconds": 0
+      },
+      {
+        "index": 3,
+        "path": "/metrics",
+        "method": "GET",
+        "statusCode": 200,
+        "statusLine": "HTTP/1.1 200 OK",
+        "responseBytes": 59,
+        "responseSha256": "1b2cc0f1a9d405514061dd5421f04a53cce50d2c60c2a65a45d3b066c9af6226",
+        "durationSeconds": 0
+      },
+      {
+        "index": 4,
+        "path": "/metrics",
+        "method": "GET",
+        "statusCode": 200,
+        "statusLine": "HTTP/1.1 200 OK",
+        "responseBytes": 59,
+        "responseSha256": "08b8c69348edecaff4da80c04b539e1f43da7fa2eb4fa5e10504bbc0572c7005",
+        "durationSeconds": 0
+      }
+    ]
+  },
+  "independentReceiverEvidence": {
+    "serverEvidencePath": "server_evidence.json",
+    "serverEvidenceSha256": "33d48947879ae2fa2a62352a4e00f996c1666b4f591550bb14fa65d2f43f0b13",
+    "totalRequestsReceived": 5,
+    "pcapPath": "pc2_receiver_http.pcap",
+    "pcapSha256": "28b95254093316b54eab14013c985afc42d45cf90df4a41726fb6dc69a59dcc6",
+    "capturedTcpPackets": 30
+  },
+  "pc1OuterCaptureEvidence": {
+    "pcapPath": "pc1_outer_http.pcap",
+    "pcapSha256": "c91a109582a0a4c63d416a298c8e06ba5e36f7fe27a64670f327854eed52d736",
+    "espPackets": 54
+  }
+}

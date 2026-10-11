@@ -1,0 +1,203 @@
+{
+  "schemaVersion": "vista-workload-collection-v1",
+  "experimentId": "a7f64c48-2741-4259-bb00-c05d1b2c00e7",
+  "sessionId": "60bd9f30-2394-4372-a523-a87c599cd27a",
+  "startedAt": "2026-10-10T02:47:03.464193+00:00",
+  "requestedWorkload": {
+    "type": "icmpv4_echo",
+    "profiles": [
+      {
+        "count": 5,
+        "interval_seconds": 0.2,
+        "payload_bytes": 64
+      }
+    ]
+  },
+  "status": "FAIL",
+  "errors": [
+    "independent_receiver_capture_did_not_observe_all_echo_replies"
+  ],
+  "artifactDirectory": "C:\\vista\\captures\\strongswan\\collections\\60bd9f30-2394-4372-a523-a87c599cd27a\\a7f64c48-2741-4259-bb00-c05d1b2c00e7",
+  "endpoints": {
+    "pc1": {
+      "containerId": "68c0da1113cb9646ec329f5d470bc7a08b6350810deb0e968c0e2ae59ae3693b",
+      "state": "running",
+      "ipv4Address": "172.20.0.2"
+    },
+    "pc2": {
+      "containerId": "ef1f7407e7d5b2dc0871b0fd3f55ab207db0d468dce8eda8424872b1e1465a47",
+      "state": "running",
+      "ipv4Address": "172.20.0.3"
+    }
+  },
+  "strongSwanVersion": "strongSwan swanctl 5.9.8",
+  "negotiatedSaBefore": {
+    "pc1": {
+      "established": true,
+      "ike": {
+        "version": 2,
+        "encryption": "AES_CBC",
+        "encryptionKeySize": 256,
+        "integrity": "HMAC_SHA2_256_128",
+        "prf": "PRF_HMAC_SHA2_256",
+        "dhGroup": 14,
+        "dhGroupName": "MODP_2048"
+      },
+      "child": {
+        "name": "pc-tunnel",
+        "state": "INSTALLED",
+        "mode": "TUNNEL",
+        "protocol": "ESP",
+        "encryption": "AES_GCM_16",
+        "encryptionKeySize": 256,
+        "integrity": null,
+        "pfsGroup": 14,
+        "pfsGroupName": "MODP_2048",
+        "localTrafficSelector": "172.20.0.2/32",
+        "remoteTrafficSelector": "172.20.0.3/32",
+        "bytesIn": 460,
+        "bytesOut": 460,
+        "packetsIn": 5,
+        "packetsOut": 5,
+        "spiIn": "ca064433",
+        "spiOut": "ce31899b"
+      },
+      "pfs": true
+    },
+    "pc2": {
+      "established": true,
+      "ike": {
+        "version": 2,
+        "encryption": "AES_CBC",
+        "encryptionKeySize": 256,
+        "integrity": "HMAC_SHA2_256_128",
+        "prf": "PRF_HMAC_SHA2_256",
+        "dhGroup": 14,
+        "dhGroupName": "MODP_2048"
+      },
+      "child": {
+        "name": "pc-tunnel",
+        "state": "INSTALLED",
+        "mode": "TUNNEL",
+        "protocol": "ESP",
+        "encryption": "AES_GCM_16",
+        "encryptionKeySize": 256,
+        "integrity": null,
+        "pfsGroup": 14,
+        "pfsGroupName": "MODP_2048",
+        "localTrafficSelector": "172.20.0.3/32",
+        "remoteTrafficSelector": "172.20.0.2/32",
+        "bytesIn": 460,
+        "bytesOut": 460,
+        "packetsIn": 5,
+        "packetsOut": 5,
+        "spiIn": "ce31899b",
+        "spiOut": "ca064433"
+      },
+      "pfs": true
+    }
+  },
+  "observedXfrmMode": "TUNNEL",
+  "senderMeasurements": [
+    {
+      "requested": {
+        "count": 5,
+        "interval_seconds": 0.2,
+        "payload_bytes": 64
+      },
+      "packetsSent": 5,
+      "packetsReceived": 5,
+      "durationSeconds": 1.0469999999040738,
+      "exitCode": 0,
+      "stdout": "PING 172.20.0.3 (172.20.0.3) 64(92) bytes of data.\n72 bytes from 172.20.0.3: icmp_seq=1 ttl=64 time=1.19 ms\n72 bytes from 172.20.0.3: icmp_seq=2 ttl=64 time=0.358 ms\n72 bytes from 172.20.0.3: icmp_seq=3 ttl=64 time=0.520 ms\n72 bytes from 172.20.0.3: icmp_seq=4 ttl=64 time=0.371 ms\n72 bytes from 172.20.0.3: icmp_seq=5 ttl=64 time=0.867 ms\n\n--- 172.20.0.3 ping statistics ---\n5 packets transmitted, 5 received, 0% packet loss, time 817ms\nrtt min/avg/max/mdev = 0.358/0.661/1.191/0.322 ms\n",
+      "stderr": ""
+    }
+  ],
+  "observedWorkload": {
+    "packetsRequested": 5,
+    "packetsSent": 5,
+    "packetsReceived": 5,
+    "senderDurationSeconds": 1.0469999999040738,
+    "receiverEchoRequests": 5,
+    "receiverEchoReplies": 0,
+    "pc1CapturedIcmpPackets": 5,
+    "pc1CapturedEspPackets": 10,
+    "packetTablePackets": 5,
+    "byteCount": 320,
+    "icmpBytesSent": 360,
+    "pc1CapturedIpv4Bytes": 460,
+    "saCounterDelta": {
+      "packetsIn": 5,
+      "packetsOut": 5,
+      "bytesIn": 460,
+      "bytesOut": 460
+    }
+  },
+  "negotiatedSaAfter": {
+    "pc1": {
+      "established": true,
+      "ike": {
+        "version": 2,
+        "encryption": "AES_CBC",
+        "encryptionKeySize": 256,
+        "integrity": "HMAC_SHA2_256_128",
+        "prf": "PRF_HMAC_SHA2_256",
+        "dhGroup": 14,
+        "dhGroupName": "MODP_2048"
+      },
+      "child": {
+        "name": "pc-tunnel",
+        "state": "INSTALLED",
+        "mode": "TUNNEL",
+        "protocol": "ESP",
+        "encryption": "AES_GCM_16",
+        "encryptionKeySize": 256,
+        "integrity": null,
+        "pfsGroup": 14,
+        "pfsGroupName": "MODP_2048",
+        "localTrafficSelector": "172.20.0.2/32",
+        "remoteTrafficSelector": "172.20.0.3/32",
+        "bytesIn": 920,
+        "bytesOut": 920,
+        "packetsIn": 10,
+        "packetsOut": 10,
+        "spiIn": "ca064433",
+        "spiOut": "ce31899b"
+      },
+      "pfs": true
+    },
+    "pc2": {
+      "established": true,
+      "ike": {
+        "version": 2,
+        "encryption": "AES_CBC",
+        "encryptionKeySize": 256,
+        "integrity": "HMAC_SHA2_256_128",
+        "prf": "PRF_HMAC_SHA2_256",
+        "dhGroup": 14,
+        "dhGroupName": "MODP_2048"
+      },
+      "child": {
+        "name": "pc-tunnel",
+        "state": "INSTALLED",
+        "mode": "TUNNEL",
+        "protocol": "ESP",
+        "encryption": "AES_GCM_16",
+        "encryptionKeySize": 256,
+        "integrity": null,
+        "pfsGroup": 14,
+        "pfsGroupName": "MODP_2048",
+        "localTrafficSelector": "172.20.0.3/32",
+        "remoteTrafficSelector": "172.20.0.2/32",
+        "bytesIn": 920,
+        "bytesOut": 920,
+        "packetsIn": 10,
+        "packetsOut": 10,
+        "spiIn": "ce31899b",
+        "spiOut": "ca064433"
+      },
+      "pfs": true
+    }
+  },
+  "completedAt": "2026-10-10T02:47:09.633202+00:00"
+}

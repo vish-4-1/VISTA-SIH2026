@@ -1,0 +1,355 @@
+{
+  "model_name": "random_forest",
+  "model_version": "20261009T233255Z-1f0eea9c",
+  "prediction_task": "benign_outer_esp_icmp_vs_tcp",
+  "target_classes": [
+    "ICMP_NORMAL",
+    "TCP_NORMAL"
+  ],
+  "feature_schema_version": "vista-testbed-extractor-v1",
+  "feature_columns": [
+    "packet_count",
+    "byte_count",
+    "flow_duration",
+    "mean_packet_size",
+    "std_packet_size",
+    "min_packet_size",
+    "max_packet_size",
+    "mean_inter_arrival_time",
+    "std_inter_arrival_time",
+    "min_inter_arrival_time",
+    "max_inter_arrival_time",
+    "packets_per_second",
+    "bytes_per_second",
+    "forward_packet_count",
+    "backward_packet_count",
+    "forward_bytes",
+    "backward_bytes",
+    "direction_ratio"
+  ],
+  "feature_schema": {
+    "schema_version": "vista-testbed-extractor-v1",
+    "task_scope": "benign ICMP-echo versus TCP-marker workload classification from outer ESP flow metadata",
+    "capture_point": "pc1 eth0, outer encrypted ESP packets",
+    "runtime_compatible": false,
+    "extraction_implementation": "vista_ml.features.pcap_features.extract_flow_features",
+    "runtime_compatibility_note": "This testbed batch feature extractor has not been proven numerically equivalent to backend.services.pcap_analyzer and is not approved for runtime inference.",
+    "target_classes": [
+      "ICMP_NORMAL",
+      "TCP_NORMAL"
+    ],
+    "label_source": "Controlled workload selected by the testbed experiment; not attack ground truth or encrypted application identity.",
+    "missing_value_policy": "Reject the flow; do not impute or zero-fill.",
+    "preprocessing": "No learned preprocessing. Convert declared features to finite numeric values in this exact order.",
+    "features": [
+      {
+        "name": "packet_count",
+        "type": "integer",
+        "units": "packets",
+        "definition": "Number of observed outer ESP IP packets in the bidirectional flow.",
+        "source": "PCAP packet aggregation",
+        "valid_range": {
+          "minimum": 1
+        }
+      },
+      {
+        "name": "byte_count",
+        "type": "integer",
+        "units": "bytes",
+        "definition": "Sum of observed outer IP packet lengths.",
+        "source": "PCAP IP length",
+        "valid_range": {
+          "minimum": 1
+        }
+      },
+      {
+        "name": "flow_duration",
+        "type": "number",
+        "units": "seconds",
+        "definition": "Elapsed time between first and last packet timestamps.",
+        "source": "PCAP timestamps",
+        "valid_range": {
+          "minimum": 0
+        }
+      },
+      {
+        "name": "mean_packet_size",
+        "type": "number",
+        "units": "bytes",
+        "definition": "Arithmetic mean of outer IP packet lengths.",
+        "source": "PCAP IP length",
+        "valid_range": {
+          "minimum": 1
+        }
+      },
+      {
+        "name": "std_packet_size",
+        "type": "number",
+        "units": "bytes",
+        "definition": "Sample standard deviation (pandas ddof=1) as produced by the VISTA batch flow extractor; null for a single sample.",
+        "source": "PCAP IP length",
+        "valid_range": {
+          "minimum": 0
+        }
+      },
+      {
+        "name": "min_packet_size",
+        "type": "number",
+        "units": "bytes",
+        "definition": "Minimum outer IP packet length.",
+        "source": "PCAP IP length",
+        "valid_range": {
+          "minimum": 1
+        }
+      },
+      {
+        "name": "max_packet_size",
+        "type": "number",
+        "units": "bytes",
+        "definition": "Maximum outer IP packet length.",
+        "source": "PCAP IP length",
+        "valid_range": {
+          "minimum": 1
+        }
+      },
+      {
+        "name": "mean_inter_arrival_time",
+        "type": "number",
+        "units": "seconds",
+        "definition": "Mean elapsed time between consecutive observed flow packets.",
+        "source": "PCAP timestamps",
+        "valid_range": {
+          "minimum": 0
+        }
+      },
+      {
+        "name": "std_inter_arrival_time",
+        "type": "number",
+        "units": "seconds",
+        "definition": "Sample standard deviation (pandas ddof=1) of consecutive packet time deltas; null where undefined.",
+        "source": "PCAP timestamps",
+        "valid_range": {
+          "minimum": 0
+        }
+      },
+      {
+        "name": "min_inter_arrival_time",
+        "type": "number",
+        "units": "seconds",
+        "definition": "Minimum consecutive packet time delta.",
+        "source": "PCAP timestamps",
+        "valid_range": {
+          "minimum": 0
+        }
+      },
+      {
+        "name": "max_inter_arrival_time",
+        "type": "number",
+        "units": "seconds",
+        "definition": "Maximum consecutive packet time delta.",
+        "source": "PCAP timestamps",
+        "valid_range": {
+          "minimum": 0
+        }
+      },
+      {
+        "name": "packets_per_second",
+        "type": "number",
+        "units": "packets/second",
+        "definition": "Packet count divided by positive flow duration.",
+        "source": "PCAP-derived flow statistics",
+        "valid_range": {
+          "minimum": 0
+        }
+      },
+      {
+        "name": "bytes_per_second",
+        "type": "number",
+        "units": "bytes/second",
+        "definition": "Byte count divided by positive flow duration.",
+        "source": "PCAP-derived flow statistics",
+        "valid_range": {
+          "minimum": 0
+        }
+      },
+      {
+        "name": "forward_packet_count",
+        "type": "integer",
+        "units": "packets",
+        "definition": "Packets from the lexicographically first endpoint to the second endpoint.",
+        "source": "Canonical endpoint ordering",
+        "valid_range": {
+          "minimum": 0
+        }
+      },
+      {
+        "name": "backward_packet_count",
+        "type": "integer",
+        "units": "packets",
+        "definition": "Packets from the lexicographically second endpoint to the first endpoint.",
+        "source": "Canonical endpoint ordering",
+        "valid_range": {
+          "minimum": 0
+        }
+      },
+      {
+        "name": "forward_bytes",
+        "type": "number",
+        "units": "bytes",
+        "definition": "Sum of outer IP packet lengths in the forward direction.",
+        "source": "Canonical endpoint ordering and PCAP IP length",
+        "valid_range": {
+          "minimum": 0
+        }
+      },
+      {
+        "name": "backward_bytes",
+        "type": "number",
+        "units": "bytes",
+        "definition": "Sum of outer IP packet lengths in the backward direction.",
+        "source": "Canonical endpoint ordering and PCAP IP length",
+        "valid_range": {
+          "minimum": 0
+        }
+      },
+      {
+        "name": "direction_ratio",
+        "type": "number",
+        "units": "ratio",
+        "definition": "Forward packet count divided by total packet count.",
+        "source": "Canonical endpoint ordering",
+        "valid_range": {
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    ],
+    "unsupported_inputs": [
+      "IKE control flows",
+      "Non-ESP flows",
+      "Application or attack labels inferred from tunnel outer metadata",
+      "Missing or non-finite mandatory features",
+      "Features extracted from a different schema version"
+    ]
+  },
+  "feature_schema_sha256": "8a67ce54e076bfb6b6d0cdbe1d86fa795c2f1bf53eab192f125e22af65aa8ab6",
+  "missing_value_policy": "Reject the flow; do not impute or zero-fill.",
+  "preprocessing": "No learned preprocessing. Convert declared features to finite numeric values in this exact order.",
+  "target_label_source": "Controlled workload selected by the testbed experiment; not attack ground truth or encrypted application identity.",
+  "capture_point": "pc1 eth0, outer encrypted ESP packets",
+  "validated_for_inference": false,
+  "validation_status": "narrow-controlled-testbed-evaluation-only",
+  "inference_blocker": "This two-class lab model is not the production application classifier, does not classify attacks, and uses vista-testbed-extractor-v1 rather than the live vista-flow-v1 contract.",
+  "training_runs": [
+    "20261005T152940Z",
+    "20261005T153141Z",
+    "20261005T155313Z"
+  ],
+  "held_out_run": "20261005T155356Z",
+  "source_dataset_hashes": {
+    "20261005T152940Z": "1448815ec554c52cda556ee0f8c50ef4faf8553750814603629c5258fa13cbc8",
+    "20261005T153141Z": "fd69eece57fa46eee7cb248640885cc8b6418c0dcde1b9d5af926df7c9f04461",
+    "20261005T155313Z": "1fdc9d53c03f4b8ddafc5487e9748d84a3046afdfe5e6a741bf7d81033018b94",
+    "20261005T155356Z": "aa49967fa8361a325b9d7921fe00457b37f7e5d80c705dc3b08dfee737793599"
+  },
+  "selected_on_validation": true,
+  "validation_metrics": {
+    "sample_count": 8,
+    "class_distribution": {
+      "ICMP_NORMAL": 4,
+      "TCP_NORMAL": 4
+    },
+    "accuracy": 1.0,
+    "macro_precision": 1.0,
+    "macro_recall": 1.0,
+    "macro_f1": 1.0,
+    "per_class": {
+      "ICMP_NORMAL": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 4.0
+      },
+      "TCP_NORMAL": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 4.0
+      }
+    },
+    "confusion_matrix": {
+      "labels": [
+        "ICMP_NORMAL",
+        "TCP_NORMAL"
+      ],
+      "values": [
+        [
+          4,
+          0
+        ],
+        [
+          0,
+          4
+        ]
+      ]
+    },
+    "tcp_normal_roc_auc": 1.0,
+    "tcp_normal_average_precision": 1.0,
+    "probability_calibration": "not evaluated; raw classifier probabilities only"
+  },
+  "held_out_test_metrics": {
+    "sample_count": 50,
+    "class_distribution": {
+      "ICMP_NORMAL": 25,
+      "TCP_NORMAL": 25
+    },
+    "accuracy": 1.0,
+    "macro_precision": 1.0,
+    "macro_recall": 1.0,
+    "macro_f1": 1.0,
+    "per_class": {
+      "ICMP_NORMAL": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 25.0
+      },
+      "TCP_NORMAL": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 25.0
+      }
+    },
+    "confusion_matrix": {
+      "labels": [
+        "ICMP_NORMAL",
+        "TCP_NORMAL"
+      ],
+      "values": [
+        [
+          25,
+          0
+        ],
+        [
+          0,
+          25
+        ]
+      ]
+    },
+    "tcp_normal_roc_auc": 1.0,
+    "tcp_normal_average_precision": 1.0,
+    "probability_calibration": "not evaluated; raw classifier probabilities only"
+  },
+  "feature_importance": [],
+  "split_manifest": "reports\\candidates\\benign_outer_esp_icmp_vs_tcp\\20261009T233255Z-1f0eea9c\\split_manifest.json",
+  "random_state": 42,
+  "python_version": "3.12.14 (main, Sep 24 2026, 17:57:31) [MSC v.1944 64 bit (AMD64)]",
+  "dependency_versions": {
+    "numpy": "2.5.3",
+    "pandas": "3.0.6",
+    "scikit-learn": "1.9.1",
+    "xgboost": "3.4.1",
+    "joblib": "1.6.0"
+  }
+}

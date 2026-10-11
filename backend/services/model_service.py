@@ -57,7 +57,7 @@ CANONICAL_FEATURE_SCHEMA: List[Dict[str, Any]] = [
         "group": "NETWORK_BASIC",
         "type": "integer",
         "unit": "bytes",
-        "description": "Total observed payload and header bytes in the flow",
+        "description": "Sum of observed IPv4 network-layer packet lengths; excludes link-layer framing",
     },
     {
         "name": "flow_duration",
@@ -78,7 +78,7 @@ CANONICAL_FEATURE_SCHEMA: List[Dict[str, Any]] = [
         "group": "PACKET_SIZE",
         "type": "float",
         "unit": "bytes",
-        "description": "Standard deviation of packet lengths in the flow",
+        "description": "Population standard deviation (ddof=0) of packet lengths, rounded to one decimal place",
     },
     {
         "name": "min_packet_size",
@@ -169,7 +169,7 @@ CANONICAL_FEATURE_SCHEMA: List[Dict[str, Any]] = [
         "group": "DIRECTION",
         "type": "float",
         "unit": "ratio (0–1)",
-        "description": "Ratio of forward bytes to total flow bytes (asymmetry)",
+        "description": "Forward packet count divided by total packet count, rounded to three decimal places",
     },
 ]
 
@@ -230,11 +230,6 @@ class ModelService:
                 self.load_errors["xgboost"] = str(err)
                 logger.exception("Failed to load XGBoost model.")
 
-        # If attack_model not explicitly loaded, fall back to xgb_model
-        if self.attack_model is None and self.xgb_model is not None:
-            self.attack_model = self.xgb_model
-            self.attack_metadata = self.xgb_metadata
-
         if rf_path.exists():
             try:
                 self.rf_model = joblib.load(rf_path)
@@ -260,6 +255,7 @@ class ModelService:
             or self.attack_model is not None
             or self.xgb_model is not None
             or self.rf_model is not None
+            or self.iso_model is not None
         )
 
     @staticmethod
@@ -277,13 +273,6 @@ class ModelService:
         metadata: Dict[str, Any],
         load_error: Optional[str] = None,
     ) -> Dict[str, Any]:
-        model_type = metadata.get("model")
-        is_classifier = (
-            getattr(model, "classes_", None) is not None
-            if model is not None
-            else isinstance(model_type, str) and "Classifier" in model_type
-        )
-        has_artifact_metadata = model is not None or bool(metadata)
         feature_cols = cls._feature_columns(model, metadata)
         info: Dict[str, Any] = {
             "loaded": model is not None,
@@ -300,30 +289,22 @@ class ModelService:
                 for col in feature_cols
             ],
             "metadata": metadata,
-            "predictionTask": metadata.get(
-                "prediction_task",
-                "flow traffic-label classification"
-                if is_classifier
-                else "flow anomaly detection"
-                if model is not None or model_type == "IsolationForest"
-                else "Not available",
-            ),
-            "trainingDataScope": metadata.get("training_data_scope") or (
-                "synthetic development dataset" if has_artifact_metadata else None
-            ),
-            "trainingDataset": metadata.get("training_dataset") or (
-                "data/sample/synthetic_vista_dataset.parquet" if has_artifact_metadata else None
-            ),
-            "evaluationScope": metadata.get("evaluation_scope") or (
-                "synthetic-data evaluation; not validated for real-world attack detection"
-                if has_artifact_metadata else None
-            ),
+            "predictionTask": metadata.get("prediction_task", "Not recorded"),
+            "trainingDataScope": metadata.get("training_data_scope"),
+            "trainingDataset": metadata.get("training_dataset"),
+            "evaluationScope": metadata.get("evaluation_scope"),
             "probabilitiesAvailable": bool(
                 model is not None and hasattr(model, "predict_proba")
             ),
-            "probabilityCalibration": metadata.get("probability_calibration") or (
-                "not evaluated" if is_classifier else None
+            "probabilityCalibration": metadata.get("probability_calibration"),
+            "modelVersion": metadata.get("model_version") or metadata.get("version"),
+            "featureSchemaVersion": metadata.get("feature_schema_version"),
+            "inferenceEnabled": (
+                model is not None
+                and metadata.get("validated_for_inference") is True
+                and metadata.get("feature_schema_version") == "vista-flow-v1"
             ),
+            "validationStatus": metadata.get("validation_status", "not_validated"),
         }
         if load_error:
             info["loadError"] = load_error
@@ -339,10 +320,10 @@ class ModelService:
                     self.traffic_model, self.traffic_metadata, self.load_errors.get("traffic_classifier"),
                 ),
                 "attack_classifier": self._model_info(
-                    self.attack_model or self.xgb_model, self.attack_metadata or self.xgb_metadata, self.load_errors.get("attack_classifier") or self.load_errors.get("xgboost"),
+                    self.attack_model, self.attack_metadata, self.load_errors.get("attack_classifier"),
                 ),
                 "xgboost": self._model_info(
-                    self.xgb_model or self.attack_model, self.xgb_metadata or self.attack_metadata, self.load_errors.get("xgboost") or self.load_errors.get("attack_classifier"),
+                    self.xgb_model, self.xgb_metadata, self.load_errors.get("xgboost"),
                 ),
                 "random_forest": self._model_info(
                     self.rf_model, self.rf_metadata, self.load_errors.get("random_forest"),
@@ -422,20 +403,20 @@ class ModelService:
                 "TrafficClassifier (XGBoost)",
             ),
             "attack_classifier": (
-                self.attack_model or self.xgb_model,
-                self.attack_metadata or self.xgb_metadata,
+                self.attack_model,
+                self.attack_metadata,
                 "attack_classifier.joblib",
                 "AttackClassifier (XGBoost)",
             ),
             "attack": (
-                self.attack_model or self.xgb_model,
-                self.attack_metadata or self.xgb_metadata,
+                self.attack_model,
+                self.attack_metadata,
                 "attack_classifier.joblib",
                 "AttackClassifier (XGBoost)",
             ),
             "xgboost": (
-                self.xgb_model or self.attack_model,
-                self.xgb_metadata or self.attack_metadata,
+                self.xgb_model,
+                self.xgb_metadata,
                 "xgboost_classifier.joblib",
                 "XGBoost",
             ),
@@ -460,8 +441,37 @@ class ModelService:
         expected_columns = self._feature_columns(model, metadata)
         absent_columns = [column for column in expected_columns if column not in features_df.columns]
         if absent_columns:
-            raise ValueError(f"Missing model input columns: {', '.join(absent_columns)}.")
-        inputs = features_df[expected_columns]
+            return [
+                {
+                    "status": "insufficient_data",
+                    "source": "feature_validation",
+                    "predictedClass": None,
+                    "isAttack": None,
+                    "probability": None,
+                    "probabilityType": None,
+                    "confidence": None,
+                    "confidenceValue": None,
+                    "probabilities": None,
+                    "isAnomaly": None,
+                    "anomalyScore": None,
+                    "modelUsed": model_label,
+                    "modelArtifact": artifact,
+                    "modelTask": metadata.get("prediction_task"),
+                    "missingFeatures": absent_columns,
+                }
+                for _ in range(len(features_df))
+            ]
+        inputs = features_df.loc[:, expected_columns]
+        fitted_columns = getattr(model, "feature_names_in_", None)
+        if fitted_columns is None and hasattr(model, "estimator"):
+            fitted_columns = getattr(model.estimator, "feature_names_in_", None)
+        if fitted_columns is None and hasattr(model, "get_booster"):
+            fitted_columns = getattr(model.get_booster(), "feature_names", None)
+        if fitted_columns is not None and list(fitted_columns) != expected_columns:
+            raise RuntimeError(
+                f"Artifact feature order {list(fitted_columns)} does not match metadata order "
+                f"{expected_columns}."
+            )
 
         results: List[Dict[str, Any]] = []
         valid_positions: List[int] = []
@@ -475,8 +485,7 @@ class ModelService:
                     "modelUsed": model_label,
                     "modelArtifact": artifact,
                     "modelTask": metadata.get("prediction_task") or "classification",
-                    "trainingDataScope": metadata.get("training_data_scope")
-                    or "synthetic development dataset",
+                    "trainingDataScope": metadata.get("training_data_scope"),
                     "probability": None,
                     "probabilityType": None,
                     "confidence": None,
@@ -495,6 +504,39 @@ class ModelService:
             return results
 
         valid_features = inputs.iloc[valid_positions]
+        if (
+            metadata.get("validated_for_inference") is not True
+            or metadata.get("feature_schema_version") != "vista-flow-v1"
+        ):
+            reason = metadata.get("inference_limitation") or (
+                "The artifact has no verified held-out evaluation and matching feature-schema "
+                "version; predictions are disabled until that evidence is recorded."
+            )
+            for position in valid_positions:
+                results[position] = {
+                    "status": "unsupported_input",
+                    "source": "model_validation_gate",
+                    "predictedClass": None,
+                    "isAttack": None,
+                    "probability": None,
+                    "probabilityType": None,
+                    "confidence": None,
+                    "confidenceValue": None,
+                    "probabilities": None,
+                    "isAnomaly": None,
+                    "anomalyScore": None,
+                    "modelUsed": model_label,
+                    "modelArtifact": artifact,
+                    "modelTask": metadata.get("prediction_task"),
+                    "modelVersion": metadata.get("model_version") or metadata.get("version"),
+                    "featureSchemaVersion": metadata.get("feature_schema_version"),
+                    "validationStatus": metadata.get("validation_status", "not_validated"),
+                    "trainingDataScope": metadata.get("training_data_scope"),
+                    "missingFeatures": [],
+                    "error": reason,
+                }
+            return results
+
         raw_preds = model.predict(valid_features)
 
         probas = None
@@ -503,18 +545,6 @@ class ModelService:
                 probas = model.predict_proba(valid_features)
             except Exception:
                 logger.exception("Model probability calculation failed; confidence is unavailable.")
-
-        # Isolation forest anomaly detection
-        anomalies = None
-        anomaly_scores = None
-        if self.iso_model is not None:
-            try:
-                anomalies = self.iso_model.predict(valid_features)
-                anomaly_scores = self.iso_model.score_samples(valid_features)
-            except Exception:
-                logger.exception("Isolation Forest inference failed; anomaly results are unavailable.")
-                anomalies = None
-                anomaly_scores = None
 
         for prediction_index, row_position in enumerate(valid_positions):
             pred_class = str(raw_preds[prediction_index])
@@ -528,19 +558,15 @@ class ModelService:
                 if pred_class in classes:
                     predicted_probability = round(float(p_row[classes.index(pred_class)]), 4)
 
-            is_anomaly = None
-            anomaly_score = None
-            if anomalies is not None:
-                is_anomaly = bool(anomalies[prediction_index] == -1)
-                anomaly_score = round(float(anomaly_scores[prediction_index]), 4)
-
             is_attack = None
-            if "BENIGN" in classes:
+            is_attack_task = metadata.get("prediction_task") in {
+                "flow attack detection",
+                "flow attack detection and attribution",
+            }
+            if is_attack_task and "BENIGN" in classes:
                 is_attack = 0 if pred_class == "BENIGN" else 1
-            elif "NORMAL" in classes:
+            elif is_attack_task and "NORMAL" in classes:
                 is_attack = 0 if pred_class == "NORMAL" else 1
-            elif metadata.get("prediction_task") == "encrypted application traffic classification":
-                is_attack = 0
 
             results[row_position] = {
                 "status": "success",
@@ -561,17 +587,117 @@ class ModelService:
                     if predicted_probability is not None else None
                 ),
                 "probabilities": proba_dict,
-                "isAnomaly": is_anomaly,
-                "anomalyScore": anomaly_score,
+                "isAnomaly": None,
+                "anomalyScore": None,
                 "modelUsed": model_label,
                 "modelArtifact": artifact,
                 "modelTask": metadata.get("prediction_task") or "classification",
                 "modelVersion": metadata.get("model_version") or metadata.get("version"),
+                "featureSchemaVersion": metadata.get("feature_schema_version"),
+                "validationStatus": metadata.get("validation_status"),
                 "trainingDataScope": metadata.get("training_data_scope")
                 or "synthetic development dataset",
                 "missingFeatures": [],
             }
 
+        return results
+
+    def predict_anomaly(self, features_df: pd.DataFrame) -> List[Dict[str, Any]]:
+        """Runs the independent Isolation Forest task with its documented score convention."""
+        model = self.iso_model
+        metadata = self.iso_metadata
+        if model is None:
+            raise RuntimeError(
+                self.load_errors.get("isolation_forest", "The Isolation Forest model is not loaded.")
+            )
+
+        expected_columns = self._feature_columns(model, metadata)
+        absent = [column for column in expected_columns if column not in features_df.columns]
+        if absent:
+            return [
+                {
+                    "status": "insufficient_data",
+                    "source": "feature_validation",
+                    "predictedClass": None,
+                    "isAnomaly": None,
+                    "anomalyScore": None,
+                    "decisionThreshold": None,
+                    "missingFeatures": absent,
+                }
+                for _ in range(len(features_df))
+            ]
+
+        inputs = features_df.loc[:, expected_columns]
+        fitted_columns = getattr(model, "feature_names_in_", None)
+        if fitted_columns is not None and list(fitted_columns) != expected_columns:
+            raise RuntimeError(
+                f"Isolation Forest feature order {list(fitted_columns)} does not match metadata "
+                f"order {expected_columns}."
+            )
+
+        results: List[Dict[str, Any]] = []
+        valid_positions: List[int] = []
+        for position, (_, row) in enumerate(inputs.iterrows()):
+            missing = [column for column, value in row.items() if not np.isfinite(value)]
+            if missing:
+                results.append({
+                    "status": "insufficient_data",
+                    "source": "feature_validation",
+                    "predictedClass": None,
+                    "isAnomaly": None,
+                    "anomalyScore": None,
+                    "decisionThreshold": None,
+                    "missingFeatures": missing,
+                })
+            else:
+                results.append({})
+                valid_positions.append(position)
+
+        if not valid_positions:
+            return results
+
+        valid_features = inputs.iloc[valid_positions]
+        if (
+            metadata.get("validated_for_inference") is not True
+            or metadata.get("feature_schema_version") != "vista-flow-v1"
+            or metadata.get("score_convention") != "decision_function; negative is outlier"
+        ):
+            for position in valid_positions:
+                results[position] = {
+                    "status": "unsupported_input",
+                    "source": "model_validation_gate",
+                    "predictedClass": None,
+                    "isAnomaly": None,
+                    "anomalyScore": None,
+                    "decisionThreshold": None,
+                    "missingFeatures": [],
+                    "error": metadata.get("inference_limitation")
+                    or "The anomaly artifact's evaluation threshold and training distribution are unvalidated.",
+                }
+            return results
+
+        labels = model.predict(valid_features)
+        scores = model.decision_function(valid_features)
+        for prediction_index, row_position in enumerate(valid_positions):
+            is_anomaly = bool(labels[prediction_index] == -1)
+            score = float(scores[prediction_index])
+            results[row_position] = {
+                "status": "success",
+                "source": "isolation_forest",
+                "predictedClass": "ANOMALY" if is_anomaly else "INLIER",
+                "isAnomaly": is_anomaly,
+                "anomalyScore": round(score, 6),
+                "scoreConvention": "decision_function; negative is outlier",
+                "decisionThreshold": 0.0,
+                "modelUsed": "IsolationForest",
+                "modelArtifact": "isolation_forest.joblib",
+                "modelVersion": metadata.get("model_version") or metadata.get("version"),
+                "featureSchemaVersion": metadata.get("feature_schema_version"),
+                "validationStatus": metadata.get("validation_status"),
+                "trainingDataset": metadata.get("training_dataset"),
+                "trainingDataScope": metadata.get("training_data_scope"),
+                "missingFeatures": [],
+            }
         return results
 
     def predict_traffic(self, features_df: pd.DataFrame) -> List[Dict[str, Any]]:
@@ -582,8 +708,7 @@ class ModelService:
         self, features_df: pd.DataFrame, model_name: Optional[str] = None
     ) -> List[Dict[str, Any]]:
         """Runs inference using the dedicated Threat Intelligence attack detection model."""
-        target_model = model_name if model_name in ("random_forest", "xgboost") else "attack_classifier"
-        return self.predict(features_df, model_name=target_model)
+        return self.predict(features_df, model_name="attack_classifier")
 
 
 # Global singleton instance

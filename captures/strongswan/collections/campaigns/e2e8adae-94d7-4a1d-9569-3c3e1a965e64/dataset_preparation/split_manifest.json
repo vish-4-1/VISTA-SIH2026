@@ -1,0 +1,116 @@
+{
+  "strategy": "deterministic nested GroupShuffleSplit by verified IKE_SA lifecycle identity",
+  "random_state": 42,
+  "fractions": {
+    "validation": 0.2,
+    "test": 0.2
+  },
+  "session_ids": {
+    "train": [
+      "04df0207-486a-464f-ad9e-bd2ca4dbde81",
+      "071002d6-bbe8-409b-a469-7f2cca84681b",
+      "2d5281b6-0442-42e7-98aa-7193b44aa97a",
+      "339f2621-a58a-423a-a16f-22f8b90d4ca9",
+      "33f73bed-b951-407d-90ac-b882db09f031",
+      "44d43aa1-2722-4d81-85d9-1e1691ea289d",
+      "8db16c22-c2be-420a-813c-4e1cdbf4c050",
+      "bc2562ed-eaa9-4213-bc94-0d218789b114",
+      "e22005b6-0d4a-4e06-a18e-f192c4ce5259"
+    ],
+    "validation": [
+      "775c3882-3523-453e-ac51-b4c1c841ed0c",
+      "85651128-7538-42c4-8214-b41aa39f5e74",
+      "d4ab074f-af33-422d-997e-415d5a6aa50c"
+    ],
+    "test": [
+      "85c0f04f-14ec-4947-bd44-4d33e6181eb1",
+      "926ca2b5-7e3d-4e6b-a315-876d08112ad2",
+      "a5df1425-76cb-49ac-a88d-aa9d1e561196"
+    ]
+  },
+  "independent_session_keys": {
+    "train": [
+      "46c24da57e7098a208c36af2d7add1e0c505dc39652b6db902325c085abed899",
+      "5e03320f1c76b744eba633a1a2872b946efa15fedb31060f9e3a2fb1f243e1de",
+      "6ef44e20594d3433f0aa7771331e591c62b70f05969cd7b9282404104c0e6f2b",
+      "7ffe2f28cbe6924b641b80735197a29e1bd8007cdc6427e5249a7f0669aee5cb",
+      "8a7400442e56f29ff15f3d954ec3704cf3dbf87db7a68cf46531b37f8abd0215",
+      "9eeacea921734aac65478c3d87dae3bbe5cee328a90a2a06eedced1f7b761673",
+      "b95cd9fa2e6577871ecf293e0104f95fd8ab8be7419a2a537993a23090c99647",
+      "bb21dd8bc508d621aa831a6c34a49054c86b89166826ed23fc71c86e30b91487",
+      "f8745d9291c864024dcbe59ce66232fd0b2179f34b3dedca0ef9f92735f801c6"
+    ],
+    "validation": [
+      "9eeef1c17e712d74d95629e4220c1b1dde6040a4508b3399a17e2fba5be80657",
+      "a49ed797770d902dc2903a602abc1cb3213d681b64ea854b9903ee664c57651a",
+      "ffb0f33f760dba6ddf84637064341648f89ab2484300464cff4fdd6902df391f"
+    ],
+    "test": [
+      "42f968443660f3c28b3e9c0d8456d552cf1dc7bb9442f3319df02424194f902b",
+      "b7c2f3563861ca57362d38029919d38ef7ea680ba92b1f959ea873b9962ffd1d",
+      "baa4c86860ccc9a3c5bd58ed94be010d5115351dd588e22aa87513ee92d3b254"
+    ]
+  },
+  "experiment_ids": {
+    "train": [
+      "1b822977-e11e-454d-bbd0-7a7a9a471d30",
+      "438c7ebe-8188-4afd-b393-8acb5fa2338a",
+      "4e9e2c57-034e-43b9-8d93-54cd7d31d36e",
+      "55be7003-31af-45fc-94a7-92e63260cfcc",
+      "585b56b2-5380-4636-b5b2-0066859ab909",
+      "75cacfd5-056e-42a5-b568-6af53da52457",
+      "834767fb-c14f-4202-b5c9-4d630c85a8e2",
+      "94e7203d-101c-434a-8a45-6426e48942f6",
+      "9f8288bc-97ad-4f51-aef7-d4f06b6152c4",
+      "a6516513-160d-4176-aebe-a3ff2531cdcc",
+      "b602b6ca-7aca-462a-a53b-d3a163291c19",
+      "c1c224eb-301d-495d-a18e-ae2f97e56771",
+      "c5f55d93-46b1-48c5-8fba-d0b4d7f80243",
+      "da982710-e8b1-46d8-bc7d-24d37fd37086",
+      "e8400182-a870-4a0e-9315-b7cf8d887a95",
+      "f0d8b68e-1e31-4b91-9f95-a478ae1fb702",
+      "fb5652f7-4ee6-4ff5-99ba-66bf0780e0d1",
+      "fdbd16e1-4129-44aa-89e1-674736cda732"
+    ],
+    "validation": [
+      "183a886c-36a7-494b-b63b-b6b39b1d5027",
+      "63ec85ac-bf23-4c3d-8a40-d7fc67620e53",
+      "8c4a6f07-b9b5-4560-be6f-524d8adb70a3",
+      "aa92e39a-1b63-4d94-be15-00c24018e882",
+      "b0cd5241-14c4-4e4e-a0e9-037bf54a4bc0",
+      "c3532c6b-d938-433b-b71c-2eee6c1c2659"
+    ],
+    "test": [
+      "1028a749-23a2-4f2c-b91c-c8f590ffa149",
+      "21890e69-c712-44b2-b4fa-480293c1a595",
+      "3ff279a0-2aa5-41d6-becc-ad6f527c46d1",
+      "a22c988c-cf23-4e41-84e5-f7dae35bda92",
+      "b165ee33-c052-4462-bbaa-09cd768417c0",
+      "f23f91e7-ccc3-409f-bd47-bc8e177d48d8"
+    ]
+  },
+  "row_counts": {
+    "train": 18,
+    "validation": 6,
+    "test": 6
+  },
+  "class_distributions": {
+    "train": {
+      "controlled_icmpv4_echo": 9,
+      "controlled_tcp_marker": 9
+    },
+    "validation": {
+      "controlled_icmpv4_echo": 3,
+      "controlled_tcp_marker": 3
+    },
+    "test": {
+      "controlled_icmpv4_echo": 3,
+      "controlled_tcp_marker": 3
+    }
+  },
+  "overlap": {
+    "train_validation": 0,
+    "train_test": 0,
+    "validation_test": 0
+  }
+}

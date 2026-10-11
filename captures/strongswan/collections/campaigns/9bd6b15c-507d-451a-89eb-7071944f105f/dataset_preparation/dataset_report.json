@@ -1,0 +1,278 @@
+{
+  "report_version": 1,
+  "status": "READY_FOR_REVIEW",
+  "dataset_id": "9bd6b15c-507d-451a-89eb-7071944f105f",
+  "manifest_path": "C:\\vista\\captures\\strongswan\\collections\\campaigns\\9bd6b15c-507d-451a-89eb-7071944f105f\\campaign_manifest.json",
+  "manifest_sha256": "0b629c19de9d4196d79e4ea3cdfe04202603ce2a79656ddddccf95ad2b9892fc",
+  "manifest_schema": "schemas\\strongswan-experiment-manifest-v2.schema.json",
+  "feature_schema_version": "vista-flow-v1",
+  "extractor_version": "vista-ml-pcap-features-v1",
+  "feature_columns": [
+    "packet_count",
+    "byte_count",
+    "flow_duration",
+    "mean_packet_size",
+    "std_packet_size",
+    "min_packet_size",
+    "max_packet_size",
+    "mean_inter_arrival_time",
+    "std_inter_arrival_time",
+    "min_inter_arrival_time",
+    "max_inter_arrival_time",
+    "packets_per_second",
+    "bytes_per_second",
+    "forward_packet_count",
+    "backward_packet_count",
+    "forward_bytes",
+    "backward_bytes",
+    "direction_ratio"
+  ],
+  "source_observations": 30,
+  "accepted_observations": 30,
+  "quarantined_observations": 0,
+  "independent_session_count": 15,
+  "class_distribution": {
+    "controlled_http_traffic": 30
+  },
+  "missingness_by_feature": {
+    "packet_count": 0,
+    "byte_count": 0,
+    "flow_duration": 0,
+    "mean_packet_size": 0,
+    "std_packet_size": 0,
+    "min_packet_size": 0,
+    "max_packet_size": 0,
+    "mean_inter_arrival_time": 0,
+    "std_inter_arrival_time": 0,
+    "min_inter_arrival_time": 0,
+    "max_inter_arrival_time": 0,
+    "packets_per_second": 0,
+    "bytes_per_second": 0,
+    "forward_packet_count": 0,
+    "backward_packet_count": 0,
+    "forward_bytes": 0,
+    "backward_bytes": 0,
+    "direction_ratio": 0
+  },
+  "feature_ranges": {
+    "packet_count": {
+      "minimum": 20.0,
+      "maximum": 77.0
+    },
+    "byte_count": {
+      "minimum": 3072.0,
+      "maximum": 10388.0
+    },
+    "flow_duration": {
+      "minimum": 0.264,
+      "maximum": 2.4707
+    },
+    "mean_packet_size": {
+      "minimum": 134.2,
+      "maximum": 187.2
+    },
+    "std_packet_size": {
+      "minimum": 54.1,
+      "maximum": 189.5
+    },
+    "min_packet_size": {
+      "minimum": 108.0,
+      "maximum": 108.0
+    },
+    "max_packet_size": {
+      "minimum": 280.0,
+      "maximum": 752.0
+    },
+    "mean_inter_arrival_time": {
+      "minimum": 0.01257,
+      "maximum": 0.03478
+    },
+    "std_inter_arrival_time": {
+      "minimum": 0.05067,
+      "maximum": 0.11985
+    },
+    "min_inter_arrival_time": {
+      "minimum": 0.0,
+      "maximum": 7e-05
+    },
+    "max_inter_arrival_time": {
+      "minimum": 0.2038,
+      "maximum": 0.45662
+    },
+    "packets_per_second": {
+      "minimum": 29.29846454343226,
+      "maximum": 83.33333333333333
+    },
+    "bytes_per_second": {
+      "minimum": 4204.476464159955,
+      "maximum": 11878.787878787878
+    },
+    "forward_packet_count": {
+      "minimum": 11.0,
+      "maximum": 42.0
+    },
+    "backward_packet_count": {
+      "minimum": 9.0,
+      "maximum": 35.0
+    },
+    "forward_bytes": {
+      "minimum": 1688.0,
+      "maximum": 6392.0
+    },
+    "backward_bytes": {
+      "minimum": 1348.0,
+      "maximum": 5068.0
+    },
+    "direction_ratio": {
+      "minimum": 0.524,
+      "maximum": 0.581
+    }
+  },
+  "duplicate_and_near_duplicate_pairs": [],
+  "exclusions": [],
+  "split_manifest": {
+    "strategy": "deterministic nested GroupShuffleSplit by verified IKE_SA lifecycle identity",
+    "random_state": 42,
+    "fractions": {
+      "validation": 0.2,
+      "test": 0.2
+    },
+    "session_ids": {
+      "train": [
+        "0c1edb67-bb5c-4730-8557-ec992754fbed",
+        "440753c9-57c3-4434-b6aa-b237edf01cfc",
+        "5250d695-2692-477c-a78e-ef7df1b2d53b",
+        "76ec541b-7543-44c0-b380-2fc826bba3e9",
+        "77b9ce84-a15f-45cf-b101-bac1f2d2b538",
+        "7e077a8a-43fe-479c-b632-3c80d589059b",
+        "8f4019a2-8d7d-4051-b26a-62c857d5b238",
+        "a2b05fd9-0978-4764-bd53-34d15d6b0a29",
+        "a97ca09b-f0a8-4ff4-8a46-e8deb414ea18"
+      ],
+      "validation": [
+        "3d2a0e63-2128-467a-8bdd-847ad69823c8",
+        "4eb7e896-11b3-49b7-8530-5eb7dc15b108",
+        "d9d3cf07-25b6-46de-9b85-d33f061a24d0"
+      ],
+      "test": [
+        "1ba2905d-ede3-4f89-b609-2ff24eaccf0d",
+        "29eda4e7-6175-458e-b9b7-1ad8ecb4b702",
+        "b50f2a62-7bba-4733-8a8f-f975a822d19c"
+      ]
+    },
+    "independent_session_keys": {
+      "train": [
+        "22a4f8ccf551c77ad375021c5e94fc5a9d2b863dfc7175eef8ce58dca26e6b01",
+        "3b70c22e69ddeac1cd733dbe1d1e30faa41832ca3466cf6f4def862668ddd6d9",
+        "4813eeaaf01e641303b79d9777a2c24501a10f8f4fe4c435e808b0bb55704900",
+        "503d0e346a1bed9180fb1e7ce42f2bf837674dbd881d6928a52b5f747e940177",
+        "6e76452396bee7ff6f8c3ddf0701d7b819d5fba02d2cf125c2e2a430b549dd69",
+        "74f4574043109863364ae609aad7cd9bff4a5356b6dc8f5124493c799de884e1",
+        "a680bff9f881f1e14200fafbc178a60a7f5e626ca60bf9f2a62829782138c33a",
+        "b65a71e4b4380d3954d8d23b7af9fd4aaaee5c12fcfd5379a0cb8717c153e3b8",
+        "e9cc1646a3e567d370a7ac3ebbb9ef00cac7f6700be9821f954eb1d2908c2989"
+      ],
+      "validation": [
+        "77f2b99bc96b278a7994fe821241aa473cea4adab97edd5c3751e7941760565d",
+        "7afee8d2581cad33a4b2025541f7dc8e6dfaf98467a8c72671109c08fafd0966",
+        "f50a9e947ce73dc93082735c3a42bfc62abeec8df8ec4df8be5f5aa7924ef122"
+      ],
+      "test": [
+        "1644e296a5c17a91a3b754972c67a19a8d5515bb80963f5726bb11ddceac978d",
+        "8944a7b42397228bfe62cb48db8836dd66fcb600fea0376fafced0546b6c10db",
+        "ade59f140735ccfffae76a5712982081c8d36fa5581128fb07cfcba8b7646de1"
+      ]
+    },
+    "experiment_ids": {
+      "train": [
+        "05fc5e33-cb27-4da5-9fbc-8f961a1b9af3",
+        "0ce3a799-56f0-46ed-a1b5-c973b7cbbb1d",
+        "1bfc4fef-cca5-43b2-a6ec-6c9c5821b432",
+        "1c8df447-c288-46a6-9ef8-c713dd18b033",
+        "2b6c0a57-6ec5-4399-a344-4277da789c13",
+        "2ffb45f1-b0aa-4514-bde5-e7dcf6ab7d30",
+        "39ae76a6-ce42-4a81-bf8c-d75bf20b83e2",
+        "44ade1bf-381c-4744-8575-93e78d32516c",
+        "57bdb4c3-af77-4350-9585-4fffe6125689",
+        "5ade3464-f3c2-47dd-b289-4d17bc2de93c",
+        "9bbc829b-bd9d-45c7-a3a9-e2b60db3208c",
+        "aec92c05-19d5-4f4b-9d6f-598c12447985",
+        "c530dd35-69e4-448d-a0a3-44bab747751f",
+        "d442e980-a13a-4fd9-835c-0fe8f35a905f",
+        "f6abb35b-6e8a-4598-ae0b-d1212a9c7385",
+        "f8afff5f-2cf5-4912-93ab-891cfef63295",
+        "fbaab394-8974-4a54-a59c-ceff71b3c38d",
+        "fd75ef4e-f8f6-434d-a7d8-473bfb6cf040"
+      ],
+      "validation": [
+        "1182b4e6-4bf0-45c7-9cc9-aac97beecb50",
+        "48bf043a-7574-4e71-8ed9-e4cbf0f65c6f",
+        "4b926979-f40d-4de0-a525-b9811c46bef7",
+        "7e83307b-a1f0-46a5-88eb-c284d9b9cdcf",
+        "89d69275-c08c-486e-8f32-5750b29c6bf3",
+        "92c962d9-d87d-45f5-9002-99b96d8c4214"
+      ],
+      "test": [
+        "2eff28ee-a9c1-44a4-b95b-81431f850dce",
+        "503bad92-12e8-46b8-b7c1-7539ed8bbff1",
+        "a9e7481b-8993-4205-bcf1-e3809b99f3dc",
+        "afb65377-04c6-491b-9885-4eacc522641c",
+        "b877a6f8-8d78-43ad-905c-311f1055881a",
+        "d621f8b6-ce98-4a89-b7e2-f28d32c38398"
+      ]
+    },
+    "row_counts": {
+      "train": 18,
+      "validation": 6,
+      "test": 6
+    },
+    "class_distributions": {
+      "train": {
+        "controlled_http_traffic": 18
+      },
+      "validation": {
+        "controlled_http_traffic": 6
+      },
+      "test": {
+        "controlled_http_traffic": 6
+      }
+    },
+    "overlap": {
+      "train_validation": 0,
+      "train_test": 0,
+      "validation_test": 0
+    }
+  },
+  "blocker": null,
+  "feature_target_separation": {
+    "target_column": "label",
+    "metadata_columns_excluded_from_features": [
+      "experiment_id",
+      "session_id",
+      "capture_path",
+      "capture_sha256"
+    ],
+    "model_features": [
+      "packet_count",
+      "byte_count",
+      "flow_duration",
+      "mean_packet_size",
+      "std_packet_size",
+      "min_packet_size",
+      "max_packet_size",
+      "mean_inter_arrival_time",
+      "std_inter_arrival_time",
+      "min_inter_arrival_time",
+      "max_inter_arrival_time",
+      "packets_per_second",
+      "bytes_per_second",
+      "forward_packet_count",
+      "backward_packet_count",
+      "forward_bytes",
+      "backward_bytes",
+      "direction_ratio"
+    ]
+  },
+  "prepared_dataset_path": "prepared_dataset.csv",
+  "prepared_dataset_sha256": "78201b83a4b3a4b7038ae59439c993eb31864851951b4c22b6db98f8a92a5306"
+}

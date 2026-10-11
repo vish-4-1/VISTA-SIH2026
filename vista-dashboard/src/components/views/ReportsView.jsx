@@ -59,7 +59,7 @@ function ReportContent({
         <div className="section-heading">
           <div>
             <h2>Reports</h2>
-            <p>Generate an assessment from existing backend audit records and optional uploaded analysis.</p>
+            <p>Generate an assessment from existing backend audit records and optional uploaded analysis. The current API generates content on demand and does not expose a saved report inventory.</p>
             <p>
               Source: POST /api/reports/generate · {analysisResult
                 ? `includes ${file?.name || 'current uploaded analysis'}`
@@ -113,6 +113,7 @@ function ReportContent({
           <>
             <p className="section-meta" style={{ marginBottom: 12 }}>
               Source: {report.source || 'Backend report service'} · Score: {report.score ?? '—'}
+              {report.createdAt ? ` · Created ${new Date(report.createdAt).toLocaleString()}` : ' · Creation time unavailable'}
             </p>
             <pre style={{
               whiteSpace: 'pre-wrap',

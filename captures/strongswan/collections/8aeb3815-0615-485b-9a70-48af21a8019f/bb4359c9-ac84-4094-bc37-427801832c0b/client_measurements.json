@@ -1,0 +1,47 @@
+{
+  "totalRequestsSent": 4,
+  "totalBytesSent": 1284,
+  "totalBytesReceived": 320,
+  "requests": [
+    {
+      "index": 0,
+      "path": "/data/sensor",
+      "method": "POST",
+      "statusCode": 200,
+      "statusLine": "HTTP/1.1 200 OK",
+      "responseBytes": 65,
+      "responseSha256": "d3d7938db129a178491fe590816646e9e6c8c6d4f10d18a58650901db68b57cc",
+      "durationSeconds": 0
+    },
+    {
+      "index": 1,
+      "path": "/data/sensor",
+      "method": "POST",
+      "statusCode": 200,
+      "statusLine": "HTTP/1.1 200 OK",
+      "responseBytes": 65,
+      "responseSha256": "b8791169737a86cc86bbd89ce1bf41bd7b47a41eb39348c272de2ad207835514",
+      "durationSeconds": 0
+    },
+    {
+      "index": 2,
+      "path": "/data/sensor",
+      "method": "POST",
+      "statusCode": 200,
+      "statusLine": "HTTP/1.1 200 OK",
+      "responseBytes": 65,
+      "responseSha256": "abbc9616d4154e35867e5fe13b757018bace54a1ba77766183620dea50c63898",
+      "durationSeconds": 0
+    },
+    {
+      "index": 3,
+      "path": "/data/sensor",
+      "method": "POST",
+      "statusCode": 200,
+      "statusLine": "HTTP/1.1 200 OK",
+      "responseBytes": 65,
+      "responseSha256": "a8b52e0b275663d6771983c38d722e25b0202e6f19a19d320a972e4966d6dba0",
+      "durationSeconds": 0
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "totalRequestsSent": 2,
+  "totalBytesSent": 1280,
+  "totalBytesReceived": 158,
+  "requests": [
+    {
+      "index": 0,
+      "path": "/data/event",
+      "method": "POST",
+      "statusCode": 200,
+      "statusLine": "HTTP/1.1 200 OK",
+      "responseBytes": 64,
+      "responseSha256": "07f7b5ad53c2b4da16917a533c3969d892cdbe75c3b0e53b4b6c060501171e68",
+      "durationSeconds": 0
+    },
+    {
+      "index": 1,
+      "path": "/data/event",
+      "method": "POST",
+      "statusCode": 200,
+      "statusLine": "HTTP/1.1 200 OK",
+      "responseBytes": 64,
+      "responseSha256": "b4690cdf44f21111cc4be5fad46414bcce4645331f68b843e3f442d95da57211",
+      "durationSeconds": 0
+    }
+  ]
+}

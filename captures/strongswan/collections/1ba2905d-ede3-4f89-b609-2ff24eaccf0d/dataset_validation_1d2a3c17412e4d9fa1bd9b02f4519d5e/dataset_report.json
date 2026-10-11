@@ -1,0 +1,164 @@
+{
+  "report_version": 1,
+  "status": "BLOCKED",
+  "dataset_id": "collection-1ba2905d-ede3-4f89-b609-2ff24eaccf0d",
+  "manifest_path": "C:\\vista\\captures\\strongswan\\collections\\1ba2905d-ede3-4f89-b609-2ff24eaccf0d\\dataset_manifest_1d2a3c17412e4d9fa1bd9b02f4519d5e.json",
+  "manifest_sha256": "6fbfd980074d6d3f1f33cfbcc56ee997b19a36addc68963a81f4bc9eb2f39eed",
+  "manifest_schema": "schemas\\strongswan-experiment-manifest-v2.schema.json",
+  "feature_schema_version": "vista-flow-v1",
+  "extractor_version": "vista-ml-pcap-features-v1",
+  "feature_columns": [
+    "packet_count",
+    "byte_count",
+    "flow_duration",
+    "mean_packet_size",
+    "std_packet_size",
+    "min_packet_size",
+    "max_packet_size",
+    "mean_inter_arrival_time",
+    "std_inter_arrival_time",
+    "min_inter_arrival_time",
+    "max_inter_arrival_time",
+    "packets_per_second",
+    "bytes_per_second",
+    "forward_packet_count",
+    "backward_packet_count",
+    "forward_bytes",
+    "backward_bytes",
+    "direction_ratio"
+  ],
+  "source_observations": 1,
+  "accepted_observations": 1,
+  "quarantined_observations": 0,
+  "independent_session_count": 1,
+  "class_distribution": {
+    "controlled_http_traffic": 1
+  },
+  "missingness_by_feature": {
+    "packet_count": 0,
+    "byte_count": 0,
+    "flow_duration": 0,
+    "mean_packet_size": 0,
+    "std_packet_size": 0,
+    "min_packet_size": 0,
+    "max_packet_size": 0,
+    "mean_inter_arrival_time": 0,
+    "std_inter_arrival_time": 0,
+    "min_inter_arrival_time": 0,
+    "max_inter_arrival_time": 0,
+    "packets_per_second": 0,
+    "bytes_per_second": 0,
+    "forward_packet_count": 0,
+    "backward_packet_count": 0,
+    "forward_bytes": 0,
+    "backward_bytes": 0,
+    "direction_ratio": 0
+  },
+  "feature_ranges": {
+    "packet_count": {
+      "minimum": 42.0,
+      "maximum": 42.0
+    },
+    "byte_count": {
+      "minimum": 5720.0,
+      "maximum": 5720.0
+    },
+    "flow_duration": {
+      "minimum": 0.6345,
+      "maximum": 0.6345
+    },
+    "mean_packet_size": {
+      "minimum": 136.2,
+      "maximum": 136.2
+    },
+    "std_packet_size": {
+      "minimum": 56.5,
+      "maximum": 56.5
+    },
+    "min_packet_size": {
+      "minimum": 108.0,
+      "maximum": 108.0
+    },
+    "max_packet_size": {
+      "minimum": 284.0,
+      "maximum": 284.0
+    },
+    "mean_inter_arrival_time": {
+      "minimum": 0.01548,
+      "maximum": 0.01548
+    },
+    "std_inter_arrival_time": {
+      "minimum": 0.05283,
+      "maximum": 0.05283
+    },
+    "min_inter_arrival_time": {
+      "minimum": 1e-05,
+      "maximum": 1e-05
+    },
+    "max_inter_arrival_time": {
+      "minimum": 0.2038,
+      "maximum": 0.2038
+    },
+    "packets_per_second": {
+      "minimum": 66.19385342789599,
+      "maximum": 66.19385342789599
+    },
+    "bytes_per_second": {
+      "minimum": 9014.972419227739,
+      "maximum": 9014.972419227739
+    },
+    "forward_packet_count": {
+      "minimum": 24.0,
+      "maximum": 24.0
+    },
+    "backward_packet_count": {
+      "minimum": 18.0,
+      "maximum": 18.0
+    },
+    "forward_bytes": {
+      "minimum": 3040.0,
+      "maximum": 3040.0
+    },
+    "backward_bytes": {
+      "minimum": 2680.0,
+      "maximum": 2680.0
+    },
+    "direction_ratio": {
+      "minimum": 0.571,
+      "maximum": 0.571
+    }
+  },
+  "duplicate_and_near_duplicate_pairs": [],
+  "exclusions": [],
+  "split_manifest": null,
+  "blocker": "At least 15 independently verified IKE_SA session lifecycles are required to support the fixed 60/20/20 split with at least three sessions per split; UUIDs alone do not establish independence.",
+  "feature_target_separation": {
+    "target_column": "label",
+    "metadata_columns_excluded_from_features": [
+      "experiment_id",
+      "session_id",
+      "capture_path",
+      "capture_sha256"
+    ],
+    "model_features": [
+      "packet_count",
+      "byte_count",
+      "flow_duration",
+      "mean_packet_size",
+      "std_packet_size",
+      "min_packet_size",
+      "max_packet_size",
+      "mean_inter_arrival_time",
+      "std_inter_arrival_time",
+      "min_inter_arrival_time",
+      "max_inter_arrival_time",
+      "packets_per_second",
+      "bytes_per_second",
+      "forward_packet_count",
+      "backward_packet_count",
+      "forward_bytes",
+      "backward_bytes",
+      "direction_ratio"
+    ]
+  }
+}

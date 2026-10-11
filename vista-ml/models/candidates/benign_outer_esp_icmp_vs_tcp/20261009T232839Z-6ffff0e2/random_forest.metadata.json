@@ -1,0 +1,240 @@
+{
+  "model_name": "random_forest",
+  "model_version": "20261009T232839Z-6ffff0e2",
+  "prediction_task": "benign_outer_esp_icmp_vs_tcp",
+  "target_classes": [
+    "ICMP_NORMAL",
+    "TCP_NORMAL"
+  ],
+  "feature_schema_version": "vista-esp-flow-v1",
+  "feature_columns": [
+    "packet_count",
+    "byte_count",
+    "flow_duration",
+    "mean_packet_size",
+    "std_packet_size",
+    "min_packet_size",
+    "max_packet_size",
+    "mean_inter_arrival_time",
+    "std_inter_arrival_time",
+    "min_inter_arrival_time",
+    "max_inter_arrival_time",
+    "packets_per_second",
+    "bytes_per_second",
+    "forward_packet_count",
+    "backward_packet_count",
+    "forward_bytes",
+    "backward_bytes",
+    "direction_ratio"
+  ],
+  "feature_definitions": {
+    "packet_count": {
+      "type": "integer",
+      "units": "packets",
+      "source": "outer ESP flow capture"
+    },
+    "byte_count": {
+      "type": "integer",
+      "units": "bytes",
+      "source": "outer ESP IP packet lengths"
+    },
+    "flow_duration": {
+      "type": "number",
+      "units": "seconds",
+      "source": "first-to-last capture timestamp"
+    },
+    "mean_packet_size": {
+      "type": "number",
+      "units": "bytes",
+      "source": "outer ESP IP packet lengths"
+    },
+    "std_packet_size": {
+      "type": "number",
+      "units": "bytes",
+      "source": "outer ESP IP packet lengths"
+    },
+    "min_packet_size": {
+      "type": "number",
+      "units": "bytes",
+      "source": "outer ESP IP packet lengths"
+    },
+    "max_packet_size": {
+      "type": "number",
+      "units": "bytes",
+      "source": "outer ESP IP packet lengths"
+    },
+    "mean_inter_arrival_time": {
+      "type": "number",
+      "units": "seconds",
+      "source": "capture timestamps"
+    },
+    "std_inter_arrival_time": {
+      "type": "number",
+      "units": "seconds",
+      "source": "capture timestamps"
+    },
+    "min_inter_arrival_time": {
+      "type": "number",
+      "units": "seconds",
+      "source": "capture timestamps"
+    },
+    "max_inter_arrival_time": {
+      "type": "number",
+      "units": "seconds",
+      "source": "capture timestamps"
+    },
+    "packets_per_second": {
+      "type": "number",
+      "units": "packets/second",
+      "source": "outer ESP capture"
+    },
+    "bytes_per_second": {
+      "type": "number",
+      "units": "bytes/second",
+      "source": "outer ESP capture"
+    },
+    "forward_packet_count": {
+      "type": "integer",
+      "units": "packets",
+      "source": "canonical endpoint ordering"
+    },
+    "backward_packet_count": {
+      "type": "integer",
+      "units": "packets",
+      "source": "canonical endpoint ordering"
+    },
+    "forward_bytes": {
+      "type": "integer",
+      "units": "bytes",
+      "source": "canonical endpoint ordering"
+    },
+    "backward_bytes": {
+      "type": "integer",
+      "units": "bytes",
+      "source": "canonical endpoint ordering"
+    },
+    "direction_ratio": {
+      "type": "number",
+      "units": "ratio",
+      "source": "forward packet count / packet count"
+    }
+  },
+  "missing_value_policy": "Reject sample; no imputation or zero filling.",
+  "preprocessing": "None; validated numeric features are passed in declared order.",
+  "target_label_source": "Controlled workload scenario label; ping vs TCP marker traffic, not attack ground truth.",
+  "capture_point": "pc1 eth0, outer encrypted ESP packets",
+  "validated_for_inference": false,
+  "validation_status": "narrow-controlled-testbed-evaluation-only",
+  "inference_blocker": "This two-class lab model is not the production application classifier, does not classify attacks, and uses vista-esp-flow-v1 rather than the live vista-flow-v1 contract.",
+  "training_runs": [
+    "20261005T152940Z",
+    "20261005T153141Z",
+    "20261005T155313Z"
+  ],
+  "held_out_run": "20261005T155356Z",
+  "source_dataset_hashes": {
+    "20261005T152940Z": "1448815ec554c52cda556ee0f8c50ef4faf8553750814603629c5258fa13cbc8",
+    "20261005T153141Z": "fd69eece57fa46eee7cb248640885cc8b6418c0dcde1b9d5af926df7c9f04461",
+    "20261005T155313Z": "1fdc9d53c03f4b8ddafc5487e9748d84a3046afdfe5e6a741bf7d81033018b94",
+    "20261005T155356Z": "aa49967fa8361a325b9d7921fe00457b37f7e5d80c705dc3b08dfee737793599"
+  },
+  "selected_on_validation": true,
+  "validation_metrics": {
+    "sample_count": 8,
+    "class_distribution": {
+      "ICMP_NORMAL": 4,
+      "TCP_NORMAL": 4
+    },
+    "accuracy": 1.0,
+    "macro_precision": 1.0,
+    "macro_recall": 1.0,
+    "macro_f1": 1.0,
+    "per_class": {
+      "ICMP_NORMAL": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 4.0
+      },
+      "TCP_NORMAL": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 4.0
+      }
+    },
+    "confusion_matrix": {
+      "labels": [
+        "ICMP_NORMAL",
+        "TCP_NORMAL"
+      ],
+      "values": [
+        [
+          4,
+          0
+        ],
+        [
+          0,
+          4
+        ]
+      ]
+    },
+    "tcp_normal_roc_auc": 1.0,
+    "tcp_normal_average_precision": 1.0,
+    "probability_calibration": "not evaluated; raw classifier probabilities only"
+  },
+  "held_out_test_metrics": {
+    "sample_count": 50,
+    "class_distribution": {
+      "ICMP_NORMAL": 25,
+      "TCP_NORMAL": 25
+    },
+    "accuracy": 1.0,
+    "macro_precision": 1.0,
+    "macro_recall": 1.0,
+    "macro_f1": 1.0,
+    "per_class": {
+      "ICMP_NORMAL": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 25.0
+      },
+      "TCP_NORMAL": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 25.0
+      }
+    },
+    "confusion_matrix": {
+      "labels": [
+        "ICMP_NORMAL",
+        "TCP_NORMAL"
+      ],
+      "values": [
+        [
+          25,
+          0
+        ],
+        [
+          0,
+          25
+        ]
+      ]
+    },
+    "tcp_normal_roc_auc": 1.0,
+    "tcp_normal_average_precision": 1.0,
+    "probability_calibration": "not evaluated; raw classifier probabilities only"
+  },
+  "split_manifest": "reports\\candidates\\benign_outer_esp_icmp_vs_tcp\\20261009T232839Z-6ffff0e2\\split_manifest.json",
+  "random_state": 42,
+  "python_version": "3.12.14 (main, Sep 24 2026, 17:57:31) [MSC v.1944 64 bit (AMD64)]",
+  "dependency_versions": {
+    "numpy": "2.5.3",
+    "pandas": "3.0.6",
+    "scikit-learn": "1.9.1",
+    "xgboost": "3.4.1",
+    "joblib": "1.6.0"
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "experimentId": "92c962d9-d87d-45f5-9002-99b96d8c4214",
+  "sessionId": "4eb7e896-11b3-49b7-8530-5eb7dc15b108",
+  "startedAt": "2026-10-10T05:49:02.002137+00:00",
+  "captureStartedAt": "2026-10-10T05:49:02.801674+00:00",
+  "captureEndedAt": "2026-10-10T05:49:06.988441+00:00",
+  "requestedProfiles": [
+    {
+      "count": 4,
+      "interval_seconds": 0.4,
+      "path": "/data/query",
+      "method": "GET",
+      "payload_bytes": 0,
+      "expected_status": 200
+    }
+  ],
+  "senderMeasurements": {
+    "totalRequestsSent": 4,
+    "totalBytesSent": 424,
+    "totalBytesReceived": 308,
+    "requests": [
+      {
+        "index": 0,
+        "path": "/data/query",
+        "method": "GET",
+        "statusCode": 200,
+        "statusLine": "HTTP/1.1 200 OK",
+        "responseBytes": 62,
+        "responseSha256": "b1680ef3aa213cbf0780ac458f7ee4aea94d77838167ca7b2d77cee29ca04ae8",
+        "durationSeconds": 0
+      },
+      {
+        "index": 1,
+        "path": "/data/query",
+        "method": "GET",
+        "statusCode": 200,
+        "statusLine": "HTTP/1.1 200 OK",
+        "responseBytes": 62,
+        "responseSha256": "dd669c9f4ce19f07d11fffdbef0ed906e3bde6b37764161b8735729f1684e773",
+        "durationSeconds": 0
+      },
+      {
+        "index": 2,
+        "path": "/data/query",
+        "method": "GET",
+        "statusCode": 200,
+        "statusLine": "HTTP/1.1 200 OK",
+        "responseBytes": 62,
+        "responseSha256": "2769cf7319383539989a0e154b64be5ff1f649c7fae660e1445835ac0a5f5527",
+        "durationSeconds": 0
+      },
+      {
+        "index": 3,
+        "path": "/data/query",
+        "method": "GET",
+        "statusCode": 200,
+        "statusLine": "HTTP/1.1 200 OK",
+        "responseBytes": 62,
+        "responseSha256": "6e3059f4de3e5f0af2d5dd185b8a9f9cbd72d8c3c01423774d9cfa975639cb37",
+        "durationSeconds": 0
+      }
+    ]
+  },
+  "independentReceiverEvidence": {
+    "serverEvidencePath": "server_evidence.json",
+    "serverEvidenceSha256": "c161236d40917c295733abc34c3c2acae90e2274d9ee6d55821bd2f3cfa34a56",
+    "totalRequestsReceived": 4,
+    "pcapPath": "pc2_receiver_http.pcap",
+    "pcapSha256": "4fbc04ac7d852cdf3b105b3387d11365b6cdcb4bdd5e7864948ba2c3a522e2f4",
+    "capturedTcpPackets": 24
+  },
+  "pc1OuterCaptureEvidence": {
+    "pcapPath": "pc1_outer_http.pcap",
+    "pcapSha256": "030080643170c7cfa8dfc94a527b0bc67ad8c105f6546857f1b62793b4b6e6ac",
+    "espPackets": 43
+  }
+}

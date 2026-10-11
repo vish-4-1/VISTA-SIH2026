@@ -1,0 +1,97 @@
+{
+  "experimentId": "8e9b8ef7-c76a-488a-a456-52ea8577f230",
+  "sessionId": "eccd775f-5c66-4dd5-98bd-83abfcd8b393",
+  "startedAt": "2026-10-10T12:00:50.210442+00:00",
+  "captureStartedAt": "2026-10-10T12:00:51.077457+00:00",
+  "captureEndedAt": "2026-10-10T12:00:55.279613+00:00",
+  "requestedProfiles": [
+    {
+      "count": 6,
+      "interval_seconds": 0.25,
+      "path": "/health",
+      "method": "GET",
+      "payload_bytes": 0,
+      "expected_status": 200
+    }
+  ],
+  "senderMeasurements": {
+    "totalRequestsSent": 6,
+    "totalBytesSent": 612,
+    "totalBytesReceived": 438,
+    "requests": [
+      {
+        "index": 0,
+        "path": "/health",
+        "method": "GET",
+        "statusCode": 200,
+        "statusLine": "HTTP/1.1 200 OK",
+        "responseBytes": 58,
+        "responseSha256": "e8294c5372268d6778f4abaaaeef06aa75623d1eeb8dc98204a5db05d924155a",
+        "durationSeconds": 0
+      },
+      {
+        "index": 1,
+        "path": "/health",
+        "method": "GET",
+        "statusCode": 200,
+        "statusLine": "HTTP/1.1 200 OK",
+        "responseBytes": 58,
+        "responseSha256": "4398a64e2a76c4a0184e652befb7fb8f5ccbc62a72792aa6713d1d428b31aebb",
+        "durationSeconds": 0
+      },
+      {
+        "index": 2,
+        "path": "/health",
+        "method": "GET",
+        "statusCode": 200,
+        "statusLine": "HTTP/1.1 200 OK",
+        "responseBytes": 58,
+        "responseSha256": "e7f63f023295c672e9f72ac272398ac9b4efc9f62d012329452f71886ec96d17",
+        "durationSeconds": 0
+      },
+      {
+        "index": 3,
+        "path": "/health",
+        "method": "GET",
+        "statusCode": 200,
+        "statusLine": "HTTP/1.1 200 OK",
+        "responseBytes": 58,
+        "responseSha256": "ac5e550f3ae4d7f227fa03b521a49e11a31e6d9a572bf7e2a2da53cfa2429471",
+        "durationSeconds": 0
+      },
+      {
+        "index": 4,
+        "path": "/health",
+        "method": "GET",
+        "statusCode": 200,
+        "statusLine": "HTTP/1.1 200 OK",
+        "responseBytes": 58,
+        "responseSha256": "15baba69c276705871a9c91be5ef4eaf187c0305a8aad7dcadc076af1ce6cedb",
+        "durationSeconds": 0
+      },
+      {
+        "index": 5,
+        "path": "/health",
+        "method": "GET",
+        "statusCode": 200,
+        "statusLine": "HTTP/1.1 200 OK",
+        "responseBytes": 58,
+        "responseSha256": "e9a84560cba1fef23bd5b2d0c060476f84a4507199808d0780530d42fb0fd000",
+        "durationSeconds": 0
+      }
+    ]
+  },
+  "independentReceiverEvidence": {
+    "serverEvidencePath": "server_evidence.json",
+    "serverEvidenceSha256": "432285bd3c46c350662b955c5acf037ebc8651f5e5db85b6893e5be2ee0d46d3",
+    "totalRequestsReceived": 6,
+    "pcapPath": "pc2_receiver_http.pcap",
+    "pcapSha256": "5bc886e36d288480c9ff9c97078f913041c5710ad4386dd86360e13d086a9203",
+    "capturedTcpPackets": 36
+  },
+  "pc1OuterCaptureEvidence": {
+    "pcapPath": "pc1_outer_http.pcap",
+    "pcapSha256": "83a6f3b34dff29b58bbe70d3f08b799db1fc8ceb975b3f0f1445ad02d4e6e6f0",
+    "espPackets": 66
+  }
+}

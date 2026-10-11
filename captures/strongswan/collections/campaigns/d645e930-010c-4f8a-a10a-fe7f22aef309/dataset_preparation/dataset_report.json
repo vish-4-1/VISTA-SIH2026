@@ -1,0 +1,316 @@
+{
+  "report_version": 1,
+  "status": "READY_FOR_REVIEW",
+  "dataset_id": "d645e930-010c-4f8a-a10a-fe7f22aef309",
+  "manifest_path": "C:\\vista\\captures\\strongswan\\collections\\campaigns\\d645e930-010c-4f8a-a10a-fe7f22aef309\\campaign_manifest.json",
+  "manifest_sha256": "0630b2684f3f9bc9f3f6c92773e9ad7b0eb1b9492282835f739a22df6acde6fb",
+  "manifest_schema": "schemas\\strongswan-experiment-manifest-v2.schema.json",
+  "feature_schema_version": "vista-flow-v1",
+  "extractor_version": "vista-ml-pcap-features-v1",
+  "feature_columns": [
+    "packet_count",
+    "byte_count",
+    "flow_duration",
+    "mean_packet_size",
+    "std_packet_size",
+    "min_packet_size",
+    "max_packet_size",
+    "mean_inter_arrival_time",
+    "std_inter_arrival_time",
+    "min_inter_arrival_time",
+    "max_inter_arrival_time",
+    "packets_per_second",
+    "bytes_per_second",
+    "forward_packet_count",
+    "backward_packet_count",
+    "forward_bytes",
+    "backward_bytes",
+    "direction_ratio"
+  ],
+  "source_observations": 60,
+  "accepted_observations": 60,
+  "quarantined_observations": 0,
+  "independent_session_count": 15,
+  "class_distribution": {
+    "controlled_http": 30,
+    "controlled_icmpv4": 15,
+    "controlled_tcp_marker": 15
+  },
+  "missingness_by_feature": {
+    "packet_count": 0,
+    "byte_count": 0,
+    "flow_duration": 0,
+    "mean_packet_size": 0,
+    "std_packet_size": 0,
+    "min_packet_size": 0,
+    "max_packet_size": 0,
+    "mean_inter_arrival_time": 0,
+    "std_inter_arrival_time": 0,
+    "min_inter_arrival_time": 0,
+    "max_inter_arrival_time": 0,
+    "packets_per_second": 0,
+    "bytes_per_second": 0,
+    "forward_packet_count": 0,
+    "backward_packet_count": 0,
+    "forward_bytes": 0,
+    "backward_bytes": 0,
+    "direction_ratio": 0
+  },
+  "feature_ranges": {
+    "packet_count": {
+      "minimum": 8.0,
+      "maximum": 86.0
+    },
+    "byte_count": {
+      "minimum": 1440.0,
+      "maximum": 20448.0
+    },
+    "flow_duration": {
+      "minimum": 0.1707,
+      "maximum": 8.1562
+    },
+    "mean_packet_size": {
+      "minimum": 122.9,
+      "maximum": 852.0
+    },
+    "std_packet_size": {
+      "minimum": 0.0,
+      "maximum": 414.2
+    },
+    "min_packet_size": {
+      "minimum": 108.0,
+      "maximum": 852.0
+    },
+    "max_packet_size": {
+      "minimum": 132.0,
+      "maximum": 1500.0
+    },
+    "mean_inter_arrival_time": {
+      "minimum": 0.00813,
+      "maximum": 0.35661
+    },
+    "std_inter_arrival_time": {
+      "minimum": 0.03294,
+      "maximum": 0.3812
+    },
+    "min_inter_arrival_time": {
+      "minimum": 0.0,
+      "maximum": 0.00042
+    },
+    "max_inter_arrival_time": {
+      "minimum": 0.15007,
+      "maximum": 0.76818
+    },
+    "packets_per_second": {
+      "minimum": 2.991101473117476,
+      "maximum": 128.88107791446984
+    },
+    "bytes_per_second": {
+      "minimum": 394.8253944515068,
+      "maximum": 17340.363210310486
+    },
+    "forward_packet_count": {
+      "minimum": 4.0,
+      "maximum": 48.0
+    },
+    "backward_packet_count": {
+      "minimum": 4.0,
+      "maximum": 38.0
+    },
+    "forward_bytes": {
+      "minimum": 720.0,
+      "maximum": 10224.0
+    },
+    "backward_bytes": {
+      "minimum": 656.0,
+      "maximum": 10224.0
+    },
+    "direction_ratio": {
+      "minimum": 0.5,
+      "maximum": 0.571
+    }
+  },
+  "duplicate_and_near_duplicate_pairs": [],
+  "exclusions": [],
+  "split_manifest": {
+    "strategy": "deterministic nested GroupShuffleSplit by verified IKE_SA lifecycle identity",
+    "random_state": 42,
+    "fractions": {
+      "validation": 0.2,
+      "test": 0.2
+    },
+    "session_ids": {
+      "train": [
+        "133ffd8e-c515-4ae3-8002-7630bb2fe0a0",
+        "23b3db38-1003-45a7-83fd-c13e3c50ac14",
+        "36a3e1fe-e729-4cab-84a1-5a628f68d0d5",
+        "70bfdb91-a744-420d-a9eb-ff4f38cde1a2",
+        "77a90d63-84a3-4dfa-a321-2d00ba7ac02f",
+        "83e6af39-0d75-4044-820b-a5bb9725c06e",
+        "8aeb3815-0615-485b-9a70-48af21a8019f",
+        "c7c587a6-ca0a-4abd-b7a3-8aec77f637b8",
+        "eccd775f-5c66-4dd5-98bd-83abfcd8b393"
+      ],
+      "validation": [
+        "9b4f221a-f523-4b67-a3e6-19a58349c2a1",
+        "aaec0f53-aa89-4900-be1c-b28b0349bb9a",
+        "accfae8f-2a92-4f98-a2ad-eb1ec3c9a7de"
+      ],
+      "test": [
+        "4c4f7337-1613-42b1-a607-5ba53ba4bf64",
+        "6ded43f6-191e-49e5-9627-3d2f9214ec3d",
+        "dbacf743-2915-4b23-974b-480202e62184"
+      ]
+    },
+    "independent_session_keys": {
+      "train": [
+        "0753ac2b6ff7c67f451f3ecd077de0e66def2d9a001f044752895a15a67bedb4",
+        "095766ba34889c080f9f1ca57242fe1183c98b51ec94e46eba6fd2271c2429dc",
+        "3abf3ad807f785d0bd3e32dd94b26b5bc6e359ec529970313eff3bd3ae4e99ad",
+        "3f75a0c53e22e5eaff3474f337ecc6fb4c3ce2bda00b3cfbb34614421fe18b75",
+        "4509d9fab364346d047e875bce4c574112613a4f357e6ebdbcb36486212980fd",
+        "4f135da9fddd790c0659508386d853839ab7b88658488236af4c31e1f9c6e74e",
+        "8e2fd83e29a7fa3134b8f6c5945a0c28d4f8f43465d33f7cffeee7875d3c4f75",
+        "cfaddfa7b2dea7a7ae8cd0531af6d303d0b180c8f6121db2089dfd8e8dcbca21",
+        "dcbf400ea4ca9368434c863a5b8565ff51a33f7874a4b2c4015899ae681fbbad"
+      ],
+      "validation": [
+        "6b0197568761deafda04b0f70f6bd2601c32484a936c64baff5743e47cedf651",
+        "6c169853bdea90573998f38e2948783a1a038a0197fff3a0f7a7c5600cb511d4",
+        "f3baab734b42dd685f4c0c85aefcff6c1a8bd2fe5373e3167861d7c2e3aa2278"
+      ],
+      "test": [
+        "01126969f16f16d829c7fd6248d9688c9a2b7d4344cd86861fd4f79c1f2ab5fc",
+        "8cc12a3e42894574292d3941f74b695fb4204b9946b3606c3a471591fdb2805d",
+        "b267c3d9da36a25d793023cf230cba42bbf19e2c333d04926baeceb98f7b96bd"
+      ]
+    },
+    "experiment_ids": {
+      "train": [
+        "0628c639-2b5f-4b50-8a37-6d21cd503fc3",
+        "082d1308-0395-457f-a68d-07e9105c3c39",
+        "09c3ed56-466e-4de7-bd1f-c68175739ac8",
+        "0cc87473-3f48-4bdd-9ba5-b0042caabab7",
+        "0f26d211-7e04-49ee-85a5-728d27901f1d",
+        "1186ed51-0a0f-4e95-9e7c-3e87004d5cc1",
+        "1f82d230-c79f-4c8e-8d1d-b38aed247ecf",
+        "27194e29-594c-4299-85d7-890cc4e56e3f",
+        "29807edc-60ab-4df4-9f29-72b464b10b9a",
+        "320ce87e-0f52-4b03-bf19-335a00b88ff4",
+        "4688dffe-9082-4cc4-ba61-a6b3a327fa1a",
+        "493f4c2e-168d-4e8a-bf49-869321848dc0",
+        "56c208ff-7be0-423a-81a2-ad37259f5f98",
+        "5de9737b-2884-4398-8155-f892957370f2",
+        "71a346df-3951-4761-b6cf-5429698b21c5",
+        "73f5153f-e1e1-4dd7-befc-9932aeb5ab3c",
+        "7ec32ea3-d1f4-4810-b254-5b1e2d82889a",
+        "8585a46a-632f-42f5-b23a-3a3bf62b69b7",
+        "8e9b8ef7-c76a-488a-a456-52ea8577f230",
+        "a35dff98-a995-4473-96bd-659e31fac650",
+        "a6fa7dcc-8268-48a0-ad45-92fd434c38ff",
+        "b01ed532-347c-4dcc-a9b1-59a32ec38a4f",
+        "b77020f5-65ed-40a3-a257-7b9554995b8d",
+        "bb4359c9-ac84-4094-bc37-427801832c0b",
+        "bfade3df-eb29-4524-b5f2-315efefcdaa0",
+        "c1d36989-5c26-42ed-8f75-55aeda86f332",
+        "c330af93-7e0b-4774-bd7a-089a3142a141",
+        "c5413759-957e-4000-9a28-ac566db6552c",
+        "cd5cbe4e-7044-43ee-b231-3bcfdfb4a8b4",
+        "d5ce6f13-7485-4ab2-8eb7-2f9179eeda09",
+        "d7a31b01-983c-411d-9a2b-d728f9fe10c4",
+        "de343221-9aa4-4c00-a00f-20f07b432535",
+        "f049acb6-ce7a-4606-9c2d-22d40017bf17",
+        "f2cce9cf-6789-45f9-9391-b2bbf4d012cd",
+        "f94fd74d-3ec8-4db3-9b58-6634434a43c9",
+        "fb2184ec-4917-484e-851d-cdd57e65dbcc"
+      ],
+      "validation": [
+        "148e6f21-c6e9-42e1-83ef-6c04d669a09b",
+        "21dbd93f-b90c-4621-a2dd-59840ce92604",
+        "4d2f75bc-52d6-4cd8-b295-9c01aceead67",
+        "50049208-470d-4cc7-924d-eefc57253a09",
+        "6e7a88a8-c9b0-42d2-985a-b8324395ec66",
+        "71ee20f4-cb21-4963-a3dc-1dbdd6739856",
+        "733673a5-812e-4316-83e2-aa5199b6856e",
+        "822a96ce-2160-4c29-ae4e-dc912344a0d8",
+        "ace65af2-afaf-4c1a-9529-8dba5ced4a02",
+        "c23cba67-97d4-436a-9163-047992cdeca6",
+        "f20878c7-0989-4bb3-ae5a-7a20f998dfad",
+        "f646d27a-6088-4b50-94d6-c7ff10600eb6"
+      ],
+      "test": [
+        "19bb778b-9bcf-4ade-a8ec-ac6005c9f5ac",
+        "1b459cd6-8faf-44c6-a7e8-2861c0b2ca83",
+        "20ffe0e2-fbf9-4b97-8034-a19a39f091e7",
+        "593942e4-3d49-46cd-8ed5-b5d30b66442d",
+        "5f9f67d1-4962-4f67-8ec6-ecb31aa09da5",
+        "6175bb6d-747b-4919-82d7-bfbab02cddc3",
+        "68391afc-80cd-41c2-8061-93908edf7ab4",
+        "7f891d7f-2b6b-4ae8-ada5-1658d8fb1d32",
+        "9596c8ca-0f6b-4761-aa07-c7effe1d6e8f",
+        "b3b2d391-9f0c-44b2-a347-6ff24527674c",
+        "c0d65e4f-d604-4ea3-a7c3-a15b96997ea3",
+        "ec4f77cf-86f3-41d9-80e9-c44065941951"
+      ]
+    },
+    "row_counts": {
+      "train": 36,
+      "validation": 12,
+      "test": 12
+    },
+    "class_distributions": {
+      "train": {
+        "controlled_http": 18,
+        "controlled_icmpv4": 9,
+        "controlled_tcp_marker": 9
+      },
+      "validation": {
+        "controlled_http": 6,
+        "controlled_icmpv4": 3,
+        "controlled_tcp_marker": 3
+      },
+      "test": {
+        "controlled_http": 6,
+        "controlled_icmpv4": 3,
+        "controlled_tcp_marker": 3
+      }
+    },
+    "overlap": {
+      "train_validation": 0,
+      "train_test": 0,
+      "validation_test": 0
+    }
+  },
+  "blocker": null,
+  "feature_target_separation": {
+    "target_column": "label",
+    "metadata_columns_excluded_from_features": [
+      "experiment_id",
+      "session_id",
+      "capture_path",
+      "capture_sha256"
+    ],
+    "model_features": [
+      "packet_count",
+      "byte_count",
+      "flow_duration",
+      "mean_packet_size",
+      "std_packet_size",
+      "min_packet_size",
+      "max_packet_size",
+      "mean_inter_arrival_time",
+      "std_inter_arrival_time",
+      "min_inter_arrival_time",
+      "max_inter_arrival_time",
+      "packets_per_second",
+      "bytes_per_second",
+      "forward_packet_count",
+      "backward_packet_count",
+      "forward_bytes",
+      "backward_bytes",
+      "direction_ratio"
+    ]
+  },
+  "prepared_dataset_path": "prepared_dataset.csv",
+  "prepared_dataset_sha256": "4a67d2ee2f9fe14fb52a09fb946a9908fa17985392e8aa5cb8f06c5896587e94"
+}

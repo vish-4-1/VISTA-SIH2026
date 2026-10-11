@@ -1,0 +1,11 @@
+{
+  "label": "controlled_tcp_marker",
+  "method": "Bounded deterministic marker bytes sent by pc1 over one TCP connection; pc2 independently records and hashes the received payload.",
+  "experimentId": "e710b7d8-ab7e-4d7a-bcd3-e206cec2a8f0",
+  "sessionId": "89235c03-eef8-4281-af70-ee92a3aea11d",
+  "messagesSent": 5,
+  "bytesSent": 640,
+  "bytesReceived": 640,
+  "senderPayloadSha256": "e6a2c1e2e7f82f97ff5b7c0869492210c9ffeec6c4d28d4a9a8b8d275b581ee6",
+  "receiverPayloadSha256": "e6a2c1e2e7f82f97ff5b7c0869492210c9ffeec6c4d28d4a9a8b8d275b581ee6"
+}

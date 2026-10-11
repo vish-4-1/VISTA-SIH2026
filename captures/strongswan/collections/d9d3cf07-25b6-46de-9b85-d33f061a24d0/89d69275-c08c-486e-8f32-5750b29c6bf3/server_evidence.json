@@ -1,0 +1,61 @@
+{
+  "totalRequestsReceived": 5,
+  "serverPort": 49875,
+  "requests": [
+    {
+      "index": 0,
+      "method": "GET",
+      "path": "/health",
+      "clientIp": "172.20.0.2",
+      "requestBodyBytes": 0,
+      "responseStatus": 200,
+      "responseBytes": 58,
+      "responseSha256": "e8294c5372268d6778f4abaaaeef06aa75623d1eeb8dc98204a5db05d924155a",
+      "timestamp": 1791611564
+    },
+    {
+      "index": 1,
+      "method": "GET",
+      "path": "/health",
+      "clientIp": "172.20.0.2",
+      "requestBodyBytes": 0,
+      "responseStatus": 200,
+      "responseBytes": 58,
+      "responseSha256": "4398a64e2a76c4a0184e652befb7fb8f5ccbc62a72792aa6713d1d428b31aebb",
+      "timestamp": 1791611564
+    },
+    {
+      "index": 2,
+      "method": "GET",
+      "path": "/health",
+      "clientIp": "172.20.0.2",
+      "requestBodyBytes": 0,
+      "responseStatus": 200,
+      "responseBytes": 58,
+      "responseSha256": "e7f63f023295c672e9f72ac272398ac9b4efc9f62d012329452f71886ec96d17",
+      "timestamp": 1791611564
+    },
+    {
+      "index": 3,
+      "method": "GET",
+      "path": "/health",
+      "clientIp": "172.20.0.2",
+      "requestBodyBytes": 0,
+      "responseStatus": 200,
+      "responseBytes": 58,
+      "responseSha256": "ac5e550f3ae4d7f227fa03b521a49e11a31e6d9a572bf7e2a2da53cfa2429471",
+      "timestamp": 1791611564
+    },
+    {
+      "index": 4,
+      "method": "GET",
+      "path": "/health",
+      "clientIp": "172.20.0.2",
+      "requestBodyBytes": 0,
+      "responseStatus": 200,
+      "responseBytes": 58,
+      "responseSha256": "15baba69c276705871a9c91be5ef4eaf187c0305a8aad7dcadc076af1ce6cedb",
+      "timestamp": 1791611564
+    }
+  ]
+}

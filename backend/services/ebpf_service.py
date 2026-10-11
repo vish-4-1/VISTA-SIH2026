@@ -5,8 +5,15 @@ Exposes Linux kernel events to the ML fusion pipeline.
 
 from __future__ import annotations
 
+import sys
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 import pandas as pd
+
+_ROOT = Path(__file__).resolve().parents[2]
+_VISTA_ML_SRC = _ROOT / "vista-ml" / "src"
+if str(_VISTA_ML_SRC) not in sys.path and _VISTA_ML_SRC.exists():
+    sys.path.insert(0, str(_VISTA_ML_SRC))
 
 from ebpf.vista_ebpf_agent import ebpf_agent
 from vista_ml.features.ebpf_features import aggregate_ebpf_features

@@ -1,0 +1,222 @@
+{
+  "run_id": "20261009T232839Z-6ffff0e2",
+  "status": "candidate_evaluated_not_approved_for_inference",
+  "task": "benign_outer_esp_icmp_vs_tcp",
+  "scope": "benign ICMP-vs-TCP workload classification from outer ESP metadata",
+  "dataset_provenance": "Existing controlled VISTA StrongSwan captures; no external dataset used.",
+  "source_files": {
+    "20261005T152940Z": {
+      "path": "data\\processed\\strongswan\\20261005T152940Z\\normal_traffic_features.parquet",
+      "sha256": "1448815ec554c52cda556ee0f8c50ef4faf8553750814603629c5258fa13cbc8",
+      "rows": 8,
+      "class_distribution": {
+        "ICMP_NORMAL": 4,
+        "TCP_NORMAL": 4
+      }
+    },
+    "20261005T153141Z": {
+      "path": "data\\processed\\strongswan\\20261005T153141Z\\normal_traffic_features.parquet",
+      "sha256": "fd69eece57fa46eee7cb248640885cc8b6418c0dcde1b9d5af926df7c9f04461",
+      "rows": 20,
+      "class_distribution": {
+        "ICMP_NORMAL": 10,
+        "TCP_NORMAL": 10
+      }
+    },
+    "20261005T155313Z": {
+      "path": "data\\processed\\strongswan\\20261005T155313Z\\normal_traffic_features.parquet",
+      "sha256": "1fdc9d53c03f4b8ddafc5487e9748d84a3046afdfe5e6a741bf7d81033018b94",
+      "rows": 8,
+      "class_distribution": {
+        "ICMP_NORMAL": 4,
+        "TCP_NORMAL": 4
+      }
+    },
+    "20261005T155356Z": {
+      "path": "data\\processed\\strongswan\\20261005T155356Z\\normal_traffic_features.parquet",
+      "sha256": "aa49967fa8361a325b9d7921fe00457b37f7e5d80c705dc3b08dfee737793599",
+      "rows": 50,
+      "class_distribution": {
+        "ICMP_NORMAL": 25,
+        "TCP_NORMAL": 25
+      }
+    }
+  },
+  "row_counts": {
+    "train": 28,
+    "validation": 8,
+    "held_out_test": 50
+  },
+  "feature_schema_version": "vista-esp-flow-v1",
+  "feature_columns": [
+    "packet_count",
+    "byte_count",
+    "flow_duration",
+    "mean_packet_size",
+    "std_packet_size",
+    "min_packet_size",
+    "max_packet_size",
+    "mean_inter_arrival_time",
+    "std_inter_arrival_time",
+    "min_inter_arrival_time",
+    "max_inter_arrival_time",
+    "packets_per_second",
+    "bytes_per_second",
+    "forward_packet_count",
+    "backward_packet_count",
+    "forward_bytes",
+    "backward_bytes",
+    "direction_ratio"
+  ],
+  "feature_leakage_review": "Only outer ESP packet size/timing/direction features were used. Target and configuration metadata were excluded. Workload labels distinguish ping from a TCP marker workload.",
+  "missing_data_policy": "Reject; no imputations or default values.",
+  "exact_duplicate_feature_label_count": 0,
+  "selection": {
+    "metric": "validation macro F1",
+    "tie_break": "validation accuracy, then Random Forest baseline",
+    "candidates": {
+      "random_forest": {
+        "sample_count": 8,
+        "class_distribution": {
+          "ICMP_NORMAL": 4,
+          "TCP_NORMAL": 4
+        },
+        "accuracy": 1.0,
+        "macro_precision": 1.0,
+        "macro_recall": 1.0,
+        "macro_f1": 1.0,
+        "per_class": {
+          "ICMP_NORMAL": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 4.0
+          },
+          "TCP_NORMAL": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 4.0
+          }
+        },
+        "confusion_matrix": {
+          "labels": [
+            "ICMP_NORMAL",
+            "TCP_NORMAL"
+          ],
+          "values": [
+            [
+              4,
+              0
+            ],
+            [
+              0,
+              4
+            ]
+          ]
+        },
+        "tcp_normal_roc_auc": 1.0,
+        "tcp_normal_average_precision": 1.0,
+        "probability_calibration": "not evaluated; raw classifier probabilities only"
+      },
+      "xgboost": {
+        "sample_count": 8,
+        "class_distribution": {
+          "ICMP_NORMAL": 4,
+          "TCP_NORMAL": 4
+        },
+        "accuracy": 1.0,
+        "macro_precision": 1.0,
+        "macro_recall": 1.0,
+        "macro_f1": 1.0,
+        "per_class": {
+          "ICMP_NORMAL": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 4.0
+          },
+          "TCP_NORMAL": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 4.0
+          }
+        },
+        "confusion_matrix": {
+          "labels": [
+            "ICMP_NORMAL",
+            "TCP_NORMAL"
+          ],
+          "values": [
+            [
+              4,
+              0
+            ],
+            [
+              0,
+              4
+            ]
+          ]
+        },
+        "tcp_normal_roc_auc": 1.0,
+        "tcp_normal_average_precision": 1.0,
+        "probability_calibration": "not evaluated; raw classifier probabilities only"
+      }
+    },
+    "selected": "random_forest"
+  },
+  "held_out_test": {
+    "sample_count": 50,
+    "class_distribution": {
+      "ICMP_NORMAL": 25,
+      "TCP_NORMAL": 25
+    },
+    "accuracy": 1.0,
+    "macro_precision": 1.0,
+    "macro_recall": 1.0,
+    "macro_f1": 1.0,
+    "per_class": {
+      "ICMP_NORMAL": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 25.0
+      },
+      "TCP_NORMAL": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 25.0
+      }
+    },
+    "confusion_matrix": {
+      "labels": [
+        "ICMP_NORMAL",
+        "TCP_NORMAL"
+      ],
+      "values": [
+        [
+          25,
+          0
+        ],
+        [
+          0,
+          25
+        ]
+      ]
+    },
+    "tcp_normal_roc_auc": 1.0,
+    "tcp_normal_average_precision": 1.0,
+    "probability_calibration": "not evaluated; raw classifier probabilities only"
+  },
+  "held_out_predictions": "reports\\candidates\\benign_outer_esp_icmp_vs_tcp\\20261009T232839Z-6ffff0e2\\held_out_predictions.csv",
+  "model_candidate": "models\\candidates\\benign_outer_esp_icmp_vs_tcp\\20261009T232839Z-6ffff0e2\\random_forest.joblib",
+  "limitations": [
+    "Only two benign synthetic workloads (ICMP echo and a TCP marker) are represented.",
+    "Captures share one controlled StrongSwan topology and crypto configuration.",
+    "The test set is a separate collection run but the same runtime/topology; it is not external validation.",
+    "This experiment does not support attack detection, application identification, cipher/DH/PFS detection, or production inference.",
+    "No probability calibration was evaluated."
+  ]
+}

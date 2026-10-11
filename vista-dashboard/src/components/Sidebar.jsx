@@ -31,7 +31,7 @@ const NAV_GROUPS = [
     title: 'OPERATIONS',
     items: [
       { id: 'reports', label: 'Reports', icon: FileText },
-      { id: 'dataset', label: 'Dataset & Provenance', icon: Database },
+      { id: 'dataset', label: 'Dataset Studio', icon: Database, badge: 'Testbed' },
     ],
   },
 ];
@@ -103,7 +103,7 @@ export default function Sidebar({ activeTab, onNavigate = () => {} }) {
           </span>
           <div className="system-status-text">
             <span className="system-status-title">VISTA Engine v2.1.0</span>
-            <span className="system-status-sub">eBPF + Dual-ML Active</span>
+            <span className="system-status-sub">IPsec Testbed · ML Pipeline</span>
           </div>
         </div>
       </div>

@@ -1,0 +1,39 @@
+{
+  "experimentId": "8e3c5924-0a92-4e62-b1e7-43b1164975c5",
+  "sessionId": "12e3b476-91d6-4d44-a5ce-19d9cf731939",
+  "startedAt": "2026-10-10T12:46:57.431292+00:00",
+  "captureStartedAt": "2026-10-10T12:46:58.284964+00:00",
+  "captureEndedAt": "2026-10-10T12:47:01.686349+00:00",
+  "requestedProfiles": [
+    {
+      "count": 10,
+      "interval_seconds": 0.02,
+      "payload_bytes": 160,
+      "ssrc": 287454020,
+      "payload_type": 0,
+      "start_sequence": 1000
+    }
+  ],
+  "senderMeasurements": {
+    "totalPacketsSent": 10,
+    "totalPayloadBytes": 1600,
+    "startSequence": 1000,
+    "endSequence": 1009,
+    "ssrc": 287454020,
+    "payloadSha256": "23138157cdea7f9df827b744baab18083145717163968eea193ae0df8b4d3a5a",
+    "durationSeconds": 0
+  },
+  "independentReceiverEvidence": {
+    "serverEvidencePath": "server_evidence.json",
+    "serverEvidenceSha256": "de16fbbc90833ce4e369f4272b8433689aa73ef24342900edddf084ca2ca7e9b",
+    "totalPacketsReceived": 10,
+    "pcapPath": "pc2_receiver_rtp.pcap",
+    "pcapSha256": "d64fa0e55e598c94321c1d8a7b5f03a534b338791fdd84131437e54ca53f69b9",
+    "capturedUdpPackets": 10
+  },
+  "pc1OuterCaptureEvidence": {
+    "pcapPath": "pc1_outer_rtp.pcap",
+    "pcapSha256": "4dcf55b0f77a3f44db9ff17d8e6f35ea008d6f386c116b6609555a1236c55dca",
+    "espPackets": 10
+  }
+}

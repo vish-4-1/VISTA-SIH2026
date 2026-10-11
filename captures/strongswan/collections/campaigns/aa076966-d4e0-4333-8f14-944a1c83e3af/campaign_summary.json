@@ -1,0 +1,12 @@
+{
+  "campaignId": "aa076966-d4e0-4333-8f14-944a1c83e3af",
+  "status": "PASS",
+  "recipeMode": "standard",
+  "completedSessions": 1,
+  "startedAt": "2026-10-10T20:54:46.614328+00:00",
+  "datasetPreparation": {
+    "status": "READY_FOR_REVIEW",
+    "acceptedObservations": 1,
+    "quarantinedObservations": 0
+  }
+}

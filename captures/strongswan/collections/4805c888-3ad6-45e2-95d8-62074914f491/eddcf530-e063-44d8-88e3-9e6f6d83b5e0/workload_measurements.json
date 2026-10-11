@@ -1,0 +1,49 @@
+{
+  "experimentId": "eddcf530-e063-44d8-88e3-9e6f6d83b5e0",
+  "sessionId": "4805c888-3ad6-45e2-95d8-62074914f491",
+  "startedAt": "2026-10-10T03:06:55.517875+00:00",
+  "captureStartedAt": "2026-10-10T03:06:56.609628+00:00",
+  "captureEndedAt": "2026-10-10T03:06:58.943533+00:00",
+  "requestedProfiles": [
+    {
+      "count": 3,
+      "interval_seconds": 0.2,
+      "payload_bytes": 32
+    }
+  ],
+  "sender": {
+    "profiles": [
+      {
+        "requested": {
+          "count": 3,
+          "interval_seconds": 0.2,
+          "payload_bytes": 32
+        },
+        "messagesSent": 3,
+        "bytesSent": 96,
+        "durationSeconds": 0.40600000007543713,
+        "throughputBytesPerSecond": 236.453201926509
+      }
+    ],
+    "messagesSent": 3,
+    "bytesSent": 96,
+    "durationSeconds": 0.43700000003445894,
+    "throughputBytesPerSecond": 219.6796338499544,
+    "expectedPayloadSha256": "dacbb6d95ac511fbdaec21f92dd61439969c0a4ce06349f0ae71d70d04b5cb48",
+    "clientExitCode": 0,
+    "clientStdout": "",
+    "clientStderr": ""
+  },
+  "receiver": {
+    "bytesReceived": 96,
+    "payloadSha256": "dacbb6d95ac511fbdaec21f92dd61439969c0a4ce06349f0ae71d70d04b5cb48",
+    "payloadPath": "receiver_payload.bin",
+    "capturedTcpPackets": 7
+  },
+  "pc1OuterCapture": {
+    "pcapPath": "pc1_outer_tcp.pcap",
+    "pcapSha256": "c5129e011a69642a2d2d5ff6755efe4f89d07b357902bb867831df04c74ea17c",
+    "tcpPackets": 0,
+    "espPackets": 12
+  }
+}

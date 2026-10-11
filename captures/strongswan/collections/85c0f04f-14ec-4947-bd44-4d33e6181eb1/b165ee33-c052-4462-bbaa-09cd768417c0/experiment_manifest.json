@@ -1,0 +1,114 @@
+{
+  "manifest_version": "vista-strongswan-experiment-v2",
+  "dataset_id": "collection-85c0f04f-14ec-4947-bd44-4d33e6181eb1",
+  "feature_schema_version": "vista-flow-v1",
+  "extractor_version": "vista-ml-pcap-features-v1",
+  "observations": [
+    {
+      "experiment_id": "b165ee33-c052-4462-bbaa-09cd768417c0",
+      "session_id": "85c0f04f-14ec-4947-bd44-4d33e6181eb1",
+      "session_record_path": "session_record.json",
+      "session_record_sha256": "135c6d50a45239cf6a0fd4aae1bdc5957c5c65718765a8caabb6bd71df481098",
+      "capture": {
+        "path": "packets.csv",
+        "format": "packet_table_csv",
+        "sha256": "5eefa54957ccca274af747af9d01a8ff6bfdec24b76546346b86ae11513d2a86",
+        "started_at": "2026-10-10T04:00:54.631498+00:00",
+        "completed_at": "2026-10-10T04:01:03.597851+00:00",
+        "interface": "eth0",
+        "capture_point": "outer",
+        "ip_version": 4,
+        "protocol_family": "ESP",
+        "raw_pcap_path": "pc1_outer_tcp.pcap",
+        "raw_pcap_format": "pcap",
+        "raw_pcap_sha256": "c3ebf5f3f79a07291767897b2750e1d18ba7dce457679ea666d65a74af01c6d0",
+        "raw_pcap_size_bytes": 5338
+      },
+      "ground_truth": {
+        "label": "controlled_tcp_marker",
+        "record_path": "ground_truth.json",
+        "record_sha256": "6813efc94fd71523bca257b70f1c3e12288e4d25eae9302c003d1815f68ffda9",
+        "record_field": "label",
+        "method": "Bounded deterministic marker bytes sent by pc1 over one TCP connection; pc2 independently records and hashes the received payload.",
+        "independently_verified": true
+      },
+      "workload": {
+        "type": "tcp_marker",
+        "configuration": {
+          "profiles": [
+            {
+              "count": 7,
+              "interval_seconds": 0.8,
+              "payload_bytes": 256
+            }
+          ],
+          "observed": {
+            "messagesRequested": 7,
+            "messagesSent": 7,
+            "bytesSent": 1792,
+            "bytesReceived": 1792,
+            "durationSeconds": 4.843999999924563,
+            "throughputBytesPerSecond": 369.9421965375531,
+            "pc1CapturedTcpPackets": 11,
+            "pc2CapturedTcpPackets": 11,
+            "pc1CapturedEspPackets": 20,
+            "pc1CapturedIpv4Bytes": 3968,
+            "receiverPayloadSha256": "b7eaf1e8348313bc47a595cae87d167e43e2908bb5235177ecd32a4d11fe662a",
+            "saCounterDelta": {
+              "packetsIn": 9,
+              "packetsOut": 11,
+              "bytesIn": 476,
+              "bytesOut": 2372
+            }
+          }
+        },
+        "measurement_path": "workload_measurements.json",
+        "measurement_sha256": "5b70b41556b58e8a4fc0bea868716ecd8134cc475efedf661f5f10a3a9f92605"
+      },
+      "vpn": {
+        "requested_configuration": {
+          "source": "existing live testbed SA; collector does not reconfigure StrongSwan",
+          "ipVersion": "IPv4",
+          "mode": "tunnel"
+        },
+        "effective_configuration": {
+          "ike": {
+            "version": 2,
+            "encryption": "AES_CBC",
+            "encryptionKeySize": 256,
+            "integrity": "HMAC_SHA2_256_128",
+            "prf": "PRF_HMAC_SHA2_256",
+            "dhGroup": 14,
+            "dhGroupName": "MODP_2048"
+          },
+          "child": {
+            "name": "pc-tunnel",
+            "state": "INSTALLED",
+            "mode": "TUNNEL",
+            "protocol": "ESP",
+            "encryption": "AES_GCM_16",
+            "encryptionKeySize": 256,
+            "integrity": null,
+            "pfsGroup": 14,
+            "pfsGroupName": "MODP_2048",
+            "localTrafficSelector": "172.20.0.2/32",
+            "remoteTrafficSelector": "172.20.0.3/32",
+            "bytesIn": 1620,
+            "bytesOut": 1620,
+            "packetsIn": 3,
+            "packetsOut": 3,
+            "spiIn": "ced65f00",
+            "spiOut": "c665b783"
+          },
+          "xfrmMode": "TUNNEL"
+        },
+        "negotiated_sa_evidence_path": "negotiated_sa.json",
+        "negotiated_sa_evidence_sha256": "58562ddf9da65d1567a1c8dc7b53c8fa9e3676f3be89d210b82fd230bfbc670c"
+      },
+      "data_quality": {
+        "status": "accepted",
+        "reasons": []
+      }
+    }
+  ]
+}

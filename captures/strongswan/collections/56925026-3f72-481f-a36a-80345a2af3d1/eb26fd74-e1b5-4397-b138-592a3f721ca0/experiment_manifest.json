@@ -1,0 +1,117 @@
+{
+  "manifest_version": "vista-strongswan-experiment-v2",
+  "dataset_id": "collection-56925026-3f72-481f-a36a-80345a2af3d1",
+  "feature_schema_version": "vista-flow-v1",
+  "extractor_version": "vista-ml-pcap-features-v1",
+  "observations": [
+    {
+      "experiment_id": "eb26fd74-e1b5-4397-b138-592a3f721ca0",
+      "session_id": "56925026-3f72-481f-a36a-80345a2af3d1",
+      "session_record_path": "session_record.json",
+      "session_record_sha256": "97b1e48064149166de786a538abb8bf1827d02661e433d49c65a076d732903d7",
+      "capture": {
+        "path": "packets.csv",
+        "format": "packet_table_csv",
+        "sha256": "47c6df45986fbfd34baea7724dd5758fe9cb34b8bb636c25e52a14553cf59a89",
+        "started_at": "2026-10-10T06:29:25.256229+00:00",
+        "completed_at": "2026-10-10T06:29:29.582023+00:00",
+        "interface": "eth0",
+        "capture_point": "outer",
+        "ip_version": 4,
+        "protocol_family": "ESP",
+        "raw_pcap_path": "pc1_outer_tcp.pcap",
+        "raw_pcap_format": "pcap",
+        "raw_pcap_sha256": "b498c15e603c1620ef2ad63b7b6dff63f6b2ca484ad0afceca19a2bfb386d7d1",
+        "raw_pcap_size_bytes": 14860
+      },
+      "ground_truth": {
+        "label": "controlled_tcp_marker",
+        "label_schema_version": "vista-target-label-schema-v1",
+        "workload_subtype": "tcp_marker",
+        "record_path": "ground_truth.json",
+        "record_sha256": "54955a69a93026e5b224fb6c059fe2c7b9ff4bb241fc6664d66966a9c9f17e23",
+        "record_field": "label",
+        "method": "Bounded deterministic marker bytes sent by pc1 over one TCP connection; pc2 independently records and hashes the received payload.",
+        "independently_verified": true
+      },
+      "workload": {
+        "type": "tcp_marker",
+        "subtype": "tcp_marker",
+        "configuration": {
+          "profiles": [
+            {
+              "count": 10,
+              "interval_seconds": 0.2,
+              "payload_bytes": 1024
+            }
+          ],
+          "observed": {
+            "messagesRequested": 10,
+            "messagesSent": 10,
+            "bytesSent": 10240,
+            "bytesReceived": 10240,
+            "durationSeconds": 1.8440000000409782,
+            "throughputBytesPerSecond": 5553.145336102192,
+            "pc1CapturedTcpPackets": 14,
+            "pc2CapturedTcpPackets": 14,
+            "pc1CapturedEspPackets": 26,
+            "pc1CapturedIpv4Bytes": 13064,
+            "receiverPayloadSha256": "7dcb15cd6126dccc546ee0c18db97b5f1b98d02ba355f20704d7d5d75c926e02",
+            "saCounterDelta": {
+              "packetsIn": 12,
+              "packetsOut": 14,
+              "bytesIn": 632,
+              "bytesOut": 10976
+            }
+          }
+        },
+        "measurement_path": "workload_measurements.json",
+        "measurement_sha256": "69533c2695377c61af033a5a6d8f65ac045270083448d6f6dbd4bde941aaf184"
+      },
+      "vpn": {
+        "requested_configuration": {
+          "source": "existing live testbed SA; collector does not reconfigure StrongSwan",
+          "ipVersion": "IPv4",
+          "mode": "tunnel"
+        },
+        "effective_configuration": {
+          "ike": {
+            "version": 2,
+            "encryption": "AES_CBC",
+            "encryptionKeySize": 256,
+            "integrity": "HMAC_SHA2_256_128",
+            "prf": "PRF_HMAC_SHA2_256",
+            "dhGroup": 14,
+            "dhGroupName": "MODP_2048"
+          },
+          "child": {
+            "name": "pc-tunnel",
+            "state": "INSTALLED",
+            "mode": "TUNNEL",
+            "protocol": "ESP",
+            "encryption": "AES_GCM_16",
+            "encryptionKeySize": 256,
+            "integrity": null,
+            "pfsGroup": 14,
+            "pfsGroupName": "MODP_2048",
+            "localTrafficSelector": "172.20.0.2/32",
+            "remoteTrafficSelector": "172.20.0.3/32",
+            "bytesIn": 1748,
+            "bytesOut": 2828,
+            "packetsIn": 19,
+            "packetsOut": 24,
+            "spiIn": "c6996d2e",
+            "spiOut": "c05a4bda"
+          },
+          "xfrmMode": "TUNNEL"
+        },
+        "negotiated_sa_evidence_path": "negotiated_sa.json",
+        "negotiated_sa_evidence_sha256": "974408c2086e9cd30225f4d90e83f55deb65e460368aeca9a890e8c8840013d0"
+      },
+      "data_quality": {
+        "status": "accepted",
+        "reasons": []
+      }
+    }
+  ]
+}

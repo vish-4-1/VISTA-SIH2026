@@ -1,0 +1,100 @@
+{
+  "observedAt": "2026-10-10T06:04:38.716308+00:00",
+  "pc1": {
+    "established": true,
+    "ike": {
+      "version": 2,
+      "encryption": "AES_CBC",
+      "encryptionKeySize": 256,
+      "integrity": "HMAC_SHA2_256_128",
+      "prf": "PRF_HMAC_SHA2_256",
+      "dhGroup": 14,
+      "dhGroupName": "MODP_2048"
+    },
+    "child": {
+      "name": "pc-tunnel",
+      "state": "INSTALLED",
+      "mode": "TUNNEL",
+      "protocol": "ESP",
+      "encryption": "AES_GCM_16",
+      "encryptionKeySize": 256,
+      "integrity": null,
+      "pfsGroup": 14,
+      "pfsGroupName": "MODP_2048",
+      "localTrafficSelector": "172.20.0.2/32",
+      "remoteTrafficSelector": "172.20.0.3/32",
+      "bytesIn": 3574,
+      "bytesOut": 4705,
+      "packetsIn": 41,
+      "packetsOut": 50,
+      "spiIn": "c4be709e",
+      "spiOut": "c38b9d77"
+    },
+    "pfs": true
+  },
+  "pc2": {
+    "established": true,
+    "ike": {
+      "version": 2,
+      "encryption": "AES_CBC",
+      "encryptionKeySize": 256,
+      "integrity": "HMAC_SHA2_256_128",
+      "prf": "PRF_HMAC_SHA2_256",
+      "dhGroup": 14,
+      "dhGroupName": "MODP_2048"
+    },
+    "child": {
+      "name": "pc-tunnel",
+      "state": "INSTALLED",
+      "mode": "TUNNEL",
+      "protocol": "ESP",
+      "encryption": "AES_GCM_16",
+      "encryptionKeySize": 256,
+      "integrity": null,
+      "pfsGroup": 14,
+      "pfsGroupName": "MODP_2048",
+      "localTrafficSelector": "172.20.0.3/32",
+      "remoteTrafficSelector": "172.20.0.2/32",
+      "bytesIn": 4705,
+      "bytesOut": 3574,
+      "packetsIn": 50,
+      "packetsOut": 41,
+      "spiIn": "c38b9d77",
+      "spiOut": "c4be709e"
+    },
+    "pfs": true
+  },
+  "verifiedXfrmMode": "TUNNEL",
+  "afterTrafficPc1": {
+    "established": true,
+    "ike": {
+      "version": 2,
+      "encryption": "AES_CBC",
+      "encryptionKeySize": 256,
+      "integrity": "HMAC_SHA2_256_128",
+      "prf": "PRF_HMAC_SHA2_256",
+      "dhGroup": 14,
+      "dhGroupName": "MODP_2048"
+    },
+    "child": {
+      "name": "pc-tunnel",
+      "state": "INSTALLED",
+      "mode": "TUNNEL",
+      "protocol": "ESP",
+      "encryption": "AES_GCM_16",
+      "encryptionKeySize": 256,
+      "integrity": null,
+      "pfsGroup": 14,
+      "pfsGroupName": "MODP_2048",
+      "localTrafficSelector": "172.20.0.2/32",
+      "remoteTrafficSelector": "172.20.0.3/32",
+      "bytesIn": 4897,
+      "bytesOut": 5971,
+      "packetsIn": 56,
+      "packetsOut": 68,
+      "spiIn": "c4be709e",
+      "spiOut": "c38b9d77"
+    },
+    "pfs": true
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "totalRequestsSent": 5,
+  "totalBytesSent": 530,
+  "totalBytesReceived": 385,
+  "requests": [
+    {
+      "index": 0,
+      "path": "/data/query",
+      "method": "GET",
+      "statusCode": 200,
+      "statusLine": "HTTP/1.1 200 OK",
+      "responseBytes": 62,
+      "responseSha256": "b1680ef3aa213cbf0780ac458f7ee4aea94d77838167ca7b2d77cee29ca04ae8",
+      "durationSeconds": 0
+    },
+    {
+      "index": 1,
+      "path": "/data/query",
+      "method": "GET",
+      "statusCode": 200,
+      "statusLine": "HTTP/1.1 200 OK",
+      "responseBytes": 62,
+      "responseSha256": "dd669c9f4ce19f07d11fffdbef0ed906e3bde6b37764161b8735729f1684e773",
+      "durationSeconds": 0
+    },
+    {
+      "index": 2,
+      "path": "/data/query",
+      "method": "GET",
+      "statusCode": 200,
+      "statusLine": "HTTP/1.1 200 OK",
+      "responseBytes": 62,
+      "responseSha256": "2769cf7319383539989a0e154b64be5ff1f649c7fae660e1445835ac0a5f5527",
+      "durationSeconds": 0
+    },
+    {
+      "index": 3,
+      "path": "/data/query",
+      "method": "GET",
+      "statusCode": 200,
+      "statusLine": "HTTP/1.1 200 OK",
+      "responseBytes": 62,
+      "responseSha256": "6e3059f4de3e5f0af2d5dd185b8a9f9cbd72d8c3c01423774d9cfa975639cb37",
+      "durationSeconds": 0
+    },
+    {
+      "index": 4,
+      "path": "/data/query",
+      "method": "GET",
+      "statusCode": 200,
+      "statusLine": "HTTP/1.1 200 OK",
+      "responseBytes": 62,
+      "responseSha256": "0608a753ded32e6465903aabbb2376fd455e13151e5a8777591c30c05139bfc6",
+      "durationSeconds": 0
+    }
+  ]
+}

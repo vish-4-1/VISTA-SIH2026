@@ -1,0 +1,566 @@
+{
+  "report_version": 1,
+  "audited_at": "2026-10-10T11:35:00+05:30",
+  "overall_status": "PARTIAL",
+  "scope": "Dataset provenance, saved-candidate validation, IPv4 feature-contract parity, model eligibility, real-PCAP inference boundaries; no VPN runtime changes.",
+  "evidence_policy": "Synthetic datasets and configuration/unit tests are not counted as operational model validation. No metrics or labels are fabricated.",
+  "datasets": [
+    {
+      "name": "VISTA synthetic traffic/attack dataset",
+      "path": "DATASET/ipsec_traffic_classification_v2.csv",
+      "status": "PARTIAL",
+      "rows": 5531,
+      "session_groups": 1000,
+      "exact_duplicate_rows": 0,
+      "attack_label_counts": {
+        "BENIGN": 4171,
+        "BRUTE_FORCE": 300,
+        "C2_BEACONING": 268,
+        "PORT_SCAN": 268,
+        "DATA_EXFILTRATION": 265,
+        "DOS_FLOOD": 259
+      },
+      "usage_boundary": "Synthetic development and regression only; labels select profile generators and do not establish operational detection performance."
+    },
+    {
+      "name": "VISTA synthetic security audit dataset",
+      "path": "DATASET/ipsec_security_audit_v2.csv",
+      "status": "PARTIAL",
+      "rows": 1000,
+      "session_groups": 1000,
+      "exact_duplicate_rows": 0,
+      "usage_boundary": "Generated posture scenarios, not observed production audits."
+    },
+    {
+      "name": "VISTA synthetic sample Parquet",
+      "path": "vista-ml/data/sample/synthetic_vista_dataset.parquet",
+      "status": "PARTIAL",
+      "rows": 750,
+      "experiment_groups": 50,
+      "exact_duplicate_rows": 0,
+      "usage_boundary": "Synthetic development data only."
+    },
+    {
+      "name": "StrongSwan controlled benign outer-ESP workload captures",
+      "path": "vista-ml/data/processed/strongswan/{20261005T155313Z,20261005T155356Z}/packets/",
+      "status": "PARTIAL",
+      "rows": 50,
+      "class_counts": {
+        "ICMP_NORMAL": 25,
+        "TCP_NORMAL": 25
+      },
+      "evaluation": {
+        "report": "vista-ml/reports/candidates/benign_outer_esp_icmp_vs_tcp/20261010T020048Z-b045d473/evaluation.json",
+        "status": "candidate_evaluated_not_approved_for_inference",
+        "feature_schema_version": "vista-flow-v1",
+        "runtime_feature_compatible": true,
+        "runtime_eligible": false,
+        "training_capture_run": "20261005T155313Z",
+        "training_rows": 6,
+        "validation_rows": 2,
+        "held_out_test_rows": 50,
+        "held_out_capture_run": "20261005T155356Z",
+        "capture_groups_disjoint": true,
+        "exact_feature_vector_overlap_between_splits": 0,
+        "capture_plane": "IPv4 native ESP at PC1 outer interface for all splits",
+        "source_session_ids_verified": false,
+        "raw_pcap_available_for_each_observation": false,
+        "independent_ground_truth_sidecars_available": false,
+        "processing_run_overlap": {
+          "train_validation": ["20261005T155313Z"],
+          "train_test": [],
+          "validation_test": []
+        },
+        "experiment_ids_and_packet_table_filenames_encode_target": true,
+        "exact_duplicate_feature_rows_within_test": 2,
+        "packet_count_by_label": {
+          "ICMP_NORMAL": [12],
+          "TCP_NORMAL": [5]
+        },
+        "packet_count_is_perfect_label_proxy": true,
+        "selected_model": "random_forest",
+        "held_out_test_metrics": {
+          "accuracy": 1.0,
+          "macro_precision": 1.0,
+          "macro_recall": 1.0,
+          "macro_f1": 1.0,
+          "tcp_normal_roc_auc": 1.0,
+          "tcp_normal_average_precision": 1.0
+        },
+        "metrics_computed_from_saved_held_out_predictions": true,
+        "held_out_predictions": "vista-ml/reports/candidates/benign_outer_esp_icmp_vs_tcp/20261010T020048Z-b045d473/held_out_predictions.csv",
+        "model_candidate": "vista-ml/models/candidates/benign_outer_esp_icmp_vs_tcp/20261010T020048Z-b045d473/random_forest.joblib",
+        "model_metadata": "vista-ml/models/candidates/benign_outer_esp_icmp_vs_tcp/20261010T020048Z-b045d473/random_forest.metadata.json",
+        "historical_mixed_capture_plane_report": {
+          "path": "vista-ml/reports/candidates/benign_outer_esp_icmp_vs_tcp/20261009T233255Z-1f0eea9c/evaluation.json",
+          "status": "superseded_for_ESP_only_claim",
+          "reason": "Earlier train/validation runs included cleartext ICMP/TCP packets alongside ESP captures; held-out run was ESP-only."
+        }
+      },
+      "usage_boundary": "Historical ESP packet-table CSVs with explicit labels in a parquet index. Saved metrics reproduce, but no independently verified source sessions, per-observation raw PCAPs, or independent endpoint ground-truth sidecars are present. Fourteen of eighteen individual features and a depth-1 tree each score 1.0; IDs/filenames encode labels; train and validation share one processing run. Candidate is not evidence of broad generalization and remains blocked from inference."
+    },
+    {
+      "name": "StrongSwan IKE_SA_INIT DH-group experiment",
+      "path": "vista-ml/data/processed/strongswan_ike_dh/20261005T162816Z/ike_init_features.parquet",
+      "status": "BLOCKED",
+      "rows": 60,
+      "class_counts": {
+        "MODP_2048": 20,
+        "MODP_3072": 20,
+        "ECP_256": 20
+      },
+      "negotiated_group_checked_per_handshake": null,
+      "usage_boundary": "Historical reported result conflicts with the independent StrongSwan capability report, which marks ECP-256 blocked. Per-sample SA evidence is unavailable; labels and reported metrics are unverified and must not be treated as supported capability."
+    },
+    {
+      "name": "ISCXVPN2016 labeled consolidated flows",
+      "path": "vista-ml/data/raw/public/iscxvpn2016_zenodo_15862668/Data.zip :: Data/ISCXVPN2016/Original_ISCXFlowMeter_CSVs/TimeBasedFeatures-Dataset-15s.csv",
+      "status": "BLOCKED",
+      "rows": 18758,
+      "column_count": 24,
+      "numeric_feature_count": 23,
+      "class_count": 14,
+      "missing_cells": 0,
+      "nonfinite_numeric_cells": 0,
+      "exact_duplicate_rows": 684,
+      "capture_or_session_group_column_present": false,
+      "class_counts": {
+        "BROWSING": 2500,
+        "CHAT": 890,
+        "FT": 1018,
+        "MAIL": 249,
+        "P2P": 1000,
+        "STREAMING": 482,
+        "VOIP": 2826,
+        "VPN-BROWSING": 2500,
+        "VPN-CHAT": 1196,
+        "VPN-FT": 1932,
+        "VPN-MAIL": 491,
+        "VPN-P2P": 928,
+        "VPN-STREAMING": 475,
+        "VPN-VOIP": 2271
+      },
+      "usage_boundary": "Seven app families (BROWSING, CHAT, FT, MAIL, P2P, STREAMING, VOIP), each with VPN and unprefixed non-VPN labels. No attack labels. Source features are time-based aggregates, not vista-flow-v1 packet features; no capture/session groups exist in the labeled file."
+    },
+    {
+      "name": "ISCXVPN2016 per-capture 15-second flow files",
+      "path": "Data/ISCXVPN2016/New_CICFlowMeter/15s/*_Flow.csv",
+      "status": "BLOCKED",
+      "csv_file_count": 102,
+      "row_count": 65249,
+      "labels_observed": {
+        "No Label": 65249
+      },
+      "usage_boundary": "Capture grouping exists as archive members, but usable class labels do not; labels are not inferred from filenames."
+    },
+    {
+      "name": "Phase 8 StrongSwan unified multi-workload dataset campaign",
+      "path": "captures/strongswan/collections/campaigns/76adc766-ef41-45f5-b677-1d950c7ff052/",
+      "status": "READY_FOR_REVIEW",
+      "rows": 60,
+      "session_groups": 15,
+      "exact_duplicate_rows": 0,
+      "class_counts": {
+        "controlled_http": 30,
+        "controlled_icmpv4": 15,
+        "controlled_tcp_marker": 15
+      },
+      "workload_subtypes": {
+        "http_get": 15,
+        "http_post": 15,
+        "icmpv4_echo": 15,
+        "tcp_marker": 15
+      },
+      "qualification": {
+        "report": "vista-ml/reports/campaign_qualification_phase8.json",
+        "split_manifest": "captures/strongswan/collections/campaigns/76adc766-ef41-45f5-b677-1d950c7ff052/dataset_preparation/split_manifest.json",
+        "target_label_schema": "vista-ml/schemas/vista-target-label-schema-v1.json",
+        "status": "READY_FOR_REVIEW",
+        "feature_schema_version": "vista-flow-v1",
+        "independent_sessions": 15,
+        "session_split": {
+          "train_sessions": 9,
+          "validation_sessions": 3,
+          "test_sessions": 3
+        },
+        "split_observations": {
+          "train": 36,
+          "validation": 12,
+          "test": 12
+        },
+        "class_representation_all_splits": true,
+        "session_ike_spi_overlap": 0,
+        "endpoint_agreement": "100%",
+        "outer_esp_verified": "100%",
+        "model_policy": "candidate_dataset_qualified_no_model_trained_or_promoted"
+      },
+      "usage_boundary": "Qualified multi-workload dataset for human review; models not trained or evaluated in this phase."
+    }
+  ],
+  "model_state": {
+    "status": "BLOCKED",
+    "existing_root_artifacts": [
+      "vista-ml/models/attack_classifier.joblib",
+      "vista-ml/models/traffic_classifier.joblib",
+      "vista-ml/models/xgboost_classifier.joblib",
+      "vista-ml/models/random_forest_baseline.joblib",
+      "vista-ml/models/isolation_forest.joblib"
+    ],
+    "inference_eligibility_rule": "validated_for_inference must be true and feature_schema_version must equal vista-flow-v1; task-specific feature order and metadata must also match.",
+    "existing_artifact_boundary": "Legacy root metadata does not qualify the model bundles for live inference. Files were retained unchanged.",
+    "attack_task": "No representative independent labeled operational attack corpus; synthetic-only development evidence.",
+    "traffic_task": "Synthetic-only development artifacts; current public labeled features do not match the live feature schema.",
+    "anomaly_task": "No independent threshold calibration data; operational predictions disabled."
+  },
+  "phase3_shortcut_audit": {
+    "status": "PASS",
+    "scope": "Diagnostic evidence; does not qualify candidate generalization or runtime use.",
+    "report": "vista-ml/reports/audits/phase3-20261010/shortcut_ablation_report.json",
+    "saved_candidate_reproduced": true,
+    "saved_metrics_recomputed": true,
+    "processing_run_overlap": {
+      "train_validation": ["20261005T155313Z"],
+      "train_test": [],
+      "validation_test": []
+    },
+    "verified_source_session_ids_available": false,
+    "independent_test_processing_runs": 1,
+    "record_counts": {"train": 6, "validation": 2, "test": 50},
+    "baselines": {
+      "saved_candidate_accuracy": 1.0,
+      "saved_candidate_macro_f1": 1.0,
+      "majority_accuracy": 0.5,
+      "majority_macro_f1": 0.3333333333333333,
+      "depth_1_tree_accuracy": 1.0,
+      "depth_1_tree_macro_f1": 1.0,
+      "packet_count_only_accuracy": 1.0,
+      "packet_count_only_macro_f1": 1.0
+    },
+    "perfect_single_feature_count": 14,
+    "perfect_single_feature_names": [
+      "backward_bytes",
+      "backward_packet_count",
+      "byte_count",
+      "direction_ratio",
+      "flow_duration",
+      "forward_bytes",
+      "forward_packet_count",
+      "max_inter_arrival_time",
+      "mean_inter_arrival_time",
+      "mean_packet_size",
+      "min_packet_size",
+      "packet_count",
+      "std_inter_arrival_time",
+      "std_packet_size"
+    ],
+    "individual_feature_removals_all_macro_f1": 1.0,
+    "feature_group_removals_all_macro_f1": 1.0,
+    "exact_test_feature_duplicates": 2,
+    "exact_cross_split_feature_overlap": 0,
+    "duplicate_capture_hashes": 0,
+    "near_duplicate_pairs_relative_tolerance_1e-6": 0,
+    "identifiers_encode_labels": true,
+    "statistical_uncertainty": {
+      "record_level_wilson_95_interval_for_50_of_50": [0.9286524008666414, 1.0],
+      "caveat": "Record-level interval is not session-valid because observations are clustered and only one test processing run exists."
+    },
+    "decision": "Perfect candidate score is recipe-specific and does not establish generalization."
+  },
+  "collection_protocol": {
+    "status": "PARTIAL",
+    "document": "docs/ML_DATA_COLLECTION_PROTOCOL.md",
+    "machine_readable_plan": "vista-ml/schemas/strongswan-collection-plan-v1.json",
+    "manifest_schema": "vista-ml/schemas/strongswan-experiment-manifest-v2.schema.json",
+    "historical_data_admitted": false,
+    "live_docker_or_strongswan_collection_executed": true,
+    "live_collection_session_id": "3dd0983a-d751-491b-8a02-6855b988bddd",
+    "live_experiment_ids": [
+      "fa7b06aa-1736-4915-86b6-8fd28eefdd8b",
+      "7a80087d-a635-467d-ad4a-c1860daf3c4c"
+    ],
+    "live_dataset_admission": "2 observations accepted with zero quarantines; session-independent split blocked because there is only one verified session.",
+    "live_integration_test_runs": {
+      "initial_opt_in_batch": "1 failed, 2 passed; ICMP sender reported 3/3 replies but PC1 produced only the 24-byte PCAP header, so the collector recorded FAIL.",
+      "follow_up_opt_in_batch": "2 passed; both ICMP and TCP live collection tests passed on rerun.",
+      "failed_attempt_artifact": "captures/strongswan/collections/75be973c-d0bd-4095-b3c2-dfe0cf2c43f5/da6793b9-a638-4591-b053-e3436bc238e9/collection_result.json"
+    },
+    "minimum_independent_sessions_for_proposed_split": 15,
+    "current_genuine_workload_path": "bounded variable-profile ICMPv4 echo, TCP marker stream, and real HTTP/1.1 request/response transactions over the existing tunnel",
+    "tcp_endpoint_and_variable_workload_controls": "temporary single-connection TCP receiver; controlled message count, interval, and payload size; not an application implementation",
+    "http_workload_evidence": "Session 15298fa7-7e97-44b0-8e7c-fac238db54e0, Experiment 60883e93-7174-405f-8f9d-cdf06d2e6894: 3 HTTP/1.1 requests, status 200 OK, 33 outer ESP packets, 18 receiver TCP packets, matching response SHA-256 digests"
+  },
+  "capabilities": [
+    {
+      "id": "three_way_group_split",
+      "status": "PASS",
+      "evidence": "Implemented group-disjoint train/validation/test split with missing-group, row-identifier, overlap, and minimum-group checks; covered by regression tests."
+    },
+    {
+      "id": "public_dataset_evaluation",
+      "status": "BLOCKED",
+      "evidence": "Executed ISCX experiment runner; it refused the archive's labeled consolidated data because the requested capture_id group column is absent."
+    },
+    {
+      "id": "controlled_benign_tunnel_classification",
+      "status": "PARTIAL",
+      "evidence": "Saved metrics reproduce at 1.0 on 50 held-out packet-table rows, but the split is not session-independent: train and validation share processing run 20261005T155313Z, and the test is one other processing run. Fourteen single features, a depth-1 tree, and every tested feature/group ablation score 1.0. IDs/filenames encode labels; no source-session IDs, per-record raw PCAPs, or independent ground-truth sidecars are available. Candidate remains inference-blocked."
+    },
+    {
+      "id": "strongswan_shortcut_and_ablation_audit",
+      "status": "PASS",
+      "evidence": "Reproduced the candidate from its saved model and source-derived vista-flow-v1 features; recomputed report metrics from saved predictions. Evaluated majority and depth-1 tree baselines, packet-count-only and single-feature baselines, every individual-feature removal and predefined feature-group removals. Diagnostic report establishes recipe shortcuts, not generalization."
+    },
+    {
+      "id": "session_independent_candidate_validation",
+      "status": "BLOCKED",
+      "evidence": "No verified capture-session IDs exist in the source records. The current train/validation partition shares one processing run; the held-out data represents only one other processing run. Source directories contain packet-table CSVs but no per-observation raw PCAP or independent endpoint ground-truth records."
+    },
+    {
+      "id": "manifest_driven_dataset_preparation",
+      "status": "PASS",
+      "evidence": "Versioned v1/v2 manifest preparation validates explicit ground-truth sources, raw PCAP and measurement/SA hashes, outer-ESP packet extraction, duplicate quarantine, feature/label separation, and deterministic session-level splits. In Phase 5 campaign e2e8adae-94d7-4a1d-9569-3c3e1a965e64, 15 independent sessions (30 observations) were admitted with zero quarantines and a clean 9/3/3 session split without leakage (READY_FOR_REVIEW)."
+    },
+    {
+      "id": "phase5_campaign_independent_audit",
+      "status": "PASS",
+      "evidence": "Automated audit of campaign e2e8adae-94d7-4a1d-9569-3c3e1a965e64 verified 15 distinct session UUIDs, 30 unique experiment UUIDs, 15 distinct verified IKE_SA identities, zero hash discrepancies across all artifacts, outer ESP packets in all 30 PCAPs, sender/receiver agreement on ICMP and TCP, and zero session/key leakage across 9/3/3 split."
+    },
+    {
+      "id": "varied_strongswan_workload_collection",
+      "status": "PARTIAL",
+      "evidence": "In Phase 5, capture reliability was hardened (tcpdump --immediate-mode, priming grace barrier, continuous SIGUSR1 packet-dispatch confirmation, container sync before copy, and failure diagnostics). The intermittent 24-byte empty PCAP was isolated to TPACKET_V3 packet buffering and socket attachment race, and resolved. A reproducible campaign runner executed 15 independent sessions with verified IKE_SA terminate-and-reinit lifecycles and varied ICMP/TCP profiles across payload sizes 32-1400 bytes, counts 3-10, and intervals 0.2-0.8s (campaign e2e8adae-94d7-4a1d-9569-3c3e1a965e64). Workload coverage is strictly limited to controlled benign ICMPv4 echo and TCP marker outer-ESP metadata; RTP-like, HTTP/HTTPS, SMTP, WhatsApp-like, video, IPv6, and attack traffic remain unverified and blocked. No models were trained, promoted, or deployed."
+    },
+    {
+      "id": "real_http_workload_collection",
+      "status": "PASS",
+      "evidence": "In Phase 6, implemented real bounded HTTP/1.1 client/server exchange over IPsec tunnel using container-native Perl in PC1 and PC2. Validates outer ESP on PC1 eth0, server evidence on PC2, status 200 OK, response bytes, and content SHA-256 match. Live test executed with 3/3 matching requests, 33 outer ESP packets, and 0 hash discrepancies (Session 15298fa7-7e97-44b0-8e7c-fac238db54e0, Experiment 60883e93-7174-405f-8f9d-cdf06d2e6894)."
+    },
+    {
+      "id": "phase6_experiment_independent_audit",
+      "status": "PASS",
+      "evidence": "Automated audit of HTTP experiment 15298fa7-7e97-44b0-8e7c-fac238db54e0 / 60883e93-7174-405f-8f9d-cdf06d2e6894 verified all 11 artifact files present, 100% SHA-256 hash match against manifest, 33 outer ESP packets on PC1, 18 TCP packets on PC2, client/server agreement on 3 requests (200 OK, 68 response bytes, exact response-body SHA-256 match), and CHILD_SA counter delta +15 in / +18 out packets."
+    },
+    {
+      "id": "phase7_multi_session_http_campaign",
+      "status": "PASS",
+      "evidence": "Automated audit of campaign 9bd6b15c-507d-451a-89eb-7071944f105f verified 15 distinct session UUIDs, 30 unique experiment UUIDs (15 GET, 15 POST), 15 distinct verified IKE_SA identities, zero hash discrepancies across all artifacts, outer ESP frames in all 30 PCAPs, client/server agreement on status 200 OK, byte counts, and body digests, and a leakage-free 9/3/3 session split without session or IKE SPI key overlap (READY_FOR_REVIEW)."
+    },
+    {
+      "id": "vista_flow_v1_ipv4_batch_backend_feature_parity",
+      "status": "PASS",
+      "evidence": "Corrected batch extractor matches all 18 ordered runtime vista-flow-v1 features on an IPv4 PCAP fixture: durations/rates, population standard deviations, timestamp-derived IAT, canonical directions, directional byte sums, and rounding. This is feature-contract parity only; IPv6 and protocol eligibility are not established."
+    },
+    {
+      "id": "controlled_ike_dh_group_experiment",
+      "status": "BLOCKED",
+      "evidence": "Historical report claims 60 handshakes including ECP-256, but independent live capability evidence marks ECP-256 blocked. No per-sample SA transcripts were available to resolve the conflict; historical labels/metrics are unverified."
+    },
+    {
+      "id": "operational_traffic_prediction",
+      "status": "BLOCKED",
+      "evidence": "No existing model meets inference provenance/schema eligibility."
+    },
+    {
+      "id": "operational_attack_prediction",
+      "status": "BLOCKED",
+      "evidence": "No eligible model or representative independent labeled attack dataset."
+    },
+    {
+      "id": "operational_anomaly_detection",
+      "status": "BLOCKED",
+      "evidence": "No eligible model or independent threshold calibration; training script no longer derives threshold from training-normal scores."
+    },
+    {
+      "id": "real_pcap_esp_ike_handling",
+      "status": "PASS",
+      "evidence": {
+        "pcap": "captures/ikev2_s2s_ipsec_vpn_aes_gcm.pcapng",
+        "analysis_id": "ANL-7D7AC35F5DDF",
+        "total_packets": 12,
+        "total_bytes": 2654,
+        "flows": [
+          {
+            "protocol_family": "ESP",
+            "packets": 8,
+            "bytes": 1120,
+            "traffic_attack_anomaly_status": "out_of_distribution",
+            "predictions": null
+          },
+          {
+            "protocol_family": "IKE",
+            "packets": 4,
+            "bytes": 1366,
+            "traffic_attack_anomaly_status": "out_of_distribution",
+            "predictions": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "analysis_and_flow_correlation",
+      "status": "PASS",
+      "evidence": "Unique analysis IDs, per-flow IDs, CSV analysis identity, and report cross-analysis rejection are regression-tested."
+    },
+    {
+      "id": "api_metrics_and_shap_provenance_gate",
+      "status": "PASS",
+      "evidence": "API tests verify unqualified historical metrics and SHAP are withheld."
+    },
+    {
+      "id": "per_flow_shap_contract",
+      "status": "PASS",
+      "evidence": "Unit test checks exactly one selected flow, feature order, prediction, class explanation, and model/schema version fields."
+    },
+    {
+      "id": "operational_shap",
+      "status": "BLOCKED",
+      "evidence": "Executed CLI against the current model; it refused metadata without inference approval. No SHAP artifacts were written."
+    },
+    {
+      "id": "dashboard_integration",
+      "status": "PARTIAL",
+      "evidence": "UI wording distinguishes unvalidated/synthetic states; no eligible live model is available."
+    },
+    {
+      "id": "live_docker_ml_integration",
+      "status": "NOT TESTED",
+      "evidence": "No containers were restarted and no model was loaded into the VPN testbed."
+    }
+  ],
+  "verification": {
+    "full_test_command": ".\\.venv\\Scripts\\pytest -q",
+    "full_test_result": {
+      "status": "PASS",
+      "passed": 141,
+      "skipped": 10,
+      "warnings": 4,
+      "live_environment_passed": 129,
+      "live_environment_skipped": 6,
+      "historical_discrepancy_note": "Phase 3 documented 65 passed, 7 skipped; Phase 5 baseline was 103 passed, 9 skipped; Phase 6 added 15 tests; Phase 7 added 4 tests for HTTP campaign; Phase 8 added 8 tests for label qualification and 1 test for unified campaign runner; Phase 9 added 2 regression tests for independent dataset audit decision gates and recomputation parity; Phase 10 added 8 unit/regression tests for Optuna baseline training, leakage prevention, shortcut ablations, and schema enforcement (total 141 passed, 10 skipped)."
+    },
+    "python_syntax_command": ".\\.venv\\Scripts\\python -m py_compile vista-ml\\scripts\\audit_strongswan_shortcuts.py vista-ml\\scripts\\prepare_experiment_dataset.py vista-ml\\tests\\test_experiment_dataset.py vista-ml\\tests\\test_shortcut_audit.py",
+    "python_syntax_result": "PASS",
+    "focused_test_command": ".\\.venv\\Scripts\\pytest -q vista-ml\\tests\\test_experiment_dataset.py vista-ml\\tests\\test_shortcut_audit.py vista-ml\\tests\\test_candidate_evidence.py vista-ml\\tests\\test_features.py vista-ml\\tests\\test_feature_contract.py backend\\test_pcap_ml_contract.py backend\\test_label_qualification.py",
+    "focused_test_result": {
+      "status": "PASS",
+      "command": ".\\.venv\\Scripts\\pytest -q vista-ml\\tests\\test_optuna_baseline.py vista-ml\\tests\\test_experiment_dataset.py backend\\test_label_qualification.py",
+      "passed": 33
+    },
+    "phase8_campaign_qualification_summary": {
+      "status": "PASS",
+      "campaign_id": "76adc766-ef41-45f5-b677-1d950c7ff052",
+      "qualification_report": "vista-ml/reports/campaign_qualification_phase8.json",
+      "target_label_schema": "vista-ml/schemas/vista-target-label-schema-v1.json",
+      "audit_result": "audit_passed: true, 0 issues",
+      "observations": 60,
+      "independent_sessions": 15,
+      "splits": "train: 36 (9 sessions), validation: 12 (3 sessions), test: 12 (3 sessions)",
+      "leakage": "0 sessions, 0 IKE SA identities, 0 SPIs",
+      "status_gate": "READY_FOR_REVIEW"
+    },
+    "phase9_dataset_audit_summary": {
+      "status": "PASS",
+      "campaign_id": "76adc766-ef41-45f5-b677-1d950c7ff052",
+      "audit_report": "vista-ml/reports/phase9_dataset_audit.json",
+      "audit_tool": "scripts/audit_phase9_dataset.py",
+      "recomputed_evidence_parity": "60/60 raw PCAPs readable with outer ESP; 60/60 packet CSVs verified; 60/60 flow feature extractions match prepared_dataset.csv (0 discrepancies); 60/60 endpoint agreements verified.",
+      "leakage_controls": "0 sessions, 0 IKE_SA identities, 0 SPIs cross splits; 0 duplicate and 0 near-duplicate vectors",
+      "decision_gates": {
+        "artifact_integrity": "PASS",
+        "ground_truth_integrity": "PASS",
+        "label_integrity": "PASS",
+        "feature_integrity": "PASS",
+        "leakage_controls": "PASS",
+        "class_coverage": "PASS",
+        "split_validity": "PASS",
+        "independent_campaign_validation": "BLOCKED",
+        "baseline_eligibility": "PASS"
+      },
+      "production_promotion": "BLOCKED",
+      "baseline_experiment_specification": "docs/PHASE9_DATASET_AUDIT.md"
+    },
+    "phase10_optuna_baseline_summary": {
+      "status": "PASS",
+      "campaign_id": "76adc766-ef41-45f5-b677-1d950c7ff052",
+      "experiment_report": "vista-ml/reports/phase10_optuna_report.json",
+      "runner_script": "vista-ml/scripts/run_optuna_baseline.py",
+      "evaluator_script": "vista-ml/scripts/evaluate_baseline.py",
+      "eligibility_gate_verified": true,
+      "non_optimized_baselines_cv": {
+        "majority_class_macro_f1": 0.2222,
+        "decision_tree_shallow_macro_f1": 0.7978,
+        "initial_random_forest_macro_f1": 0.9692
+      },
+      "optuna_hyperparameter_optimization": {
+        "n_trials": 30,
+        "best_macro_f1": 1.0,
+        "best_hyperparameters": {
+          "n_estimators": 130,
+          "max_depth": 8,
+          "min_samples_split": 2,
+          "min_samples_leaf": 1,
+          "max_features": null,
+          "class_weight": "balanced"
+        }
+      },
+      "shortcut_ablations": {
+        "packet_count_alone_macro_f1": 0.8429,
+        "excluding_packet_count_macro_f1": 0.9692,
+        "top_single_feature": "std_packet_size (0.8893 macro-f1)",
+        "lofo_range": "0.9286 - 1.0000 macro-f1"
+      },
+      "held_out_test_evaluation": {
+        "sample_count": 12,
+        "session_count": 3,
+        "test_macro_f1": 1.0,
+        "uncertainty_note": "High statistical variance on 12 samples; exploratory candidate only, does not prove general operational performance."
+      },
+      "model_artifact": {
+        "path": "vista-ml/models/candidates/controlled_workload_classification/20261010T082308Z-6b8eb840/random_forest.joblib",
+        "validated_for_inference": false,
+        "production_eligible": false,
+        "experimental": true
+      }
+    },
+    "candidate_saved_evidence_regression": "PASS: prediction CSV hash, saved-prediction metrics/confusion matrix, candidate metadata eligibility, 6/2/50 experiment split, and disjoint experiment groups are checked by test_candidate_evidence.py. test_shortcut_audit.py also checks saved model reproduction and documents processing-run overlap.",
+    "dataset_preparation_tests": "PASS: 15 focused tests in test_experiment_dataset.py plus 10 tests in test_label_qualification.py plus 8 tests in test_optuna_baseline.py; offline fixtures and live recomputation exercise manifest/hash/label validation, explicit quarantine, feature/target separation, deterministic session splits, Phase 9 decision gates, Phase 10 Optuna optimization, and shortcut ablations.",
+    "backend_api_harness_result": "PASS: existing API test harness exercised observed-PCAP preservation, explicit unsupported/OOD states, inference failure behavior, and API responses; mocked checks are not live model qualification.",
+    "json_validation_result": "PASS: runtime schema, capability report, candidate evaluation, split manifest, target label schema, and candidate model metadata parse as JSON.",
+    "git_diff_check_result": "PASS: git diff --check returned no whitespace errors; Git emitted LF/CRLF normalization warnings.",
+    "warning_categories": [
+      "Starlette/httpx deprecation",
+      "SHAP color API pending deprecations"
+    ],
+    "strongswan_candidate_command": "cd vista-ml; ..\\.venv\\Scripts\\python scripts\\evaluate_strongswan_benign_captures.py",
+    "strongswan_candidate_result": "Saved candidate labels and probabilities reproduced; saved held-out metrics are all 1.0 for 50 packet-table rows. This is not 50 independent sessions: train and validation share processing run 20261005T155313Z; the test comes from one separate run; source-session IDs are unavailable. Fourteen individual features and a depth-1 tree each score 1.0; feature ablations retain 1.0. Candidate remains blocked.",
+    "strongswan_candidate_report": "vista-ml/reports/candidates/benign_outer_esp_icmp_vs_tcp/20261010T020048Z-b045d473/evaluation.json",
+    "candidate_evidence_audit": {
+      "held_out_processing_run_distinct": true,
+      "verified_session_independence": false,
+      "train_validation_processing_run_overlap": ["20261005T155313Z"],
+      "independent_test_processing_run_count": 1,
+      "group_overlap": 0,
+      "exact_feature_vector_overlap_between_splits": 0,
+      "exact_test_feature_duplicates": 2,
+      "label_encoded_in_ids_or_filenames": true,
+      "raw_pcap_available_per_observation": false,
+      "independent_ground_truth_sidecars_available": false,
+      "metrics_recomputed_from_saved_predictions": true,
+      "packet_count_is_perfect_label_proxy": true,
+      "training_capture_plane_consistent_with_held_out": true,
+      "historical_28_8_50_result": "Superseded for ESP-only generalization because its training inputs mixed cleartext ICMP/TCP and ESP capture planes."
+    },
+    "live_dataset_command": "cd vista-ml; ..\\.venv\\Scripts\\python scripts\\run_iscxvpn2016_experiment.py --group-column capture_id",
+    "live_dataset_result": "BLOCKED as designed: capture_id is absent; no row-random split or candidate artifact was produced.",
+    "shap_command": "cd vista-ml; ..\\.venv\\Scripts\\python scripts\\run_shap.py --output-dir reports\\shap\\audit-attempt",
+    "shap_result": "BLOCKED as designed: model metadata does not approve inference; no model training or explanation artifact was produced.",
+    "dashboard_build_result": "NOT RUN for this ML phase; dashboard was unaffected by the changes."
+  },
+  "remaining_blockers": [
+    "Labeled data with real capture/session identifiers for leakage-aware held-out evaluation.",
+    "A tested, versioned conversion between any public source feature schema and the live PCAP feature extractor.",
+    "Representative independent attack and normal data plus an independent anomaly-threshold calibration set.",
+    "A model approval/review process after candidate metrics, class support, provenance, and error analysis are available.",
+    "Dashboard build and live API integration against an approved model."
+  ]
+}

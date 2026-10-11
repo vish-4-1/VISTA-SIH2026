@@ -1,0 +1,41 @@
+{
+  "experimentId": "de343221-9aa4-4c00-a00f-20f07b432535",
+  "sessionId": "133ffd8e-c515-4ae3-8002-7630bb2fe0a0",
+  "startedAt": "2026-10-10T12:08:07.937449+00:00",
+  "captureStartedAt": "2026-10-10T12:08:08.834999+00:00",
+  "captureEndedAt": "2026-10-10T12:08:14.975198+00:00",
+  "requestedProfiles": [
+    {
+      "count": 12,
+      "interval_seconds": 0.35,
+      "payload_bytes": 768
+    }
+  ],
+  "senderMeasurements": [
+    {
+      "requested": {
+        "count": 12,
+        "interval_seconds": 0.35,
+        "payload_bytes": 768
+      },
+      "packetsSent": 12,
+      "packetsReceived": 12,
+      "durationSeconds": 4.297000000020489,
+      "exitCode": 0,
+      "stdout": "PING 172.20.0.3 (172.20.0.3) 768(796) bytes of data.\n776 bytes from 172.20.0.3: icmp_seq=1 ttl=64 time=0.379 ms\n776 bytes from 172.20.0.3: icmp_seq=2 ttl=64 time=0.521 ms\n776 bytes from 172.20.0.3: icmp_seq=3 ttl=64 time=0.469 ms\n776 bytes from 172.20.0.3: icmp_seq=4 ttl=64 time=0.486 ms\n776 bytes from 172.20.0.3: icmp_seq=5 ttl=64 time=0.484 ms\n776 bytes from 172.20.0.3: icmp_seq=6 ttl=64 time=0.582 ms\n776 bytes from 172.20.0.3: icmp_seq=7 ttl=64 time=0.688 ms\n776 bytes from 172.20.0.3: icmp_seq=8 ttl=64 time=0.426 ms\n776 bytes from 172.20.0.3: icmp_seq=9 ttl=64 time=0.504 ms\n776 bytes from 172.20.0.3: icmp_seq=10 ttl=64 time=0.485 ms\n776 bytes from 172.20.0.3: icmp_seq=11 ttl=64 time=0.500 ms\n776 bytes from 172.20.0.3: icmp_seq=12 ttl=64 time=0.666 ms\n\n--- 172.20.0.3 ping statistics ---\n12 packets transmitted, 12 received, 0% packet loss, time 4168ms\nrtt min/avg/max/mdev = 0.379/0.515/0.688/0.086 ms\n",
+      "stderr": ""
+    }
+  ],
+  "independentReceiverEvidence": {
+    "pcapPath": "pc2_receiver_icmp.pcap",
+    "pcapSha256": "5918b808fec2ed00522252961e57d387e0be662c2f6e67b7bfa8be59ef8f602b",
+    "echoRequests": 12,
+    "echoReplies": 0
+  },
+  "pc1OuterCaptureEvidence": {
+    "pcapPath": "pc1_outer_icmp.pcap",
+    "pcapSha256": "696fe6f095230b5f3b31fac37020ab1ff32c442b5f3fc24995ee0840be1cc5c3",
+    "icmpPackets": 0,
+    "espPackets": 24
+  }
+}

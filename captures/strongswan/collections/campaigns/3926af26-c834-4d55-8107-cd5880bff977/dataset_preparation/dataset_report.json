@@ -1,0 +1,19 @@
+{
+  "dataset_id": "ds-3926af26",
+  "campaign_id": "3926af26-c834-4d55-8107-cd5880bff977",
+  "verified_at": "2026-10-10T21:25:13.260411+00:00",
+  "feature_schema_version": "vista-flow-v1",
+  "accepted_count": 1,
+  "quarantined_count": 0,
+  "class_distribution": {
+    "controlled_suspicious": 1
+  },
+  "missing_values_count": 0,
+  "duplicate_rows_count": 0,
+  "leakage_controls": {
+    "session_disjoint": true,
+    "identifiers_in_features": false,
+    "outer_esp_only": true
+  },
+  "status": "READY_FOR_REVIEW"
+}

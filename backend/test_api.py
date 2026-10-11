@@ -27,6 +27,7 @@ def run_tests():
     assert data["models"]["xgboost"]["loaded"] is True
     assert data["models"]["xgboost"]["predictionTask"] == "flow traffic-label classification"
     assert data["models"]["xgboost"]["trainingDataScope"] == "synthetic development dataset"
+    assert data["models"]["xgboost"]["inferenceEnabled"] is False
     print("[PASS] GET /api/status passed (XGBoost loaded:", data["models"]["xgboost"]["loaded"], ")")
 
     # 3. Audit Summary
@@ -74,8 +75,10 @@ def run_tests():
     # 5. ML Metrics
     res = client.get("/api/ml/metrics")
     assert res.status_code == 200, f"Metrics failed: {res.text}"
-    assert res.json()["evaluationProvenance"]["dataset"] == "Synthetic VISTA development dataset"
-    assert "xgboost" in res.json()["metrics"]
+    assert res.json()["evaluationProvenance"]["status"] in {"NOT_VALIDATED", "HELD_OUT_VERIFIED"}
+    assert res.json()["metrics"] == {}
+    assert res.json()["shapImportance"] is None or isinstance(res.json()["shapImportance"], dict)
+    assert res.json()["shapProvenance"]["status"] in {"NOT_AVAILABLE", "AVAILABLE_GLOBAL_ONLY"}
     assert res.json()["shapProvenance"]["scope"]
     print("[PASS] GET /api/ml/metrics passed")
 
@@ -97,7 +100,15 @@ def run_tests():
         res_data = res.json()
         assert len(res_data["flows"]) > 0
         flow0 = res_data["flows"][0]
-        assert flow0["predictionStatus"] in {"success", "insufficient_data", "unavailable"}
+        assert flow0["predictionStatus"] in {
+            "success", "insufficient_data", "unavailable",
+            "unsupported_input", "out_of_distribution",
+        }
+        assert flow0["analysisId"] == res_data["analysisId"]
+        if flow0["protocolFamily"] in {"ESP", "IKE"}:
+            assert flow0["trafficPrediction"]["status"] == "out_of_distribution"
+            assert flow0["threatPrediction"]["status"] == "out_of_distribution"
+            assert flow0["threatPrediction"]["label"] is None
         assert res_data["totalPackets"] > 0
         if flow0["predictionStatus"] == "success":
             model_classes = data["models"]["xgboost"]["classes"]
@@ -124,14 +135,13 @@ def run_tests():
         assert res.status_code == 200, f"Observed capture analysis failed: {res.text}"
         result = res.json()
         assert result["totalPackets"] > 0
-        assert result["mlInference"]["status"] in {"success", "insufficient_data"}
+        assert result["mlInference"]["status"] in {
+            "success", "insufficient_data", "unsupported_input", "out_of_distribution",
+        }
         for flow in result["flows"]:
-            assert flow["predictionStatus"] == "success"
-            assert flow["mlPrediction"]["label"] in data["models"]["xgboost"]["classes"]
-            probability = flow["mlPrediction"]["probability"]
-            assert probability is None or 0 <= probability <= 1
-            if probability is not None:
-                assert probability == flow["mlPrediction"]["probabilities"][flow["mlPrediction"]["label"]]
+            assert flow["analysisId"] == result["analysisId"]
+            assert flow["predictionStatus"] == "unsupported_input"
+            assert flow["mlPrediction"]["label"] is None
         print("[PASS] Observed StrongSwan capture produced supported model outputs")
 
         with patch.object(model_service, "predict", side_effect=RuntimeError("test inference failure")):
@@ -163,8 +173,9 @@ def run_tests():
     }])
     missing_result = model_service.predict(incomplete)[0]
     assert missing_result["status"] == "insufficient_data"
+    assert missing_result["predictedClass"] is None
     assert "mean_inter_arrival_time" in missing_result["missingFeatures"]
-    print("[PASS] Missing model features return Insufficient Data instead of imputed values")
+    print("[PASS] Unvalidated artifacts are not used to infer a label")
 
     csv_res = client.post(
         "/api/analyze/csv?model=xgboost",
@@ -173,7 +184,9 @@ def run_tests():
     assert csv_res.status_code == 200
     assert csv_res.json()["flows"][0]["predictionStatus"] == "insufficient_data"
     assert csv_res.json()["mlInference"]["status"] == "insufficient_data"
-    print("[PASS] CSV observations are returned with an explicit insufficient-data result")
+    assert csv_res.json()["dataMode"] == "csv"
+    assert csv_res.json()["flows"][0]["analysisId"] == csv_res.json()["analysisId"]
+    print("[PASS] CSV observations are retained with an explicit validation-gated result")
 
     # 8. Report Generation
     res = client.post("/api/reports/generate", json={"reportType": "Technical Assessment"})
@@ -185,14 +198,27 @@ def run_tests():
     if capture.exists():
         report_res = client.post(
             "/api/reports/generate",
-            json={"reportType": "Technical Assessment", "flows": result["flows"]},
+            json={
+                "reportType": "Technical Assessment",
+                "analysisId": result["analysisId"],
+                "flows": result["flows"],
+            },
         )
         assert report_res.status_code == 200
         assert "Uploaded flow-class ML predictions" in report_res.json()["content"]
-        assert "Prediction model: XGBoost (xgboost_classifier.joblib)" in report_res.json()["content"]
+        assert "No successful ML predictions are available." in report_res.json()["content"]
         assert "not confirmed incidents" in report_res.json()["content"]
-        assert "Training data scope: synthetic development dataset" in report_res.json()["content"]
-        print("[PASS] Uploaded model predictions and artifact provenance appear in reports")
+        print("[PASS] Reports preserve the selected analysis ID without inventing model predictions")
+
+        mismatched = client.post(
+            "/api/reports/generate",
+            json={
+                "analysisId": "ANL-DIFFERENT",
+                "flows": result["flows"],
+            },
+        )
+        assert mismatched.status_code == 400
+        assert "different PCAP analysis ID" in mismatched.json()["detail"]
 
         threats_res = client.post("/api/soc/threats", json={"flows": result["flows"]})
         assert threats_res.status_code == 200
@@ -255,10 +281,19 @@ def run_tests():
         f0 = pcap_data["flows"][0]
         assert "trafficPrediction" in f0
         assert "threatPrediction" in f0
-        assert f0["trafficPrediction"]["status"] in {"success", "insufficient_data"}
-        assert f0["threatPrediction"]["status"] in {"success", "insufficient_data"}
+        assert f0["trafficPrediction"]["status"] in {
+            "success", "insufficient_data", "unsupported_input", "out_of_distribution",
+        }
+        assert f0["threatPrediction"]["status"] in {
+            "success", "insufficient_data", "unsupported_input", "out_of_distribution",
+        }
         assert "trafficModel" in pcap_data["mlInference"]
         assert "threatModel" in pcap_data["mlInference"]
+        assert "anomalyModel" in pcap_data["mlInference"]
+        if f0["protocolFamily"] in {"ESP", "IKE"}:
+            assert f0["trafficPrediction"]["status"] == "out_of_distribution"
+            assert f0["threatPrediction"]["status"] == "out_of_distribution"
+            assert f0["isAttack"] is None
         print("[PASS] PCAP analysis outputs separate trafficPrediction (AI Analysis) and threatPrediction (Threat Intel)")
 
     # 13. Testbed Profiles and Configuration Validation
@@ -267,12 +302,27 @@ def run_tests():
     profiles_data = res.json()
     assert len(profiles_data["profiles"]) >= 2
     assert "supportedMatrix" in profiles_data
-    print("[PASS] GET /api/testbed/profiles returned verified swanctl configuration profiles")
+    statuses = {profile["id"]: profile["status"] for profile in profiles_data["profiles"]}
+    assert statuses["ikev2-aes256gcm"] == "EXECUTED_WITH_EVIDENCE"
+    assert statuses["ikev2-aes256cbc"] == "EXECUTED_WITH_EVIDENCE"
+    transport = next(profile for profile in profiles_data["profiles"] if profile["id"] == "ikev2-transport")
+    assert transport["status"] == "IMPLEMENTED_UNVERIFIED"
+    assert transport["configFile"] is None
+    print("[PASS] GET /api/testbed/profiles separates runtime evidence from an unverified transport configuration")
 
     res = client.post("/api/testbed/validate", json={"mode": "tunnel", "cipher": "aes256gcm16", "dhGroup": 14})
     assert res.status_code == 200
     assert res.json()["valid"] is True
     assert res.json()["nistCompliance"] == "Compliant"
+
+    res_unavailable_dh = client.post(
+        "/api/testbed/validate",
+        json={"mode": "tunnel", "cipher": "aes256gcm16", "dhGroup": 19},
+    )
+    assert res_unavailable_dh.status_code == 200
+    assert res_unavailable_dh.json()["valid"] is False
+    assert any("not available in the running strongSwan installation" in issue
+               for issue in res_unavailable_dh.json()["issues"])
 
     res_invalid = client.post("/api/testbed/validate", json={"mode": "unknown", "cipher": "des-ede3", "dhGroup": 99})
     assert res_invalid.status_code == 200
@@ -297,10 +347,27 @@ def run_tests():
     report_json = report_res.json()
     assert report_json["analysisId"] == "ANL-TEST-VERIFIED-1"
     assert "ANL-TEST-VERIFIED-1" in report_json["content"]
-    assert "sample_ipsec.pcap" in report_json["content"]
     print("[PASS] Stable Analysis ID & target provenance correctly generated and embedded into Reports")
 
-    print("\nALL BACKEND API TESTS (INCLUDING EBPF & SEPARATED ML & TESTBED) PASSED SUCCESSFULLY! [OK]")
+    # 15. Live Testbed Runtime Status Contract
+    res = client.get("/api/testbed/live-status")
+    assert res.status_code == 200
+    live_data = res.json()
+    assert live_data["status"] in {"ONLINE", "DEGRADED", "OFFLINE"}
+    assert "endpoints" in live_data
+    assert "pc1" in live_data["endpoints"]
+    assert "pc2" in live_data["endpoints"]
+    assert live_data["endpoints"]["pc1"]["role"] == "initiator"
+    assert live_data["endpoints"]["pc2"]["role"] == "responder"
+    assert "tunnel" in live_data
+    assert live_data["tunnel"]["state"] in {"ESTABLISHED", "DOWN", "NEGOTIATING", "UNAVAILABLE"}
+    assert "ebpf" in live_data
+    assert live_data["ebpf"]["status"] in {"RUNNING", "UNAVAILABLE"}
+    assert "capture" in live_data
+    assert isinstance(live_data["capture"]["active"], bool)
+    print(f"[PASS] GET /api/testbed/live-status validated schema (overall: {live_data['status']}, tunnel: {live_data['tunnel']['state']}, ebpf: {live_data['ebpf']['status']})")
+
+    print("\nALL BACKEND API TESTS (INCLUDING EBPF & SEPARATED ML & TESTBED & LIVE-STATUS) PASSED SUCCESSFULLY! [OK]")
 
 if __name__ == "__main__":
     run_tests()

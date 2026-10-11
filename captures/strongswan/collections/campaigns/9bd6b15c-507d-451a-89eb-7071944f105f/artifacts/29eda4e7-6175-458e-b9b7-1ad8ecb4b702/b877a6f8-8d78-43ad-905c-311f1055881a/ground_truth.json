@@ -1,0 +1,15 @@
+{
+  "label": "controlled_http_traffic",
+  "method": "Bounded HTTP/1.1 client/server exchange generated between pc1 and pc2 over IPsec tunnel; independently verified by pc2 server-side access evidence and pc1 outer ESP capture.",
+  "experimentId": "b877a6f8-8d78-43ad-905c-311f1055881a",
+  "sessionId": "29eda4e7-6175-458e-b9b7-1ad8ecb4b702",
+  "requestsRequested": 2,
+  "requestsCompleted": 2,
+  "senderBytesSent": 1280,
+  "senderBytesReceived": 158,
+  "serverEvidenceSha256": "21275972624fe0cae59b68f3f9fff3d7d3348adc6393b82f0c98d2b1b43677cd",
+  "statusCodes": [
+    200,
+    200
+  ]
+}

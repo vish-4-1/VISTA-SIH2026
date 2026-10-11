@@ -14,6 +14,7 @@ from vista_ml.data.schema import ALL_FEATURE_COLUMNS
 from vista_ml.datasets.splitter import check_group_leakage, experiment_aware_split
 from vista_ml.evaluation.evaluate import evaluate_classifier
 from vista_ml.models.random_forest import save_model_bundle, train_random_forest_classifier
+from vista_ml.utils.artifacts import create_candidate_run_dirs
 from vista_ml.utils.reproducibility import set_random_seed
 
 
@@ -33,10 +34,14 @@ def main() -> None:
     y_test = test_df["label"].copy()
 
     model = train_random_forest_classifier(X_train, y_train, random_state=42)
-    save_model_bundle(model, ROOT / "models" / "random_forest_baseline.joblib", {
+    model_dir, report_dir = create_candidate_run_dirs(ROOT, "synthetic-traffic-baseline")
+    save_model_bundle(model, model_dir / "random_forest_baseline.joblib", {
         "model": "RandomForestClassifier",
         "prediction_task": "flow traffic-label classification",
         "training_data_scope": "synthetic development dataset",
+        "validated_for_inference": False,
+        "feature_schema_version": "vista-flow-v1",
+        "validation_status": "synthetic-development-only",
         "training_dataset": "data/sample/synthetic_vista_dataset.parquet",
         "evaluation_scope": "experiment-aware group holdout; offline synthetic-data evaluation",
         "probability_calibration": "not evaluated",
@@ -47,10 +52,11 @@ def main() -> None:
         "test_experiments": test_df["experiment_id"].nunique(),
     })
 
-    metrics = evaluate_classifier(model, X_test, y_test, sorted(y_test.unique()), ROOT / "reports" / "metrics")
+    metrics = evaluate_classifier(model, X_test, y_test, sorted(y_test.unique()), report_dir)
     print(f"Dataset shape: {df.shape}")
     print(f"Train experiments={train_df['experiment_id'].nunique()}, test experiments={test_df['experiment_id'].nunique()}")
-    print(f"Random Forest metrics: {metrics}")
+    print(f"Candidate model: {model_dir / 'random_forest_baseline.joblib'}")
+    print(f"Synthetic development metrics: {metrics}")
 
 
 if __name__ == "__main__":

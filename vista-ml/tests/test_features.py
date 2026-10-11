@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
 from vista_ml.data.loader import load_dataset
 from vista_ml.data.schema import REQUIRED_COLUMNS
@@ -18,6 +19,7 @@ def test_feature_extraction_from_packet_csv(tmp_path: Path) -> None:
             "packet_length": [100, 120, 140],
             "src_ip": ["10.0.0.1", "10.0.0.1", "10.0.0.1"],
             "dst_ip": ["10.0.0.2", "10.0.0.2", "10.0.0.2"],
+            "protocol": ["ICMP"] * 3,
             "direction": ["forward", "forward", "backward"],
         }
     ).to_csv(packet_csv, index=False)
@@ -56,6 +58,7 @@ def test_feature_extractors_accept_pandas_dataframes() -> None:
             "packet_length": [100, 120, 140],
             "src_ip": ["10.0.0.1", "10.0.0.1", "10.0.0.1"],
             "dst_ip": ["10.0.0.2", "10.0.0.2", "10.0.0.2"],
+            "protocol": ["ICMP"] * 3,
             "direction": ["forward", "forward", "backward"],
         }
     )
@@ -122,3 +125,73 @@ def test_feature_extractors_accept_pandas_dataframes() -> None:
     loaded = load_dataset(dataset_df)
     assert all(column in loaded.columns for column in REQUIRED_COLUMNS)
     assert len(loaded.columns) == len(REQUIRED_COLUMNS)
+
+
+def test_packet_flow_features_reject_unobserved_timestamp_defaults() -> None:
+    packet_df = pd.DataFrame(
+        {
+            "flow_id": ["f1", "f1"],
+            "packet_length": [100, 110],
+            "direction": ["forward", "backward"],
+        }
+    )
+
+    with pytest.raises(ValueError, match="timestamps"):
+        extract_flow_features(packet_df)
+
+
+def test_packet_flow_features_match_runtime_aggregation_semantics() -> None:
+    packets = pd.DataFrame(
+        {
+            "timestamp": [
+                "2024-01-01T00:00:00.000000Z",
+                "2024-01-01T00:00:00.100000Z",
+                "2024-01-01T00:00:00.350000Z",
+            ],
+            "packet_length": [100, 130, 120],
+            "src_ip": ["192.0.2.1", "192.0.2.2", "192.0.2.1"],
+            "dst_ip": ["192.0.2.2", "192.0.2.1", "192.0.2.2"],
+            "src_port": [0, 0, 0],
+            "dst_port": [0, 0, 0],
+            "protocol": ["ICMP"] * 3,
+            "direction": ["forward", "backward", "forward"],
+        }
+    )
+
+    feature = extract_flow_features(packets).iloc[0]
+
+    assert feature["packet_count"] == 3
+    assert feature["byte_count"] == 350
+    assert feature["flow_duration"] == 0.35
+    assert feature["std_packet_size"] == 12.5
+    assert feature["mean_inter_arrival_time"] == 0.175
+    assert feature["std_inter_arrival_time"] == 0.075
+    assert feature["forward_packet_count"] == 2
+    assert feature["backward_packet_count"] == 1
+    assert feature["forward_bytes"] == 220
+    assert feature["backward_bytes"] == 130
+    assert feature["direction_ratio"] == 0.667
+
+
+def test_packet_flow_features_use_a_canonical_bidirectional_flow_key() -> None:
+    packets = pd.DataFrame(
+        {
+            "timestamp": [
+                "2024-01-01T00:00:00Z",
+                "2024-01-01T00:00:01Z",
+            ],
+            "packet_length": [100, 110],
+            "src_ip": ["192.0.2.1", "192.0.2.2"],
+            "dst_ip": ["192.0.2.2", "192.0.2.1"],
+            "src_port": [1234, 443],
+            "dst_port": [443, 1234],
+            "protocol": ["TCP", "TCP"],
+        }
+    )
+
+    features = extract_flow_features(packets)
+
+    assert len(features) == 1
+    assert features.loc[0, "packet_count"] == 2
+    assert features.loc[0, "forward_packet_count"] == 1
+    assert features.loc[0, "backward_packet_count"] == 1

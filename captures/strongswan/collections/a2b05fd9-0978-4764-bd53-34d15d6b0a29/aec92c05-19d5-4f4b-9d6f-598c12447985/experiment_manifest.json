@@ -1,0 +1,113 @@
+{
+  "manifest_version": "vista-strongswan-experiment-v2",
+  "dataset_id": "collection-a2b05fd9-0978-4764-bd53-34d15d6b0a29",
+  "feature_schema_version": "vista-flow-v1",
+  "extractor_version": "vista-ml-pcap-features-v1",
+  "observations": [
+    {
+      "experiment_id": "aec92c05-19d5-4f4b-9d6f-598c12447985",
+      "session_id": "a2b05fd9-0978-4764-bd53-34d15d6b0a29",
+      "session_record_path": "session_record.json",
+      "session_record_sha256": "87385a5a32e529ba6caf8000d1b21759d5b39eea26d04a56a3533be19b1d1eec",
+      "capture": {
+        "path": "packets.csv",
+        "format": "packet_table_csv",
+        "sha256": "1f0a73d224d585b05699c41ea161831eb4ab56f7ac3b4b29af11dc1d1d18bcfb",
+        "started_at": "2026-10-10T05:51:37.298794+00:00",
+        "completed_at": "2026-10-10T05:51:40.773529+00:00",
+        "interface": "eth0",
+        "capture_point": "outer",
+        "ip_version": 4,
+        "protocol_family": "ESP",
+        "raw_pcap_path": "pc1_outer_http.pcap",
+        "raw_pcap_format": "pcap",
+        "raw_pcap_sha256": "eb1b08239870bf1db110c19b01cb76b58f52e28c03c732e24e453fd13ce073dd",
+        "raw_pcap_size_bytes": 4814
+      },
+      "ground_truth": {
+        "label": "controlled_http_traffic",
+        "record_path": "ground_truth.json",
+        "record_sha256": "08e452a04d022e450bd668857fae6f6829ab15a93a5a195a5ea8356b263cff16",
+        "record_field": "label",
+        "method": "Bounded HTTP/1.1 client/server exchange generated between pc1 and pc2 over IPsec tunnel; independently verified by pc2 server-side access evidence and pc1 outer ESP capture.",
+        "independently_verified": true
+      },
+      "workload": {
+        "type": "http_traffic",
+        "configuration": {
+          "profiles": [
+            {
+              "count": 2,
+              "interval_seconds": 0.45,
+              "path": "/api/v1/submit",
+              "method": "POST",
+              "payload_bytes": 128,
+              "expected_status": 200
+            }
+          ],
+          "observed": {
+            "requestsRequested": 2,
+            "requestsSent": 2,
+            "requestsReceivedByServer": 2,
+            "bytesSent": 518,
+            "bytesReceived": 164,
+            "pc1CapturedEspPackets": 20,
+            "pc2CapturedTcpPackets": 11,
+            "saCounterDelta": {
+              "packetsIn": 9,
+              "packetsOut": 11,
+              "bytesIn": 848,
+              "bytesOut": 1106
+            }
+          }
+        },
+        "measurement_path": "workload_measurements.json",
+        "measurement_sha256": "fb16723f981056186841378f8639c1214d1ee8380a89a5a5710ebf1c964252de"
+      },
+      "vpn": {
+        "requested_configuration": {
+          "source": "existing live testbed SA; collector does not reconfigure StrongSwan",
+          "ipVersion": "IPv4",
+          "mode": "tunnel"
+        },
+        "effective_configuration": {
+          "ike": {
+            "version": 2,
+            "encryption": "AES_CBC",
+            "encryptionKeySize": 256,
+            "integrity": "HMAC_SHA2_256_128",
+            "prf": "PRF_HMAC_SHA2_256",
+            "dhGroup": 14,
+            "dhGroupName": "MODP_2048"
+          },
+          "child": {
+            "name": "pc-tunnel",
+            "state": "INSTALLED",
+            "mode": "TUNNEL",
+            "protocol": "ESP",
+            "encryption": "AES_GCM_16",
+            "encryptionKeySize": 256,
+            "integrity": null,
+            "pfsGroup": 14,
+            "pfsGroupName": "MODP_2048",
+            "localTrafficSelector": "172.20.0.2/32",
+            "remoteTrafficSelector": "172.20.0.3/32",
+            "bytesIn": 2636,
+            "bytesOut": 2574,
+            "packetsIn": 29,
+            "packetsOut": 36,
+            "spiIn": "c6cf8a61",
+            "spiOut": "ce22e29e"
+          },
+          "xfrmMode": "TUNNEL"
+        },
+        "negotiated_sa_evidence_path": "negotiated_sa.json",
+        "negotiated_sa_evidence_sha256": "6c88ebc1e422952d7c494b2b1b8e0816d4baf2c0b99787d083e87ec661165e86"
+      },
+      "data_quality": {
+        "status": "accepted",
+        "reasons": []
+      }
+    }
+  ]
+}

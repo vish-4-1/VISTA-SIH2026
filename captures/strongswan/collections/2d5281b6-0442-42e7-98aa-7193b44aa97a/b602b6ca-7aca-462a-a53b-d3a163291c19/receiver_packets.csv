@@ -1,0 +1,4 @@
+timestamp,src_ip,dst_ip,src_port,dst_port,protocol,protocol_family,packet_length
+2026-10-10T04:04:02.538436+00:00,172.20.0.2,172.20.0.3,0,0,ICMP,ICMP,284
+2026-10-10T04:04:03.347657+00:00,172.20.0.2,172.20.0.3,0,0,ICMP,ICMP,284
+2026-10-10T04:04:04.179601+00:00,172.20.0.2,172.20.0.3,0,0,ICMP,ICMP,284

@@ -7,10 +7,10 @@ when the complete recorded feature schema can be formed from the capture.
 
 from __future__ import annotations
 
-import hashlib
 import logging
 import os
 import tempfile
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -69,6 +69,7 @@ class PcapAnalyzer:
         """
         path_obj = Path(file_path)
         name = filename or path_obj.name
+        analysis_id = f"ANL-{uuid.uuid4().hex[:12].upper()}"
         packets_data: List[Dict[str, Any]] = []
         ike_negotiations: List[Dict[str, Any]] = []
         total_raw_packets = 0
@@ -103,6 +104,7 @@ class PcapAnalyzer:
                 is_ipv6 = True
 
             proto_label = "OTHER"
+            protocol_family = "OTHER"
             spi_hex = None
             src_port = 0
             dst_port = 0
@@ -110,6 +112,7 @@ class PcapAnalyzer:
             # 1. ESP Packet Analysis (Protocol 50)
             if ESP in pkt or ip_proto == 50:
                 proto_label = "ESP (50)"
+                protocol_family = "ESP"
                 if ESP in pkt:
                     spi_hex = _format_spi(int(pkt[ESP].spi))
                 else:
@@ -126,8 +129,11 @@ class PcapAnalyzer:
                 src_port = int(pkt[UDP].sport)
                 dst_port = int(pkt[UDP].dport)
                 udp_payload = bytes(pkt[UDP].payload)
+                protocol_family = "UDP"
+                proto_label = "UDP"
 
                 if src_port == 500 or dst_port == 500:
+                    protocol_family = "IKE"
                     proto_label = "IKE (UDP 500)"
                     # Parse ISAKMP Header
                     if len(udp_payload) >= 28:
@@ -156,6 +162,7 @@ class PcapAnalyzer:
                     if len(udp_payload) >= 4:
                         # Non-ESP marker check (\x00\x00\x00\x00)
                         if udp_payload[:4] == b"\x00\x00\x00\x00":
+                            protocol_family = "IKE"
                             proto_label = "NAT-T IKE (UDP 4500)"
                             if len(udp_payload) >= 32:
                                 v_byte = udp_payload[21]
@@ -163,6 +170,7 @@ class PcapAnalyzer:
                                 proto_label = f"NAT-T IKEv{major_v}"
                         else:
                             # Encapsulated ESP! First 4 bytes are the SPI
+                            protocol_family = "ESP"
                             proto_label = "NAT-T ESP (UDP 4500)"
                             spi_int = int.from_bytes(udp_payload[:4], byteorder="big")
                             spi_hex = _format_spi(spi_int)
@@ -170,14 +178,22 @@ class PcapAnalyzer:
             elif TCP in pkt:
                 src_port = int(pkt[TCP].sport)
                 dst_port = int(pkt[TCP].dport)
+                protocol_family = "TCP"
                 proto_label = "TCP"
             elif ICMP in pkt:
+                protocol_family = "ICMP"
                 proto_label = "ICMP"
+            elif is_ipv6 and ip_proto == 58:
+                protocol_family = "ICMPv6"
+                proto_label = "ICMPv6"
 
             # Endpoints and flow key
-            endpoints = sorted((src_ip, dst_ip))
-            flow_key = f"{proto_label}|{endpoints[0]}|{endpoints[1]}"
-            direction = "forward" if src_ip == endpoints[0] else "backward"
+            port_aware = protocol_family in {"TCP", "UDP", "IKE"} or bool(src_port or dst_port)
+            src_endpoint = (src_ip, src_port if port_aware else 0)
+            dst_endpoint = (dst_ip, dst_port if port_aware else 0)
+            endpoints = sorted((src_endpoint, dst_endpoint), key=lambda item: (item[0] or "", item[1]))
+            flow_key = f"{protocol_family}|{endpoints[0][0]}:{endpoints[0][1]}|{endpoints[1][0]}:{endpoints[1][1]}"
+            direction = "forward" if src_endpoint == endpoints[0] else "backward"
 
             packets_data.append({
                 "time": pkt_time,
@@ -187,6 +203,7 @@ class PcapAnalyzer:
                 "src_port": src_port,
                 "dst_port": dst_port,
                 "protocol": proto_label,
+                "protocol_family": protocol_family,
                 "spi": spi_hex,
                 "flow_key": flow_key,
                 "direction": direction,
@@ -197,6 +214,7 @@ class PcapAnalyzer:
 
         if not packets_data:
             return {
+                "analysisId": analysis_id,
                 "filename": name,
                 "totalPackets": 0,
                 "totalBytes": 0,
@@ -264,11 +282,16 @@ class PcapAnalyzer:
             flow_rec = {
                 "id": f"FLW-{flow_idx:07d}",
                 "flowId": f"FLW-{flow_idx:07d}",
+                "analysisId": analysis_id,
                 "spi": most_frequent_spi,
                 "time": iso_time,
                 "src": first_row["src_ip"],
                 "dst": first_row["dst_ip"],
                 "proto": first_row["protocol"],
+                "protocolFamily": first_row["protocol_family"],
+                "srcPort": int(first_row["src_port"]),
+                "dstPort": int(first_row["dst_port"]),
+                "isIPv6": bool(first_row["is_ipv6"]),
                 "duration": duration,
                 "packets": pkts_count,
                 "bytes": total_bytes,
@@ -292,137 +315,189 @@ class PcapAnalyzer:
             flows_list.append(flow_rec)
             flow_idx += 1
 
-        # Run Live Machine Learning Inference on Extracted Flows
+        # Live outer ESP and IKE control-plane records are not compatible with
+        # the current application/attack model training distributions.
         inference_error = None
-        try:
-            features_df = model_service.prepare_feature_dataframe(flows_list)
-            traffic_predictions = model_service.predict_traffic(features_df)
-            threat_predictions = model_service.predict_threat(features_df, model_name=model_name)
+        inference_indices = [
+            index for index, flow in enumerate(flows_list)
+            if flow.get("protocolFamily") not in {"ESP", "IKE"}
+        ]
+        feature_frame = None
+        if inference_indices:
+            try:
+                feature_frame = model_service.prepare_feature_dataframe(
+                    [flows_list[index] for index in inference_indices]
+                )
+            except Exception as err:
+                inference_error = str(err)
+                logger.exception("Unable to prepare PCAP flow features.")
 
-            for i, flow in enumerate(flows_list):
-                t_pred = traffic_predictions[i]
-                th_pred = threat_predictions[i]
+        def unavailable_result(task: str, error: Optional[str] = None) -> Dict[str, Any]:
+            return {
+                "status": "unavailable" if error else "unsupported_input",
+                "source": "ml_model",
+                "predictedClass": None,
+                "modelUsed": task,
+                "modelArtifact": (
+                    "traffic_classifier.joblib" if task == "traffic_classifier"
+                    else "attack_classifier.joblib"
+                ),
+                "probability": None,
+                "probabilityType": None,
+                "confidence": None,
+                "confidenceValue": None,
+                "probabilities": None,
+                "isAttack": None,
+                "isAnomaly": None,
+                "anomalyScore": None,
+                "missingFeatures": [],
+                **({"error": error} if error else {}),
+            }
 
-                # 1. Traffic Classification (AI Analysis / Encrypted Application Profile)
-                is_ike_flow = "IKE" in str(flow.get("proto", "")).upper()
-                if is_ike_flow:
-                    flow["trafficPrediction"] = {
+        task_results: Dict[str, List[Dict[str, Any]]] = {
+            "traffic": [unavailable_result("traffic_classifier") for _ in flows_list],
+            "threat": [unavailable_result("attack_classifier") for _ in flows_list],
+            "anomaly": [unavailable_result("isolation_forest") for _ in flows_list],
+        }
+        for index, flow in enumerate(flows_list):
+            if flow.get("protocolFamily") in {"ESP", "IKE"}:
+                plane = "control-plane IKE" if flow["protocolFamily"] == "IKE" else "outer encrypted ESP"
+                reason = (
+                    f"Observed {plane} does not contain labeled inner application/attack flow records. "
+                    "The available models have no validated IPsec capture evaluation for this input."
+                )
+                for task, model_name in (
+                    ("traffic", "traffic_classifier"),
+                    ("threat", "attack_classifier"),
+                    ("anomaly", "isolation_forest"),
+                ):
+                    task_results[task][index] = {
+                        **unavailable_result(model_name),
                         "status": "out_of_distribution",
                         "source": "unsupported_input",
-                        "label": "IKE Control Plane",
-                        "model": t_pred["modelUsed"],
-                        "modelArtifact": t_pred["modelArtifact"],
-                        "modelVersion": t_pred.get("modelVersion"),
-                        "trainingDataScope": t_pred.get("trainingDataScope"),
-                        "predictionTask": "encrypted application traffic classification",
-                        "probability": None,
-                        "probabilityType": None,
-                        "probabilities": None,
                         "isOutOfDistribution": True,
-                        "outOfDistributionReason": (
-                            "IKE control-plane negotiation; traffic classifier is trained on encapsulated "
-                            "data-plane application payloads, not key-exchange signaling."
-                        ),
-                        "missingFeatures": [],
+                        "outOfDistributionReason": reason,
                     }
-                    flow["trafficType"] = "IKE Control Plane (Out of scope)"
-                else:
-                    flow["trafficPrediction"] = {
-                        "status": t_pred["status"],
-                        "source": t_pred["source"],
-                        "label": t_pred["predictedClass"],
-                        "model": t_pred["modelUsed"],
-                        "modelArtifact": t_pred["modelArtifact"],
-                        "modelVersion": t_pred.get("modelVersion"),
-                        "trainingDataScope": t_pred.get("trainingDataScope"),
-                        "predictionTask": t_pred.get("predictionTask"),
-                        "probability": t_pred["probability"],
-                        "probabilityType": t_pred["probabilityType"],
-                        "probabilities": t_pred["probabilities"],
-                        "isOutOfDistribution": False,
-                        "missingFeatures": t_pred["missingFeatures"],
-                    }
-                    flow["trafficType"] = (
-                        t_pred["predictedClass"]
-                        if t_pred["status"] == "success"
-                        else "Insufficient Data"
-                        if t_pred["status"] == "insufficient_data"
-                        else "Prediction Unavailable"
-                    )
 
-                # 2. Threat Classification (Threat Intelligence / Attack Detection)
-                flow["threatPrediction"] = {
-                    "status": th_pred["status"],
-                    "source": th_pred["source"],
-                    "label": th_pred["predictedClass"],
-                    "model": th_pred["modelUsed"],
-                    "modelArtifact": th_pred["modelArtifact"],
-                    "modelVersion": th_pred.get("modelVersion"),
-                    "trainingDataScope": th_pred.get("trainingDataScope"),
-                    "predictionTask": th_pred.get("predictionTask"),
-                    "probability": th_pred["probability"],
-                    "probabilityType": th_pred["probabilityType"],
-                    "probabilities": th_pred["probabilities"],
-                    "missingFeatures": th_pred["missingFeatures"],
-                }
+        if feature_frame is not None:
+            for task, predictor in (
+                ("traffic", model_service.predict_traffic),
+                ("threat", model_service.predict_threat),
+                ("anomaly", model_service.predict_anomaly),
+            ):
+                try:
+                    outputs = predictor(feature_frame)
+                    if len(outputs) != len(inference_indices):
+                        raise RuntimeError(
+                            f"{task} predictor returned {len(outputs)} results for "
+                            f"{len(inference_indices)} flows."
+                        )
+                    for index, output in zip(inference_indices, outputs):
+                        task_results[task][index] = output
+                except Exception as err:
+                    logger.exception("%s inference failed.", task)
+                    inference_error = f"{task}: {err}"
+                    for index in inference_indices:
+                        task_results[task][index] = unavailable_result(
+                            {
+                                "traffic": "traffic_classifier",
+                                "threat": "attack_classifier",
+                                "anomaly": "isolation_forest",
+                            }[task],
+                            str(err),
+                        )
 
-                # Backward-compatible fields
-                flow["mlPrediction"] = flow["threatPrediction"]
-                flow["predictionStatus"] = th_pred["status"]
-                flow["attackType"] = (
-                    th_pred["predictedClass"]
-                    if th_pred["status"] == "success"
-                    else "Insufficient Data"
-                    if th_pred["status"] == "insufficient_data"
-                    else "Prediction Unavailable"
+        for index, flow in enumerate(flows_list):
+            traffic_result = task_results["traffic"][index]
+            threat_result = task_results["threat"][index]
+            anomaly_result = task_results["anomaly"][index]
+            flow["trafficPrediction"] = {
+                "status": traffic_result.get("status"),
+                "source": traffic_result.get("source"),
+                "label": traffic_result.get("predictedClass"),
+                "model": traffic_result.get("modelUsed"),
+                "modelArtifact": traffic_result.get("modelArtifact"),
+                "modelVersion": traffic_result.get("modelVersion"),
+                "featureSchemaVersion": traffic_result.get("featureSchemaVersion"),
+                "predictionTask": traffic_result.get("modelTask"),
+                "probability": traffic_result.get("probability"),
+                "probabilityType": traffic_result.get("probabilityType"),
+                "probabilities": traffic_result.get("probabilities"),
+                "isOutOfDistribution": traffic_result.get("isOutOfDistribution", False),
+                "outOfDistributionReason": traffic_result.get("outOfDistributionReason"),
+                "missingFeatures": traffic_result.get("missingFeatures", []),
+                "error": traffic_result.get("error"),
+                "analysisId": analysis_id,
+                "flowId": flow["flowId"],
+            }
+            flow["anomalyPrediction"] = {
+                "status": anomaly_result.get("status"),
+                "source": anomaly_result.get("source"),
+                "label": anomaly_result.get("predictedClass"),
+                "isAnomaly": anomaly_result.get("isAnomaly"),
+                "anomalyScore": anomaly_result.get("anomalyScore"),
+                "scoreConvention": anomaly_result.get("scoreConvention"),
+                "decisionThreshold": anomaly_result.get("decisionThreshold"),
+                "modelArtifact": anomaly_result.get("modelArtifact"),
+                "modelVersion": anomaly_result.get("modelVersion"),
+                "featureSchemaVersion": anomaly_result.get("featureSchemaVersion"),
+                "validationStatus": anomaly_result.get("validationStatus"),
+                "error": anomaly_result.get("error"),
+                "analysisId": analysis_id,
+                "flowId": flow["flowId"],
+            }
+            flow["trafficType"] = (
+                traffic_result.get("predictedClass")
+                if traffic_result.get("status") == "success"
+                else "Out of scope"
+                if traffic_result.get("status") == "out_of_distribution"
+                else "Insufficient Data"
+                if traffic_result.get("status") == "insufficient_data"
+                else "Prediction Unavailable"
+            )
+            flow["threatPrediction"] = {
+                "status": threat_result.get("status"),
+                "source": threat_result.get("source"),
+                "label": threat_result.get("predictedClass"),
+                "model": threat_result.get("modelUsed"),
+                "modelArtifact": threat_result.get("modelArtifact"),
+                "modelVersion": threat_result.get("modelVersion"),
+                "featureSchemaVersion": threat_result.get("featureSchemaVersion"),
+                "predictionTask": threat_result.get("modelTask"),
+                "probability": threat_result.get("probability"),
+                "probabilityType": threat_result.get("probabilityType"),
+                "probabilities": threat_result.get("probabilities"),
+                "missingFeatures": threat_result.get("missingFeatures", []),
+                "error": threat_result.get("error"),
+                "analysisId": analysis_id,
+                "flowId": flow["flowId"],
+            }
+            flow["mlPrediction"] = flow["threatPrediction"]
+            flow["predictionStatus"] = threat_result.get("status")
+            flow["attackType"] = (
+                threat_result.get("predictedClass")
+                if threat_result.get("status") == "success"
+                else "Insufficient Data"
+                if threat_result.get("status") == "insufficient_data"
+                else "Out of scope"
+                if threat_result.get("status") == "out_of_distribution"
+                else "Prediction Unavailable"
+            )
+            flow["isAttack"] = threat_result.get("isAttack")
+            flow["confidence"] = threat_result.get("confidence")
+            flow["confidenceValue"] = threat_result.get("confidenceValue")
+            flow["probabilities"] = threat_result.get("probabilities")
+            flow["isAnomaly"] = anomaly_result.get("isAnomaly")
+            flow["anomalyScore"] = anomaly_result.get("anomalyScore")
+            flow["inferenceEngine"] = threat_result.get("modelUsed")
+            flow["model_used"] = threat_result.get("modelUsed")
+            if threat_result.get("error"):
+                flow["predictionError"] = threat_result["error"]
+            elif threat_result.get("status") == "insufficient_data":
+                flow["predictionError"] = (
+                    "Required model features are missing: "
+                    + ", ".join(threat_result.get("missingFeatures", []))
                 )
-                flow["isAttack"] = th_pred["isAttack"]
-                flow["confidence"] = th_pred["confidence"]
-                flow["confidenceValue"] = th_pred["confidenceValue"]
-                flow["probabilities"] = th_pred["probabilities"]
-                flow["isAnomaly"] = th_pred["isAnomaly"]
-                flow["anomalyScore"] = th_pred["anomalyScore"]
-                flow["inferenceEngine"] = th_pred["modelUsed"]
-                flow["model_used"] = th_pred["modelUsed"]
-                if th_pred["status"] == "insufficient_data":
-                    flow["predictionError"] = (
-                        "Required model features are missing: "
-                        + ", ".join(th_pred["missingFeatures"])
-                    )
-        except Exception as e:
-            logger.exception("ML inference failed: %s", e)
-            inference_error = str(e)
-            for flow in flows_list:
-                flow["trafficPrediction"] = {
-                    "status": "unavailable",
-                    "source": "traffic_classifier",
-                    "label": None,
-                    "model": "traffic_classifier",
-                    "probability": None,
-                    "probabilityType": None,
-                    "probabilities": None,
-                }
-                flow["threatPrediction"] = {
-                    "status": "unavailable",
-                    "source": "attack_classifier",
-                    "label": None,
-                    "model": model_name,
-                    "probability": None,
-                    "probabilityType": None,
-                    "probabilities": None,
-                }
-                flow["mlPrediction"] = flow["threatPrediction"]
-                flow["predictionStatus"] = "unavailable"
-                flow["attackType"] = "Prediction Unavailable"
-                flow["isAttack"] = None
-                flow["trafficType"] = "Prediction Unavailable"
-                flow["confidence"] = None
-                flow["confidenceValue"] = None
-                flow["probabilities"] = None
-                flow["isAnomaly"] = None
-                flow["anomalyScore"] = None
-                flow["inferenceEngine"] = "Prediction Unavailable"
-                flow["predictionError"] = inference_error
 
         # High-level Summary
         predicted_flows = [f for f in flows_list if f["predictionStatus"] == "success"]
@@ -431,10 +506,13 @@ class PcapAnalyzer:
         ike_count = sum(1 for f in flows_list if "IKE" in f["proto"])
         insufficient_count = sum(1 for f in flows_list if f["predictionStatus"] == "insufficient_data")
         unavailable_count = sum(1 for f in flows_list if f["predictionStatus"] == "unavailable")
+        unsupported_count = sum(1 for f in flows_list if f["predictionStatus"] == "unsupported_input")
+        out_of_distribution_count = sum(1 for f in flows_list if f["predictionStatus"] == "out_of_distribution")
 
         all_models_info = model_service.get_info().get("models", {})
-        threat_model_info = all_models_info.get(model_name, {})
+        threat_model_info = all_models_info.get("attack_classifier", {})
         traffic_model_info = all_models_info.get("traffic_classifier", {})
+        anomaly_model_info = all_models_info.get("isolation_forest", {})
 
         summary = {
             "totalFlows": len(flows_list),
@@ -445,6 +523,8 @@ class PcapAnalyzer:
             "predictedFlows": len(predicted_flows),
             "insufficientDataFlows": insufficient_count,
             "unavailablePredictionFlows": unavailable_count,
+            "unsupportedInputFlows": unsupported_count,
+            "outOfDistributionFlows": out_of_distribution_count,
             "espFlows": esp_count,
             "ikeFlows": ike_count,
             "detectedIkeNegotiations": len(ike_negotiations),
@@ -455,19 +535,22 @@ class PcapAnalyzer:
         }
         inference_status = (
             "success" if predicted_flows
-            else "insufficient_data" if insufficient_count and not unavailable_count
+            else "out_of_distribution" if out_of_distribution_count == len(flows_list)
+            else "unsupported_input" if unsupported_count
+            else "insufficient_data" if insufficient_count
             else "unavailable" if unavailable_count
             else "insufficient_data"
         )
         ml_inference = {
             "status": inference_status,
             "source": "ml_model",
-            "model": model_name,
-            "modelArtifact": (
-                "attack_classifier.joblib" if model_name in ("attack_classifier", "xgboost")
-                else "random_forest_baseline.joblib"
-            ),
+            "analysisId": analysis_id,
+            "model": "attack_classifier",
+            "modelArtifact": "attack_classifier.joblib",
             "modelTask": threat_model_info.get("predictionTask"),
+            "modelVersion": threat_model_info.get("modelVersion"),
+            "featureSchemaVersion": threat_model_info.get("featureSchemaVersion"),
+            "validationStatus": threat_model_info.get("validationStatus"),
             "trainingDataScope": threat_model_info.get("trainingDataScope"),
             "trainingDataset": threat_model_info.get("trainingDataset"),
             "evaluationScope": threat_model_info.get("evaluationScope"),
@@ -476,26 +559,44 @@ class PcapAnalyzer:
             "predictedFlows": len(predicted_flows),
             "insufficientDataFlows": insufficient_count,
             "unavailableFlows": unavailable_count,
+            "unsupportedInputFlows": unsupported_count,
+            "outOfDistributionFlows": out_of_distribution_count,
             "trafficModel": {
                 "name": "traffic_classifier",
                 "modelArtifact": "traffic_classifier.joblib",
                 "predictionTask": traffic_model_info.get("predictionTask"),
+                "modelVersion": traffic_model_info.get("modelVersion"),
+                "featureSchemaVersion": traffic_model_info.get("featureSchemaVersion"),
+                "validationStatus": traffic_model_info.get("validationStatus"),
+                "inferenceEnabled": traffic_model_info.get("inferenceEnabled"),
                 "classes": traffic_model_info.get("classes", []),
                 "features": traffic_model_info.get("features", []),
                 "trainingDataset": traffic_model_info.get("trainingDataset"),
                 "trainingDataScope": traffic_model_info.get("trainingDataScope"),
             },
             "threatModel": {
-                "name": model_name,
-                "modelArtifact": (
-                    "attack_classifier.joblib" if model_name in ("attack_classifier", "xgboost")
-                    else "random_forest_baseline.joblib"
-                ),
+                "name": "attack_classifier",
+                "modelArtifact": "attack_classifier.joblib",
                 "predictionTask": threat_model_info.get("predictionTask"),
+                "modelVersion": threat_model_info.get("modelVersion"),
+                "featureSchemaVersion": threat_model_info.get("featureSchemaVersion"),
+                "validationStatus": threat_model_info.get("validationStatus"),
+                "inferenceEnabled": threat_model_info.get("inferenceEnabled"),
                 "classes": threat_model_info.get("classes", []),
                 "features": threat_model_info.get("features", []),
                 "trainingDataset": threat_model_info.get("trainingDataset"),
                 "trainingDataScope": threat_model_info.get("trainingDataScope"),
+            },
+            "anomalyModel": {
+                "name": "isolation_forest",
+                "modelArtifact": "isolation_forest.joblib",
+                "predictionTask": anomaly_model_info.get("predictionTask"),
+                "modelVersion": anomaly_model_info.get("modelVersion"),
+                "featureSchemaVersion": anomaly_model_info.get("featureSchemaVersion"),
+                "validationStatus": anomaly_model_info.get("validationStatus"),
+                "inferenceEnabled": anomaly_model_info.get("inferenceEnabled"),
+                "trainingDataset": anomaly_model_info.get("trainingDataset"),
+                "trainingDataScope": anomaly_model_info.get("trainingDataScope"),
             },
         }
         if inference_error:
@@ -534,8 +635,6 @@ class PcapAnalyzer:
         assessment = posture_engine.evaluate_session(session_for_eval)
 
         analyzed_at = datetime.now(timezone.utc).isoformat()
-        digest_src = f"{name}:{total_raw_packets}:{total_raw_bytes}:{len(flows_list)}"
-        analysis_id = f"ANL-{hashlib.sha256(digest_src.encode('utf-8')).hexdigest()[:10].upper()}"
 
         return {
             "analysisId": analysis_id,

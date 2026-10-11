@@ -1,0 +1,19 @@
+{
+  "label": "controlled_suspicious",
+  "broadCategory": "suspicious",
+  "scenarioName": "controlled_port_scan",
+  "workloadSubtype": "tcp_connect_probe",
+  "operationalDefinition": "Low-rate TCP connect probe sequence against allowlisted ports on PC2 through IPsec tunnel.",
+  "method": "Sequential non-blocking connects to 172.20.0.3; outer ESP packets verified; receiver listener on port 8000.",
+  "experimentId": "c70f9bc2-1300-4c96-aa04-6752fbceb1d9",
+  "sessionId": "ab79afe5-26fe-43da-8d0e-0d32cd9d40ef",
+  "probedPortCount": 5,
+  "probedPorts": [
+    80,
+    443,
+    8000,
+    8080,
+    2222
+  ],
+  "independentlyVerified": true
+}

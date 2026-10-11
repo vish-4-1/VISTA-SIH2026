@@ -1,0 +1,77 @@
+{
+  "totalRequestsSent": 7,
+  "totalBytesSent": 721,
+  "totalBytesReceived": 518,
+  "requests": [
+    {
+      "index": 0,
+      "path": "/metrics",
+      "method": "GET",
+      "statusCode": 200,
+      "statusLine": "HTTP/1.1 200 OK",
+      "responseBytes": 59,
+      "responseSha256": "ebca263ec17ef4d6edd41069a5825a0d12ce8a7a66d734e90cb625d4a1e4038a",
+      "durationSeconds": 0
+    },
+    {
+      "index": 1,
+      "path": "/metrics",
+      "method": "GET",
+      "statusCode": 200,
+      "statusLine": "HTTP/1.1 200 OK",
+      "responseBytes": 59,
+      "responseSha256": "e67f15bbd86a5c047c53af7861897b9f92f03d847f7adeb16e31d07c7d31a4f6",
+      "durationSeconds": 0
+    },
+    {
+      "index": 2,
+      "path": "/metrics",
+      "method": "GET",
+      "statusCode": 200,
+      "statusLine": "HTTP/1.1 200 OK",
+      "responseBytes": 59,
+      "responseSha256": "68094a9428a991e468d92b5d0a1d802061c098698e65b173d6210e43b66582c3",
+      "durationSeconds": 0
+    },
+    {
+      "index": 3,
+      "path": "/metrics",
+      "method": "GET",
+      "statusCode": 200,
+      "statusLine": "HTTP/1.1 200 OK",
+      "responseBytes": 59,
+      "responseSha256": "1b2cc0f1a9d405514061dd5421f04a53cce50d2c60c2a65a45d3b066c9af6226",
+      "durationSeconds": 0
+    },
+    {
+      "index": 4,
+      "path": "/metrics",
+      "method": "GET",
+      "statusCode": 200,
+      "statusLine": "HTTP/1.1 200 OK",
+      "responseBytes": 59,
+      "responseSha256": "08b8c69348edecaff4da80c04b539e1f43da7fa2eb4fa5e10504bbc0572c7005",
+      "durationSeconds": 0
+    },
+    {
+      "index": 5,
+      "path": "/metrics",
+      "method": "GET",
+      "statusCode": 200,
+      "statusLine": "HTTP/1.1 200 OK",
+      "responseBytes": 59,
+      "responseSha256": "ca7bac2864feee304d69e0d3718941995f80f9ba0910fd1787746d5ddc02a781",
+      "durationSeconds": 0
+    },
+    {
+      "index": 6,
+      "path": "/metrics",
+      "method": "GET",
+      "statusCode": 200,
+      "statusLine": "HTTP/1.1 200 OK",
+      "responseBytes": 59,
+      "responseSha256": "a58a327fe04387f77e53c25572732fa9fd2ff451d9dfceff77cb5e353c0f39e6",
+      "durationSeconds": 0
+    }
+  ]
+}

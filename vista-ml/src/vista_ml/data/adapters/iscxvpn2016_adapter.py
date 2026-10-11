@@ -16,7 +16,7 @@ PROVENANCE = {
     "original_dataset_citation": "Drapper Gil et al., Characterization of Encrypted and VPN Traffic Using Time-Related Features, ICISSP 2016.",
     "label_definition": "Fourteen application labels; the VPN- prefix denotes VPN traffic, and unprefixed labels denote non-VPN traffic.",
     "feature_definition": "The source's numeric TimeBasedFeatures columns are retained unchanged; no unavailable VISTA telemetry or cryptographic metadata is imputed.",
-    "limitations": "This subset has no attack labels, cryptographic configuration labels, packet/session IDs, or independent experiment groups. It supports application/VPN classification only; row-stratified metrics may be optimistic.",
+    "limitations": "This subset has no attack labels, cryptographic configuration labels, or independent experiment groups. The supplied consolidated CSV is not eligible for leakage-safe evaluation without a source-provided capture/session identifier.",
 }
 
 
@@ -38,30 +38,12 @@ def adapt_iscxvpn2016(
             raise ValueError(f"Could not find label column {label_column!r}, 'Label', or 'class'.")
     source = source.copy()
     labels = source[label_column].astype("string").str.strip()
+    if labels.isna().any() or labels.eq("").any():
+        raise ValueError("ISCXVPN2016 label column contains missing or empty labels.")
     source["label"] = labels
-    traffic_type = labels.str.upper().str.startswith("VPN-").map({True: "vpn", False: "nonvpn"})
-    source["experiment_id"] = source.get("experiment_id", "iscxvpn2016_15s")
-    source["scenario_id"] = source.get("scenario_id", "iscxvpn2016_15s")
-    source["flow_id"] = source.get("flow_id", source.index.astype(str))
-    source["timestamp_start"] = source.get("timestamp_start", pd.NaT)
-    source["timestamp_end"] = source.get("timestamp_end", source["timestamp_start"])
-    source["traffic_type"] = source.get("traffic_type", traffic_type)
-    source["attack_type"] = source.get("attack_type", "not_labeled")
-    source["ipsec_mode"] = source.get("ipsec_mode", "unknown")
-    source["ike_version"] = source.get("ike_version", "unknown")
-    source["cipher"] = source.get("cipher", "unknown")
-    source["integrity_algorithm"] = source.get("integrity_algorithm", "unknown")
-    source["dh_group"] = source.get("dh_group", "unknown")
-    source["pfs_enabled"] = source.get("pfs_enabled", pd.NA)
-    for name in [
-        "ebpf_event_count",
-        "socket_event_count",
-        "process_event_count",
-        "network_event_count",
-        "unique_process_count",
-    ]:
-        if name not in source.columns:
-            source[name] = pd.NA
+    source["traffic_type"] = labels.str.upper().str.startswith("VPN-").map(
+        {True: "vpn", False: "nonvpn"}
+    )
     if output_path is not None:
         out_path = Path(output_path)
         out_path.parent.mkdir(parents=True, exist_ok=True)

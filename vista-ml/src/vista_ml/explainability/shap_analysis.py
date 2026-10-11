@@ -12,24 +12,52 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 
-def explain_xgboost(model, X: pd.DataFrame, output_dir: str | Path | None = None, max_samples: int = 200) -> dict:
+def _validate_feature_order(model, X: pd.DataFrame) -> None:
+    fitted_features = getattr(model, "feature_names_in_", None)
+    if fitted_features is None and hasattr(model, "estimator"):
+        fitted_features = getattr(model.estimator, "feature_names_in_", None)
+    if fitted_features is None and hasattr(model, "get_booster"):
+        fitted_features = getattr(model.get_booster(), "feature_names", None)
+    if fitted_features is not None and list(X.columns) != list(fitted_features):
+        raise ValueError(
+            f"SHAP feature order {list(X.columns)} does not match fitted model order "
+            f"{list(fitted_features)}."
+        )
+
+
+def _class_explanations(model, shap_values, values: np.ndarray) -> list[tuple[str, object]]:
+    if values.ndim == 3:
+        class_labels = list(getattr(model, "classes_", range(values.shape[2])))
+        if len(class_labels) != values.shape[2]:
+            raise ValueError("SHAP class dimension does not match the model's class mapping.")
+        return [
+            (str(label), shap_values[:, :, index])
+            for index, label in enumerate(class_labels)
+        ]
+    return [("", shap_values)]
+
+
+def explain_xgboost(
+    model,
+    X: pd.DataFrame,
+    output_dir: str | Path | None = None,
+    max_samples: int = 200,
+    model_version: str | None = None,
+    feature_schema_version: str | None = None,
+) -> dict:
     if X.empty:
         raise ValueError("Cannot generate SHAP explanations for an empty dataset.")
 
     sample = X.head(max_samples).copy()
+    _validate_feature_order(model, sample)
     explainer = shap.TreeExplainer(model.get_booster())
     shap_values = explainer(sample)
     values = shap_values.values
     if values.ndim == 3:
         importance = np.abs(values).mean(axis=(0, 2))
-        class_labels = getattr(model, "classes_", range(values.shape[2]))
-        class_explanations = [
-            (str(label), shap_values[:, :, index])
-            for index, label in enumerate(class_labels)
-        ]
     else:
         importance = np.abs(values).mean(axis=0)
-        class_explanations = [("", shap_values)]
+    class_explanations = _class_explanations(model, shap_values, values)
 
     feature_names = list(sample.columns)
     top_features = sorted(
@@ -56,6 +84,12 @@ def explain_xgboost(model, X: pd.DataFrame, output_dir: str | Path | None = None
             plt.close()
 
     summary = {
+        "scope": "global",
+        "importance_measure": "mean_absolute_shap_value",
+        "sample_count": len(sample),
+        "model_version": model_version,
+        "feature_schema_version": feature_schema_version,
+        "feature_order": feature_names,
         "top_features": [
             {"feature": feature_name, "shap_value": float(value)}
             for feature_name, value in top_features
@@ -65,3 +99,49 @@ def explain_xgboost(model, X: pd.DataFrame, output_dir: str | Path | None = None
         with open(Path(output_dir) / "top_features.json", "w", encoding="utf-8") as handle:
             json.dump(summary, handle, indent=2)
     return summary
+
+
+def explain_xgboost_flow(
+    model,
+    flow_features: pd.DataFrame,
+    model_version: str,
+    feature_schema_version: str,
+) -> dict:
+    if len(flow_features) != 1:
+        raise ValueError("A per-flow SHAP explanation requires exactly one selected flow.")
+    _validate_feature_order(model, flow_features)
+
+    explainer = shap.TreeExplainer(model.get_booster())
+    shap_values = explainer(flow_features)
+    values = np.asarray(shap_values.values)
+    feature_names = list(flow_features.columns)
+    class_labels = list(getattr(model, "classes_", []))
+
+    if values.ndim == 3:
+        if len(class_labels) != values.shape[2]:
+            raise ValueError("SHAP class dimension does not match the model's class mapping.")
+        class_values = {
+            str(label): [
+                {"feature": name, "shap_value": float(value)}
+                for name, value in zip(feature_names, values[0, :, index])
+            ]
+            for index, label in enumerate(class_labels)
+        }
+    elif values.ndim == 2:
+        class_values = {
+            class_labels[-1] if class_labels else "model_output": [
+                {"feature": name, "shap_value": float(value)}
+                for name, value in zip(feature_names, values[0])
+            ]
+        }
+    else:
+        raise ValueError(f"Unsupported SHAP output shape: {values.shape}.")
+
+    return {
+        "scope": "per_flow",
+        "model_version": model_version,
+        "feature_schema_version": feature_schema_version,
+        "feature_order": feature_names,
+        "predicted_class": str(model.predict(flow_features)[0]),
+        "class_explanations": class_values,
+    }

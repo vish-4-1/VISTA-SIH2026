@@ -1,0 +1,50 @@
+{
+  "totalRequestsReceived": 4,
+  "serverPort": 43593,
+  "requests": [
+    {
+      "index": 0,
+      "method": "POST",
+      "path": "/api/v1/upload",
+      "clientIp": "172.20.0.2",
+      "requestBodyBytes": 384,
+      "responseStatus": 200,
+      "responseBytes": 67,
+      "responseSha256": "bbf582d214b322747a3ece7123ab74ac6c9624efd0e02ea46fb1a7f6d6687b15",
+      "timestamp": 1791633896
+    },
+    {
+      "index": 1,
+      "method": "POST",
+      "path": "/api/v1/upload",
+      "clientIp": "172.20.0.2",
+      "requestBodyBytes": 384,
+      "responseStatus": 200,
+      "responseBytes": 67,
+      "responseSha256": "4c8a121701ab0a740e6fb952197c42606e9de9c92ae13813602c9b1f4be1cb8e",
+      "timestamp": 1791633896
+    },
+    {
+      "index": 2,
+      "method": "POST",
+      "path": "/api/v1/upload",
+      "clientIp": "172.20.0.2",
+      "requestBodyBytes": 384,
+      "responseStatus": 200,
+      "responseBytes": 67,
+      "responseSha256": "d97ba1a3f72fd389241ea2e518207b15556ae7b7557efdc6674303ae0bb8f41c",
+      "timestamp": 1791633897
+    },
+    {
+      "index": 3,
+      "method": "POST",
+      "path": "/api/v1/upload",
+      "clientIp": "172.20.0.2",
+      "requestBodyBytes": 384,
+      "responseStatus": 200,
+      "responseBytes": 67,
+      "responseSha256": "6ba39273d495ff7a0a44f7a019225415b3e21384c2884f347d82d35aa6f1769a",
+      "timestamp": 1791633897
+    }
+  ]
+}

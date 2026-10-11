@@ -265,9 +265,11 @@ export default function SecurityAssessmentView() {
             </h1>
             <span className="soc-badge success" style={{ fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}>
               <Database size={11} />
-              <span>{loading ? 'LOADING AUDIT DATA' : summary?.assessedSessions
-                ? `${summary.assessedSessions.toLocaleString()} ASSESSED SESSIONS`
-                : 'NO OPERATIONAL AUDIT DATA'}</span>
+              <span>{loading ? 'LOADING AUDIT DATA' : loadError
+                ? 'AUDIT DATA UNAVAILABLE'
+                : summary?.assessedSessions
+                  ? `${summary.assessedSessions.toLocaleString()} ASSESSED SESSIONS`
+                  : 'NO OPERATIONAL AUDIT DATA'}</span>
             </span>
           </div>
           <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px' }}>
@@ -353,12 +355,12 @@ export default function SecurityAssessmentView() {
                 {cat.score == null ? '—' : `${cat.score}%`}
               </span>
               <span style={{ fontSize: '11px', color: 'var(--text-dim)' }}>
-                {audits.length ? cat.count : 'Insufficient Data'}
+                {loadError ? 'Unavailable' : loading ? 'Loading' : audits.length ? cat.count : 'Insufficient Data'}
               </span>
             </div>
-            <div style={{ height: '4px', background: 'rgba(255,255,255,0.06)', borderRadius: '2px', overflow: 'hidden' }}>
-              <div style={{ width: `${cat.score ?? 0}%`, height: '100%', background: cat.color, borderRadius: '2px' }} />
-            </div>
+            {cat.score != null && <div style={{ height: '4px', background: 'rgba(255,255,255,0.06)', borderRadius: '2px', overflow: 'hidden' }}>
+              <div style={{ width: `${cat.score}%`, height: '100%', background: cat.color, borderRadius: '2px' }} />
+            </div>}
           </div>
         ))}
       </div>

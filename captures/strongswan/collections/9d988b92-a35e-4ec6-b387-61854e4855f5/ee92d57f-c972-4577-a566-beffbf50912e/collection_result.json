@@ -1,0 +1,117 @@
+{
+  "schemaVersion": "vista-workload-collection-v1",
+  "experimentId": "ee92d57f-c972-4577-a566-beffbf50912e",
+  "sessionId": "9d988b92-a35e-4ec6-b387-61854e4855f5",
+  "startedAt": "2026-10-10T02:46:16.368745+00:00",
+  "requestedWorkload": {
+    "type": "icmpv4_echo",
+    "profiles": [
+      {
+        "count": 5,
+        "interval_seconds": 0.2,
+        "payload_bytes": 64
+      }
+    ]
+  },
+  "status": "FAIL",
+  "errors": [
+    "Stopping pc1 ICMP capture failed (exit 127): OCI runtime exec failed: exec failed: unable to start container process: exec: \"kill\": executable file not found in $PATH"
+  ],
+  "artifactDirectory": "C:\\vista\\captures\\strongswan\\collections\\9d988b92-a35e-4ec6-b387-61854e4855f5\\ee92d57f-c972-4577-a566-beffbf50912e",
+  "endpoints": {
+    "pc1": {
+      "containerId": "68c0da1113cb9646ec329f5d470bc7a08b6350810deb0e968c0e2ae59ae3693b",
+      "state": "running",
+      "ipv4Address": "172.20.0.2"
+    },
+    "pc2": {
+      "containerId": "ef1f7407e7d5b2dc0871b0fd3f55ab207db0d468dce8eda8424872b1e1465a47",
+      "state": "running",
+      "ipv4Address": "172.20.0.3"
+    }
+  },
+  "strongSwanVersion": "strongSwan swanctl 5.9.8",
+  "negotiatedSaBefore": {
+    "pc1": {
+      "established": true,
+      "ike": {
+        "version": 2,
+        "encryption": "AES_CBC",
+        "encryptionKeySize": 256,
+        "integrity": "HMAC_SHA2_256_128",
+        "prf": "PRF_HMAC_SHA2_256",
+        "dhGroup": 14,
+        "dhGroupName": "MODP_2048"
+      },
+      "child": {
+        "name": "pc-tunnel",
+        "state": "INSTALLED",
+        "mode": "TUNNEL",
+        "protocol": "ESP",
+        "encryption": "AES_GCM_16",
+        "encryptionKeySize": 256,
+        "integrity": null,
+        "pfsGroup": 14,
+        "pfsGroupName": "MODP_2048",
+        "localTrafficSelector": "172.20.0.2/32",
+        "remoteTrafficSelector": "172.20.0.3/32",
+        "bytesIn": 0,
+        "bytesOut": 0,
+        "packetsIn": 0,
+        "packetsOut": 0,
+        "spiIn": "ca064433",
+        "spiOut": "ce31899b"
+      },
+      "pfs": true
+    },
+    "pc2": {
+      "established": true,
+      "ike": {
+        "version": 2,
+        "encryption": "AES_CBC",
+        "encryptionKeySize": 256,
+        "integrity": "HMAC_SHA2_256_128",
+        "prf": "PRF_HMAC_SHA2_256",
+        "dhGroup": 14,
+        "dhGroupName": "MODP_2048"
+      },
+      "child": {
+        "name": "pc-tunnel",
+        "state": "INSTALLED",
+        "mode": "TUNNEL",
+        "protocol": "ESP",
+        "encryption": "AES_GCM_16",
+        "encryptionKeySize": 256,
+        "integrity": null,
+        "pfsGroup": 14,
+        "pfsGroupName": "MODP_2048",
+        "localTrafficSelector": "172.20.0.3/32",
+        "remoteTrafficSelector": "172.20.0.2/32",
+        "bytesIn": 0,
+        "bytesOut": 0,
+        "packetsIn": 0,
+        "packetsOut": 0,
+        "spiIn": "ce31899b",
+        "spiOut": "ca064433"
+      },
+      "pfs": true
+    }
+  },
+  "observedXfrmMode": "TUNNEL",
+  "senderMeasurements": [
+    {
+      "requested": {
+        "count": 5,
+        "interval_seconds": 0.2,
+        "payload_bytes": 64
+      },
+      "packetsSent": 5,
+      "packetsReceived": 5,
+      "durationSeconds": 1.015999999945052,
+      "exitCode": 0,
+      "stdout": "PING 172.20.0.3 (172.20.0.3) 64(92) bytes of data.\n72 bytes from 172.20.0.3: icmp_seq=1 ttl=64 time=7.12 ms\n72 bytes from 172.20.0.3: icmp_seq=2 ttl=64 time=0.462 ms\n72 bytes from 172.20.0.3: icmp_seq=3 ttl=64 time=0.260 ms\n72 bytes from 172.20.0.3: icmp_seq=4 ttl=64 time=0.389 ms\n72 bytes from 172.20.0.3: icmp_seq=5 ttl=64 time=0.347 ms\n\n--- 172.20.0.3 ping statistics ---\n5 packets transmitted, 5 received, 0% packet loss, time 812ms\nrtt min/avg/max/mdev = 0.260/1.715/7.121/2.703 ms\n",
+      "stderr": ""
+    }
+  ],
+  "completedAt": "2026-10-10T02:46:21.361317+00:00"
+}

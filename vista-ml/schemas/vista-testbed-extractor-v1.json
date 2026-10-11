@@ -1,0 +1,168 @@
+{
+  "schema_version": "vista-testbed-extractor-v1",
+  "task_scope": "benign ICMP-echo versus TCP-marker workload classification from outer ESP flow metadata",
+  "capture_point": "pc1 eth0, outer encrypted ESP packets",
+  "runtime_compatible": false,
+  "extraction_implementation": "vista_ml.features.pcap_features.extract_flow_features",
+  "runtime_compatibility_note": "This testbed batch feature extractor has not been proven numerically equivalent to backend.services.pcap_analyzer and is not approved for runtime inference.",
+  "target_classes": [
+    "ICMP_NORMAL",
+    "TCP_NORMAL"
+  ],
+  "label_source": "Controlled workload selected by the testbed experiment; not attack ground truth or encrypted application identity.",
+  "missing_value_policy": "Reject the flow; do not impute or zero-fill.",
+  "preprocessing": "No learned preprocessing. Convert declared features to finite numeric values in this exact order.",
+  "features": [
+    {
+      "name": "packet_count",
+      "type": "integer",
+      "units": "packets",
+      "definition": "Number of observed outer ESP IP packets in the bidirectional flow.",
+      "source": "PCAP packet aggregation",
+      "valid_range": {"minimum": 1}
+    },
+    {
+      "name": "byte_count",
+      "type": "integer",
+      "units": "bytes",
+      "definition": "Sum of observed outer IP packet lengths.",
+      "source": "PCAP IP length",
+      "valid_range": {"minimum": 1}
+    },
+    {
+      "name": "flow_duration",
+      "type": "number",
+      "units": "seconds",
+      "definition": "Elapsed time between first and last packet timestamps.",
+      "source": "PCAP timestamps",
+      "valid_range": {"minimum": 0}
+    },
+    {
+      "name": "mean_packet_size",
+      "type": "number",
+      "units": "bytes",
+      "definition": "Arithmetic mean of outer IP packet lengths.",
+      "source": "PCAP IP length",
+      "valid_range": {"minimum": 1}
+    },
+    {
+      "name": "std_packet_size",
+      "type": "number",
+      "units": "bytes",
+      "definition": "Sample standard deviation (pandas ddof=1) as produced by the VISTA batch flow extractor; null for a single sample.",
+      "source": "PCAP IP length",
+      "valid_range": {"minimum": 0}
+    },
+    {
+      "name": "min_packet_size",
+      "type": "number",
+      "units": "bytes",
+      "definition": "Minimum outer IP packet length.",
+      "source": "PCAP IP length",
+      "valid_range": {"minimum": 1}
+    },
+    {
+      "name": "max_packet_size",
+      "type": "number",
+      "units": "bytes",
+      "definition": "Maximum outer IP packet length.",
+      "source": "PCAP IP length",
+      "valid_range": {"minimum": 1}
+    },
+    {
+      "name": "mean_inter_arrival_time",
+      "type": "number",
+      "units": "seconds",
+      "definition": "Mean elapsed time between consecutive observed flow packets.",
+      "source": "PCAP timestamps",
+      "valid_range": {"minimum": 0}
+    },
+    {
+      "name": "std_inter_arrival_time",
+      "type": "number",
+      "units": "seconds",
+      "definition": "Sample standard deviation (pandas ddof=1) of consecutive packet time deltas; null where undefined.",
+      "source": "PCAP timestamps",
+      "valid_range": {"minimum": 0}
+    },
+    {
+      "name": "min_inter_arrival_time",
+      "type": "number",
+      "units": "seconds",
+      "definition": "Minimum consecutive packet time delta.",
+      "source": "PCAP timestamps",
+      "valid_range": {"minimum": 0}
+    },
+    {
+      "name": "max_inter_arrival_time",
+      "type": "number",
+      "units": "seconds",
+      "definition": "Maximum consecutive packet time delta.",
+      "source": "PCAP timestamps",
+      "valid_range": {"minimum": 0}
+    },
+    {
+      "name": "packets_per_second",
+      "type": "number",
+      "units": "packets/second",
+      "definition": "Packet count divided by positive flow duration.",
+      "source": "PCAP-derived flow statistics",
+      "valid_range": {"minimum": 0}
+    },
+    {
+      "name": "bytes_per_second",
+      "type": "number",
+      "units": "bytes/second",
+      "definition": "Byte count divided by positive flow duration.",
+      "source": "PCAP-derived flow statistics",
+      "valid_range": {"minimum": 0}
+    },
+    {
+      "name": "forward_packet_count",
+      "type": "integer",
+      "units": "packets",
+      "definition": "Packets from the lexicographically first endpoint to the second endpoint.",
+      "source": "Canonical endpoint ordering",
+      "valid_range": {"minimum": 0}
+    },
+    {
+      "name": "backward_packet_count",
+      "type": "integer",
+      "units": "packets",
+      "definition": "Packets from the lexicographically second endpoint to the first endpoint.",
+      "source": "Canonical endpoint ordering",
+      "valid_range": {"minimum": 0}
+    },
+    {
+      "name": "forward_bytes",
+      "type": "number",
+      "units": "bytes",
+      "definition": "Sum of outer IP packet lengths in the forward direction.",
+      "source": "Canonical endpoint ordering and PCAP IP length",
+      "valid_range": {"minimum": 0}
+    },
+    {
+      "name": "backward_bytes",
+      "type": "number",
+      "units": "bytes",
+      "definition": "Sum of outer IP packet lengths in the backward direction.",
+      "source": "Canonical endpoint ordering and PCAP IP length",
+      "valid_range": {"minimum": 0}
+    },
+    {
+      "name": "direction_ratio",
+      "type": "number",
+      "units": "ratio",
+      "definition": "Forward packet count divided by total packet count.",
+      "source": "Canonical endpoint ordering",
+      "valid_range": {"minimum": 0, "maximum": 1}
+    }
+  ],
+  "unsupported_inputs": [
+    "IKE control flows",
+    "Non-ESP flows",
+    "Application or attack labels inferred from tunnel outer metadata",
+    "Missing or non-finite mandatory features",
+    "Features extracted from a different schema version"
+  ]
+}

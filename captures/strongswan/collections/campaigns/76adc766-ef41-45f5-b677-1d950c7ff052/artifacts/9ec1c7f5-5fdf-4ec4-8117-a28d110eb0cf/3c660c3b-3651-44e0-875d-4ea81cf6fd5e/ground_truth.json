@@ -1,0 +1,13 @@
+{
+  "label": "controlled_tcp_marker",
+  "labelSchemaVersion": "vista-target-label-schema-v1",
+  "workloadSubtype": "tcp_marker",
+  "method": "Bounded deterministic marker bytes sent by pc1 over one TCP connection; pc2 independently records and hashes the received payload.",
+  "experimentId": "3c660c3b-3651-44e0-875d-4ea81cf6fd5e",
+  "sessionId": "9ec1c7f5-5fdf-4ec4-8117-a28d110eb0cf",
+  "messagesSent": 10,
+  "bytesSent": 2560,
+  "bytesReceived": 2560,
+  "senderPayloadSha256": "3ac6dc68d4512b90cc5aad75fbb89f2fcb1e5b798a1415c1a758f61dabfad61b",
+  "receiverPayloadSha256": "3ac6dc68d4512b90cc5aad75fbb89f2fcb1e5b798a1415c1a758f61dabfad61b"
+}

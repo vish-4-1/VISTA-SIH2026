@@ -1,0 +1,39 @@
+{
+  "totalRequestsReceived": 3,
+  "serverPort": 42003,
+  "requests": [
+    {
+      "index": 0,
+      "method": "GET",
+      "path": "/api/v1/status",
+      "clientIp": "172.20.0.2",
+      "requestBodyBytes": 0,
+      "responseStatus": 200,
+      "responseBytes": 65,
+      "responseSha256": "81bcbbecf6469eed26a845227c43145f681deec230d1f933a7810f01fbfa28a2",
+      "timestamp": 1791613806
+    },
+    {
+      "index": 1,
+      "method": "GET",
+      "path": "/api/v1/status",
+      "clientIp": "172.20.0.2",
+      "requestBodyBytes": 0,
+      "responseStatus": 200,
+      "responseBytes": 65,
+      "responseSha256": "fbceabc357c6d96089fb69214eeabdb43b61f67ff1f748be3db55cf091501a8a",
+      "timestamp": 1791613807
+    },
+    {
+      "index": 2,
+      "method": "GET",
+      "path": "/api/v1/status",
+      "clientIp": "172.20.0.2",
+      "requestBodyBytes": 0,
+      "responseStatus": 200,
+      "responseBytes": 65,
+      "responseSha256": "4e47039b182be0ef1170c6f10857061688608161b1c071e0bb91639c12f5584d",
+      "timestamp": 1791613807
+    }
+  ]
+}

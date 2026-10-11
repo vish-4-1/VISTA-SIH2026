@@ -1,0 +1,47 @@
+{
+  "totalRequestsSent": 4,
+  "totalBytesSent": 1036,
+  "totalBytesReceived": 328,
+  "requests": [
+    {
+      "index": 0,
+      "path": "/api/v1/upload",
+      "method": "POST",
+      "statusCode": 200,
+      "statusLine": "HTTP/1.1 200 OK",
+      "responseBytes": 67,
+      "responseSha256": "90107b119b0c83a69ae3733eb5835b2b4ffa5cd8f4f8fce495f79a585ea159b1",
+      "durationSeconds": 0
+    },
+    {
+      "index": 1,
+      "path": "/api/v1/upload",
+      "method": "POST",
+      "statusCode": 200,
+      "statusLine": "HTTP/1.1 200 OK",
+      "responseBytes": 67,
+      "responseSha256": "55b273144b45b55e6187fec6ca1404196b24f423d58cf18f07b7f22164289d73",
+      "durationSeconds": 0
+    },
+    {
+      "index": 2,
+      "path": "/api/v1/upload",
+      "method": "POST",
+      "statusCode": 200,
+      "statusLine": "HTTP/1.1 200 OK",
+      "responseBytes": 67,
+      "responseSha256": "f03906bd5384f6ffc56bf093ed92bbebfab816e1fdd728f16345d4a7f80a18ed",
+      "durationSeconds": 0
+    },
+    {
+      "index": 3,
+      "path": "/api/v1/upload",
+      "method": "POST",
+      "statusCode": 200,
+      "statusLine": "HTTP/1.1 200 OK",
+      "responseBytes": 67,
+      "responseSha256": "1b8081e096987a0875582b0ea634b934151c49525f10e1d745a213fdc1db7cbb",
+      "durationSeconds": 0
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "totalRequestsReceived": 4,
+  "serverPort": 45101,
+  "requests": [
+    {
+      "index": 0,
+      "method": "GET",
+      "path": "/api/v1/telemetry",
+      "clientIp": "172.20.0.2",
+      "requestBodyBytes": 0,
+      "responseStatus": 200,
+      "responseBytes": 68,
+      "responseSha256": "353c24c30ee97bb6c4dae2f064ed9cb5234a76bb1bff4897e0f2ffcfc29b8daf",
+      "timestamp": 1791633566
+    },
+    {
+      "index": 1,
+      "method": "GET",
+      "path": "/api/v1/telemetry",
+      "clientIp": "172.20.0.2",
+      "requestBodyBytes": 0,
+      "responseStatus": 200,
+      "responseBytes": 68,
+      "responseSha256": "5feeb49c891f05ea22d404ef10d6930c765f2a77ddd4d91e2c62b05134695ffa",
+      "timestamp": 1791633566
+    },
+    {
+      "index": 2,
+      "method": "GET",
+      "path": "/api/v1/telemetry",
+      "clientIp": "172.20.0.2",
+      "requestBodyBytes": 0,
+      "responseStatus": 200,
+      "responseBytes": 68,
+      "responseSha256": "183544f8a0317554162a51716074730e2face5ee784f85e5b26b579698202bb2",
+      "timestamp": 1791633567
+    },
+    {
+      "index": 3,
+      "method": "GET",
+      "path": "/api/v1/telemetry",
+      "clientIp": "172.20.0.2",
+      "requestBodyBytes": 0,
+      "responseStatus": 200,
+      "responseBytes": 68,
+      "responseSha256": "30576de48d108f21a92b2fd2532e36b465557071d765e4850a49f18dc16c40b0",
+      "timestamp": 1791633567
+    }
+  ]
+}

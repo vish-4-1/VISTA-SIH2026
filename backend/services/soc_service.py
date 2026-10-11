@@ -3,7 +3,7 @@ VISTA SOC & Threat Intelligence Service
 Summarizes repository datasets and supplied analysis, with MITRE ATT&CK mappings.
 
 Evidence provenance:
-  "Dataset ground-truth label"  — attackType from the repository CSV (not live ML)
+  "Synthetic dataset label"     — generated scenario class (not observed attack ground truth)
   "ML Prediction"               — attackType from live model inference (predictionStatus == "success")
   "Prediction Unavailable"      — inference ran but failed
   "Insufficient Data"           — inference ran but required features were missing
@@ -90,7 +90,7 @@ def _classify_flow_provenance(flow: Dict[str, Any], is_live: bool) -> Optional[s
     Returns the evidence provenance string for a flow IF it represents a threat/attack,
     or None if the flow is benign, incomplete, or unclassified.
 
-    Repository flows (is_live=False) carry ground-truth labels from the dataset CSV.
+    Repository flows (is_live=False) carry generated scenario labels from synthetic data.
     Live PCAP flows (is_live=True) carry labels from live ML inference.
     """
     prediction_status = flow.get("predictionStatus")
@@ -109,7 +109,7 @@ def _classify_flow_provenance(flow: Dict[str, Any], is_live: bool) -> Optional[s
     if prediction_status is None or prediction_status == "":
         if flow.get("isAttack") == 1 or flow.get("trafficType") == "Attack":
             if atk and atk not in _BENIGN_LABELS:
-                return "Dataset ground-truth label"
+                return "Synthetic dataset label"
         return None
     if prediction_status == "success":
         if flow.get("isAttack") == 1 or (atk and atk not in _BENIGN_LABELS):
@@ -210,7 +210,7 @@ class SocService:
         )
 
         return {
-            "source": "Uploaded analysis" if is_live else "Repository dataset",
+            "source": "Uploaded analysis" if is_live else "Synthetic repository dataset",
             "securityScore": posture_summary.get("overallScore"),
             "aiConfidence": round(conf_sum / conf_count, 1) if conf_count else None,
             "rawPacketsCount": total_pkts,
@@ -237,7 +237,7 @@ class SocService:
         Returns threat events with MITRE ATT&CK mappings.
 
         Evidence provenance is clearly recorded on every returned record:
-          - "Dataset ground-truth label": label from the repository CSV dataset.
+          - "Synthetic dataset label": generated scenario class, not observed attack ground truth.
           - "ML Prediction": label from live ML inference (predictionStatus == "success").
 
         Normal/benign flows are never included.
@@ -262,8 +262,9 @@ class SocService:
             if not atk or atk in _BENIGN_LABELS:
                 continue
 
-            # Normalise DOS_FLOOD → look up in table
-            tech = MITRE_TECHNIQUES.get(atk) or MITRE_TECHNIQUES.get("DOS")
+            # Normalise DOS_FLOOD → DOS mapping only when explicitly registered.
+            # Unknown labels have no evidence-backed ATT&CK attribution.
+            tech = MITRE_TECHNIQUES.get(atk)
             if not tech:
                 continue
 
@@ -277,14 +278,11 @@ class SocService:
                     "This is not a confirmed incident. " + tech["description"]
                 )
             else:
-                # Dataset ground-truth: these are known-labelled test/training flows.
-                verification = (
-                    "Repository dataset label — training/evaluation data, not live detection"
-                )
+                verification = "Synthetic scenario label — not an observed attack or live detection"
                 description = (
-                    f"Flow labelled as {atk} in the VISTA repository dataset "
-                    f"({FLOWS_JSON_PATH.name}). "
-                    "This is a dataset record, not a live detection. " + tech["description"]
+                    f"Generated flow assigned scenario class {atk} in the VISTA synthetic "
+                    f"development dataset ({FLOWS_JSON_PATH.name}). This does not establish that "
+                    "a real attack occurred. " + tech["description"]
                 )
 
             record: Dict[str, Any] = {
@@ -301,7 +299,7 @@ class SocService:
                 "description": description,
                 "packets": f.get("packets"),
                 "bytes": f.get("bytes"),
-                "source": "Uploaded analysis" if is_live else "Repository dataset",
+                "source": "Uploaded analysis" if is_live else "Synthetic repository dataset",
                 "modelUsed": f.get("inferenceEngine") or f.get("model_used") or "XGBoost",
             }
 

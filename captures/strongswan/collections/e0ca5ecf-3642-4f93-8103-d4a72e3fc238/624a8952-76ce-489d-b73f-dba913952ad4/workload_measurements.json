@@ -1,0 +1,77 @@
+{
+  "experimentId": "624a8952-76ce-489d-b73f-dba913952ad4",
+  "sessionId": "e0ca5ecf-3642-4f93-8103-d4a72e3fc238",
+  "startedAt": "2026-10-10T06:40:20.554161+00:00",
+  "captureStartedAt": "2026-10-10T06:40:21.430359+00:00",
+  "captureEndedAt": "2026-10-10T06:40:25.589298+00:00",
+  "requestedProfiles": [
+    {
+      "count": 4,
+      "interval_seconds": 0.35,
+      "path": "/api/v1/submit",
+      "method": "POST",
+      "payload_bytes": 128,
+      "expected_status": 200
+    }
+  ],
+  "senderMeasurements": {
+    "totalRequestsSent": 4,
+    "totalBytesSent": 1036,
+    "totalBytesReceived": 328,
+    "requests": [
+      {
+        "index": 0,
+        "path": "/api/v1/submit",
+        "method": "POST",
+        "statusCode": 200,
+        "statusLine": "HTTP/1.1 200 OK",
+        "responseBytes": 67,
+        "responseSha256": "c77ed8de9b3f9c230274a26615e775ee93dc46f15ea32fcf1b8e8ee6dd131d78",
+        "durationSeconds": 0
+      },
+      {
+        "index": 1,
+        "path": "/api/v1/submit",
+        "method": "POST",
+        "statusCode": 200,
+        "statusLine": "HTTP/1.1 200 OK",
+        "responseBytes": 67,
+        "responseSha256": "f512eaba8f2ef51d74b2eff8c9a2a49ec36d192a46d27e8acd7a0f818c7af24a",
+        "durationSeconds": 0
+      },
+      {
+        "index": 2,
+        "path": "/api/v1/submit",
+        "method": "POST",
+        "statusCode": 200,
+        "statusLine": "HTTP/1.1 200 OK",
+        "responseBytes": 67,
+        "responseSha256": "9c7febe77ebe61755eab57001f353c7846250d26a2380553c4a68a0a2299400d",
+        "durationSeconds": 0
+      },
+      {
+        "index": 3,
+        "path": "/api/v1/submit",
+        "method": "POST",
+        "statusCode": 200,
+        "statusLine": "HTTP/1.1 200 OK",
+        "responseBytes": 67,
+        "responseSha256": "586780529f59bd62e5c282895e28a5774c1b7252e6d233fc960151aac6fc3fc7",
+        "durationSeconds": 0
+      }
+    ]
+  },
+  "independentReceiverEvidence": {
+    "serverEvidencePath": "server_evidence.json",
+    "serverEvidenceSha256": "1d51370d8500f6fcb05f5d165949a0f53adafce17c0718fab34692eb1ef76857",
+    "totalRequestsReceived": 4,
+    "pcapPath": "pc2_receiver_http.pcap",
+    "pcapSha256": "7115494de3989fd938eb126913efb96d08c194c8d0f6155edc7dfa481b9923d4",
+    "capturedTcpPackets": 24
+  },
+  "pc1OuterCaptureEvidence": {
+    "pcapPath": "pc1_outer_http.pcap",
+    "pcapSha256": "ee2d565f97a74bf84be7b74cca6ad57339b9d7faa61f42ad08462aff4aeb109e",
+    "espPackets": 44
+  }
+}

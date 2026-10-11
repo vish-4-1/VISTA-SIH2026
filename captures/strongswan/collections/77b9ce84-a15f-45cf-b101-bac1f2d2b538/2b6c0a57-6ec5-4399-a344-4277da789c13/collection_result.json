@@ -1,0 +1,349 @@
+{
+  "schemaVersion": "vista-workload-collection-v1",
+  "experimentId": "2b6c0a57-6ec5-4399-a344-4277da789c13",
+  "sessionId": "77b9ce84-a15f-45cf-b101-bac1f2d2b538",
+  "startedAt": "2026-10-10T05:49:27.201287+00:00",
+  "requestedWorkload": {
+    "type": "http_traffic",
+    "profiles": [
+      {
+        "count": 3,
+        "interval_seconds": 0.2,
+        "path": "/api/v1/telemetry",
+        "method": "GET",
+        "payload_bytes": 0,
+        "expected_status": 200
+      }
+    ]
+  },
+  "status": "PASS",
+  "errors": [],
+  "artifactDirectory": "C:\\vista\\captures\\strongswan\\collections\\77b9ce84-a15f-45cf-b101-bac1f2d2b538\\2b6c0a57-6ec5-4399-a344-4277da789c13",
+  "lifecycleState": "PASS",
+  "lifecycle": [
+    {
+      "state": "PRECHECK",
+      "at": "2026-10-10T05:49:27.201287+00:00"
+    },
+    {
+      "state": "CAPTURE_STARTING",
+      "at": "2026-10-10T05:49:28.057854+00:00"
+    },
+    {
+      "state": "CAPTURE_READY",
+      "at": "2026-10-10T05:49:29.798382+00:00"
+    },
+    {
+      "state": "WORKLOAD_RUNNING",
+      "at": "2026-10-10T05:49:30.479734+00:00"
+    },
+    {
+      "state": "CAPTURE_STOPPING",
+      "at": "2026-10-10T05:49:31.546252+00:00"
+    },
+    {
+      "state": "ARTIFACT_VALIDATION",
+      "at": "2026-10-10T05:49:34.153351+00:00"
+    },
+    {
+      "state": "PASS",
+      "at": "2026-10-10T05:49:37.548779+00:00"
+    }
+  ],
+  "endpoints": {
+    "pc1": {
+      "containerId": "68c0da1113cb9646ec329f5d470bc7a08b6350810deb0e968c0e2ae59ae3693b",
+      "state": "running",
+      "ipv4Address": "172.20.0.2",
+      "imageId": "sha256:770e746a34009f6123b93e17e84e01b3f3359197f6dec393a56530fe87732083",
+      "imageReference": "topology-pc1"
+    },
+    "pc2": {
+      "containerId": "ef1f7407e7d5b2dc0871b0fd3f55ab207db0d468dce8eda8424872b1e1465a47",
+      "state": "running",
+      "ipv4Address": "172.20.0.3",
+      "imageId": "sha256:e7c265590f9b3249eee79c5cccbad92baf845a86869176129e5abefd3e77de0b",
+      "imageReference": "topology-pc2"
+    }
+  },
+  "strongSwanVersion": "strongSwan swanctl 5.9.8",
+  "repositoryRevision": "fe556314022348b9f6f1b93bd6ead64300d39f84",
+  "worktreeDirty": true,
+  "negotiatedSaBefore": {
+    "pc1": {
+      "established": true,
+      "ike": {
+        "version": 2,
+        "encryption": "AES_CBC",
+        "encryptionKeySize": 256,
+        "integrity": "HMAC_SHA2_256_128",
+        "prf": "PRF_HMAC_SHA2_256",
+        "dhGroup": 14,
+        "dhGroupName": "MODP_2048"
+      },
+      "child": {
+        "name": "pc-tunnel",
+        "state": "INSTALLED",
+        "mode": "TUNNEL",
+        "protocol": "ESP",
+        "encryption": "AES_GCM_16",
+        "encryptionKeySize": 256,
+        "integrity": null,
+        "pfsGroup": 14,
+        "pfsGroupName": "MODP_2048",
+        "localTrafficSelector": "172.20.0.2/32",
+        "remoteTrafficSelector": "172.20.0.3/32",
+        "bytesIn": 1800,
+        "bytesOut": 3852,
+        "packetsIn": 20,
+        "packetsOut": 24,
+        "spiIn": "c88ed250",
+        "spiOut": "cb6f9bfc"
+      },
+      "pfs": true
+    },
+    "pc2": {
+      "established": true,
+      "ike": {
+        "version": 2,
+        "encryption": "AES_CBC",
+        "encryptionKeySize": 256,
+        "integrity": "HMAC_SHA2_256_128",
+        "prf": "PRF_HMAC_SHA2_256",
+        "dhGroup": 14,
+        "dhGroupName": "MODP_2048"
+      },
+      "child": {
+        "name": "pc-tunnel",
+        "state": "INSTALLED",
+        "mode": "TUNNEL",
+        "protocol": "ESP",
+        "encryption": "AES_GCM_16",
+        "encryptionKeySize": 256,
+        "integrity": null,
+        "pfsGroup": 14,
+        "pfsGroupName": "MODP_2048",
+        "localTrafficSelector": "172.20.0.3/32",
+        "remoteTrafficSelector": "172.20.0.2/32",
+        "bytesIn": 3852,
+        "bytesOut": 1800,
+        "packetsIn": 24,
+        "packetsOut": 20,
+        "spiIn": "cb6f9bfc",
+        "spiOut": "c88ed250"
+      },
+      "pfs": true
+    }
+  },
+  "observedXfrmMode": "TUNNEL",
+  "captureCompletion": {
+    "pc1": {
+      "packetCount": 44,
+      "packetsDispatchedBeforeStop": 44,
+      "exitCode": 0,
+      "tcpdumpLog": "tcpdump: listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes\ntcpdump: 44 packets captured, 44 packets received by filter, 0 packets dropped by kernel\n44 packets captured\n44 packets received by filter\n0 packets dropped by kernel",
+      "diagnosticLogPath": "C:\\vista\\captures\\strongswan\\collections\\77b9ce84-a15f-45cf-b101-bac1f2d2b538\\2b6c0a57-6ec5-4399-a344-4277da789c13\\pc1_tcpdump.log",
+      "path": "C:\\vista\\captures\\strongswan\\collections\\77b9ce84-a15f-45cf-b101-bac1f2d2b538\\2b6c0a57-6ec5-4399-a344-4277da789c13\\pc1_outer_http.pcap"
+    },
+    "pc2": {
+      "packetCount": 49,
+      "packetsDispatchedBeforeStop": 49,
+      "exitCode": 0,
+      "tcpdumpLog": "tcpdump: listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes\ntcpdump: 49 packets captured, 49 packets received by filter, 0 packets dropped by kernel\n49 packets captured\n49 packets received by filter\n0 packets dropped by kernel",
+      "diagnosticLogPath": "C:\\vista\\captures\\strongswan\\collections\\77b9ce84-a15f-45cf-b101-bac1f2d2b538\\2b6c0a57-6ec5-4399-a344-4277da789c13\\pc2_tcpdump.log",
+      "path": "C:\\vista\\captures\\strongswan\\collections\\77b9ce84-a15f-45cf-b101-bac1f2d2b538\\2b6c0a57-6ec5-4399-a344-4277da789c13\\pc2_receiver_http.pcap"
+    }
+  },
+  "senderMeasurements": {
+    "totalRequestsSent": 3,
+    "totalBytesSent": 336,
+    "totalBytesReceived": 249,
+    "requests": [
+      {
+        "index": 0,
+        "path": "/api/v1/telemetry",
+        "method": "GET",
+        "statusCode": 200,
+        "statusLine": "HTTP/1.1 200 OK",
+        "responseBytes": 68,
+        "responseSha256": "353c24c30ee97bb6c4dae2f064ed9cb5234a76bb1bff4897e0f2ffcfc29b8daf",
+        "durationSeconds": 0
+      },
+      {
+        "index": 1,
+        "path": "/api/v1/telemetry",
+        "method": "GET",
+        "statusCode": 200,
+        "statusLine": "HTTP/1.1 200 OK",
+        "responseBytes": 68,
+        "responseSha256": "5feeb49c891f05ea22d404ef10d6930c765f2a77ddd4d91e2c62b05134695ffa",
+        "durationSeconds": 0
+      },
+      {
+        "index": 2,
+        "path": "/api/v1/telemetry",
+        "method": "GET",
+        "statusCode": 200,
+        "statusLine": "HTTP/1.1 200 OK",
+        "responseBytes": 68,
+        "responseSha256": "183544f8a0317554162a51716074730e2face5ee784f85e5b26b579698202bb2",
+        "durationSeconds": 0
+      }
+    ]
+  },
+  "serverEvidence": {
+    "totalRequestsReceived": 3,
+    "serverPort": 43589,
+    "requests": [
+      {
+        "index": 0,
+        "method": "GET",
+        "path": "/api/v1/telemetry",
+        "clientIp": "172.20.0.2",
+        "requestBodyBytes": 0,
+        "responseStatus": 200,
+        "responseBytes": 68,
+        "responseSha256": "353c24c30ee97bb6c4dae2f064ed9cb5234a76bb1bff4897e0f2ffcfc29b8daf",
+        "timestamp": 1791611370
+      },
+      {
+        "index": 1,
+        "method": "GET",
+        "path": "/api/v1/telemetry",
+        "clientIp": "172.20.0.2",
+        "requestBodyBytes": 0,
+        "responseStatus": 200,
+        "responseBytes": 68,
+        "responseSha256": "5feeb49c891f05ea22d404ef10d6930c765f2a77ddd4d91e2c62b05134695ffa",
+        "timestamp": 1791611370
+      },
+      {
+        "index": 2,
+        "method": "GET",
+        "path": "/api/v1/telemetry",
+        "clientIp": "172.20.0.2",
+        "requestBodyBytes": 0,
+        "responseStatus": 200,
+        "responseBytes": 68,
+        "responseSha256": "183544f8a0317554162a51716074730e2face5ee784f85e5b26b579698202bb2",
+        "timestamp": 1791611371
+      }
+    ]
+  },
+  "observedWorkload": {
+    "requestsRequested": 3,
+    "requestsSent": 3,
+    "requestsReceivedByServer": 3,
+    "bytesSent": 336,
+    "bytesReceived": 249,
+    "pc1CapturedEspPackets": 31,
+    "pc2CapturedTcpPackets": 18,
+    "saCounterDelta": {
+      "packetsIn": 13,
+      "packetsOut": 18,
+      "bytesIn": 1249,
+      "bytesOut": 1296
+    }
+  },
+  "negotiatedSaAfter": {
+    "pc1": {
+      "established": true,
+      "ike": {
+        "version": 2,
+        "encryption": "AES_CBC",
+        "encryptionKeySize": 256,
+        "integrity": "HMAC_SHA2_256_128",
+        "prf": "PRF_HMAC_SHA2_256",
+        "dhGroup": 14,
+        "dhGroupName": "MODP_2048"
+      },
+      "child": {
+        "name": "pc-tunnel",
+        "state": "INSTALLED",
+        "mode": "TUNNEL",
+        "protocol": "ESP",
+        "encryption": "AES_GCM_16",
+        "encryptionKeySize": 256,
+        "integrity": null,
+        "pfsGroup": 14,
+        "pfsGroupName": "MODP_2048",
+        "localTrafficSelector": "172.20.0.2/32",
+        "remoteTrafficSelector": "172.20.0.3/32",
+        "bytesIn": 3049,
+        "bytesOut": 5148,
+        "packetsIn": 33,
+        "packetsOut": 42,
+        "spiIn": "c88ed250",
+        "spiOut": "cb6f9bfc"
+      },
+      "pfs": true
+    },
+    "pc2": {
+      "established": true,
+      "ike": {
+        "version": 2,
+        "encryption": "AES_CBC",
+        "encryptionKeySize": 256,
+        "integrity": "HMAC_SHA2_256_128",
+        "prf": "PRF_HMAC_SHA2_256",
+        "dhGroup": 14,
+        "dhGroupName": "MODP_2048"
+      },
+      "child": {
+        "name": "pc-tunnel",
+        "state": "INSTALLED",
+        "mode": "TUNNEL",
+        "protocol": "ESP",
+        "encryption": "AES_GCM_16",
+        "encryptionKeySize": 256,
+        "integrity": null,
+        "pfsGroup": 14,
+        "pfsGroupName": "MODP_2048",
+        "localTrafficSelector": "172.20.0.3/32",
+        "remoteTrafficSelector": "172.20.0.2/32",
+        "bytesIn": 5148,
+        "bytesOut": 3049,
+        "packetsIn": 42,
+        "packetsOut": 33,
+        "spiIn": "cb6f9bfc",
+        "spiOut": "c88ed250"
+      },
+      "pfs": true
+    }
+  },
+  "datasetPreparation": {
+    "status": "BLOCKED",
+    "acceptedObservations": 2,
+    "quarantinedObservations": 0,
+    "independentSessions": 1,
+    "blocker": "At least 15 independently verified IKE_SA session lifecycles are required to support the fixed 60/20/20 split with at least three sessions per split; UUIDs alone do not establish independence.",
+    "reportPath": "C:\\vista\\captures\\strongswan\\collections\\77b9ce84-a15f-45cf-b101-bac1f2d2b538\\dataset_validation_1349e8803e9d46b3adf9ae8e128e8743\\dataset_report.json",
+    "currentObservationAdmission": "ACCEPTED"
+  },
+  "artifacts": {
+    "pc1Pcap": "C:\\vista\\captures\\strongswan\\collections\\77b9ce84-a15f-45cf-b101-bac1f2d2b538\\2b6c0a57-6ec5-4399-a344-4277da789c13\\pc1_outer_http.pcap",
+    "pc2ReceiverPcap": "C:\\vista\\captures\\strongswan\\collections\\77b9ce84-a15f-45cf-b101-bac1f2d2b538\\2b6c0a57-6ec5-4399-a344-4277da789c13\\pc2_receiver_http.pcap",
+    "packetTable": "C:\\vista\\captures\\strongswan\\collections\\77b9ce84-a15f-45cf-b101-bac1f2d2b538\\2b6c0a57-6ec5-4399-a344-4277da789c13\\packets.csv",
+    "groundTruth": "C:\\vista\\captures\\strongswan\\collections\\77b9ce84-a15f-45cf-b101-bac1f2d2b538\\2b6c0a57-6ec5-4399-a344-4277da789c13\\ground_truth.json",
+    "workloadMeasurements": "C:\\vista\\captures\\strongswan\\collections\\77b9ce84-a15f-45cf-b101-bac1f2d2b538\\2b6c0a57-6ec5-4399-a344-4277da789c13\\workload_measurements.json",
+    "clientMeasurements": "C:\\vista\\captures\\strongswan\\collections\\77b9ce84-a15f-45cf-b101-bac1f2d2b538\\2b6c0a57-6ec5-4399-a344-4277da789c13\\client_measurements.json",
+    "serverEvidence": "C:\\vista\\captures\\strongswan\\collections\\77b9ce84-a15f-45cf-b101-bac1f2d2b538\\2b6c0a57-6ec5-4399-a344-4277da789c13\\server_evidence.json",
+    "negotiatedSa": "C:\\vista\\captures\\strongswan\\collections\\77b9ce84-a15f-45cf-b101-bac1f2d2b538\\2b6c0a57-6ec5-4399-a344-4277da789c13\\negotiated_sa.json",
+    "sessionRecord": "C:\\vista\\captures\\strongswan\\collections\\77b9ce84-a15f-45cf-b101-bac1f2d2b538\\2b6c0a57-6ec5-4399-a344-4277da789c13\\session_record.json",
+    "manifest": "C:\\vista\\captures\\strongswan\\collections\\77b9ce84-a15f-45cf-b101-bac1f2d2b538\\2b6c0a57-6ec5-4399-a344-4277da789c13\\experiment_manifest.json",
+    "sessionDatasetManifest": "C:\\vista\\captures\\strongswan\\collections\\77b9ce84-a15f-45cf-b101-bac1f2d2b538\\dataset_manifest_1349e8803e9d46b3adf9ae8e128e8743.json",
+    "datasetReport": "C:\\vista\\captures\\strongswan\\collections\\77b9ce84-a15f-45cf-b101-bac1f2d2b538\\dataset_validation_1349e8803e9d46b3adf9ae8e128e8743\\dataset_report.json",
+    "sha256": {
+      "pc1Pcap": "cf47c06d5e5c01c72d9190bfee09b21616fbb75cb22b091c93eb2f23b30e2ead",
+      "pc2ReceiverPcap": "a8b2ab3fa4700d22b9adfd2649ca1bde9620b57fca5f220944ac6e62c9d34564",
+      "packetTable": "d630141c0b8143c7c33902922ff8fb4b9844dcea9c4413034e644dffed36848b",
+      "groundTruth": "92674186ef6710eb0ffb0ebfc0f9e86121905a1b6495d711abf0ea2494c24444",
+      "workloadMeasurements": "0c1459d0ebf45b53bd177521a9f6ce630ffee80d480de23eb4fee0dfa47c97b1",
+      "clientMeasurements": "96fc2efd02feda9bbefa38bd70f58a858b4f3498f876c0657889d614de8e8344",
+      "serverEvidence": "7b6624a0155c474c40339289df0801fe7987d2aeea7b431631f27061ec94f099",
+      "negotiatedSa": "b8c34869930c855aceaaf3f2b87985424a07d09dbed910a6c799f441952a0896",
+      "manifest": "5368759033562ab18508fdf996d33fb845a362f5e32ffb549b4cee4277bb95b4"
+    }
+  },
+  "completedAt": "2026-10-10T05:49:37.937965+00:00"
+}

@@ -11,12 +11,12 @@ const SEVERITY_CLASS = {
 };
 
 function severityBadgeClass(severity) {
-  return SEVERITY_CLASS[String(severity || '').toLowerCase()] || 'low';
+  return SEVERITY_CLASS[String(severity || '').toLowerCase()] || '';
 }
 
 function provenanceBadgeClass(source) {
   if (source === 'ML Prediction') return 'success';
-  if (source === 'Dataset ground-truth label') return 'low';
+  if (source === 'Synthetic dataset label') return 'low';
   return 'low';
 }
 
@@ -99,13 +99,15 @@ export default function ThreatIntelligenceView() {
 
   // Provenance counts for threats
   const liveCount = threats.filter(t => t.classificationSource === 'ML Prediction').length;
-  const datasetCount = threats.filter(t => t.classificationSource === 'Dataset ground-truth label').length;
+  const datasetCount = threats.filter(t => t.classificationSource === 'Synthetic dataset label').length;
 
   const sectionMetaText = isLoading
     ? 'Loading\u2026'
+    : fetchError
+      ? 'Unavailable'
     : isLiveAnalysis
       ? `${evaluatedCount} of ${totalExtracted} flows evaluated · ${attackCount} attack, ${benignCount} benign`
-      : `${threats.length} repository threat records`;
+      : `${threats.length} synthetic dataset records`;
 
   return (
     <div className="dashboard-content">
@@ -115,8 +117,8 @@ export default function ThreatIntelligenceView() {
             <h2>Threat Intelligence &amp; Attack Attribution</h2>
             <p>
               {isLiveAnalysis
-                ? 'ML-predicted attack classifications from the uploaded PCAP. These are unverified model predictions, not confirmed incidents.'
-                : 'Attack-labelled flows from the VISTA repository dataset. These are training/evaluation records, not live detections.'}
+                ? 'Attack-model outputs from the uploaded PCAP are shown only when the artifact is validated for that input. Predictions are not confirmed incidents.'
+                : 'Synthetic scenario labels from the VISTA development dataset. They are not observed attacks or validated real-world evaluation records.'}
             </p>
             <p>
               Source: {dataSource || (isLiveAnalysis ? file?.name || 'Uploaded analysis' : 'Repository dataset')}
@@ -145,7 +147,7 @@ export default function ThreatIntelligenceView() {
         {!file && !isLoading && !fetchError && (
           <div style={{ marginBottom: 16, padding: '10px 14px', borderRadius: 6, background: 'rgba(78, 139, 114, 0.08)', border: '1px solid var(--border-subtle)', fontSize: 12, color: 'var(--text-secondary)' }}>
             <Shield size={13} style={{ verticalAlign: 'middle', marginRight: 6 }} className="text-sage" />
-            Upload a PCAP in Traffic Analysis to run live ML inference. The findings below are from the repository evaluation dataset (<code>realFlows.json</code>) — they are dataset labels, not real-time detections.
+            No external threat-intelligence feed is configured. Upload a PCAP in Traffic Analysis to inspect model outputs when eligible; repository records below are <strong>SYNTHETIC_FIXTURE</strong> scenario labels from <code>realFlows.json</code>, not observed incidents or IOC matches.
           </div>
         )}
 
@@ -340,7 +342,7 @@ export default function ThreatIntelligenceView() {
                   {datasetCount > 0 && (
                     <span className="soc-badge low" style={{ fontSize: 11 }}>
                       <Database size={11} />
-                      {datasetCount} dataset record{datasetCount !== 1 ? 's' : ''} (training/evaluation data)
+                      {datasetCount} synthetic fixture record{datasetCount !== 1 ? 's' : ''}
                     </span>
                   )}
                 </div>
@@ -373,11 +375,11 @@ export default function ThreatIntelligenceView() {
                           <span
                             className={`soc-badge ${provenanceBadgeClass(threat.classificationSource)}`}
                             style={{ fontSize: 10 }}
-                            title={threat.classificationSource === 'Dataset ground-truth label'
-                              ? 'This label is from the VISTA repository training dataset, not from live detection.'
+                            title={threat.classificationSource === 'Synthetic dataset label'
+                              ? 'Synthetic scenario label from the repository fixture; not live evidence or ground truth from a real capture.'
                               : 'This label was produced by the ML model at inference time.'}
                           >
-                            {threat.classificationSource === 'ML Prediction' ? 'ML Prediction' : 'Dataset Label'}
+                            {threat.classificationSource === 'ML Prediction' ? 'ML Prediction' : 'Synthetic Fixture'}
                           </span>
                         </td>
                         <td style={{ fontSize: 10, color: 'var(--text-secondary)', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -414,7 +416,7 @@ export default function ThreatIntelligenceView() {
               <p style={{ marginTop: 10, fontSize: 11, color: 'var(--text-dim)' }}>
                 {isLiveAnalysis
                   ? 'ML Predictions are unverified model outputs. They are not confirmed security incidents. Confidence values are model probabilities, not probability of real-world attack occurrence.'
-                  : 'Dataset Labels are ground-truth labels from the VISTA IPsec traffic classification dataset (ipsec_traffic_classification_v2.csv). These records exist for training and evaluation purposes only.'}
+                  : 'Repository labels are synthetic scenario fixtures. They are not observations, confirmed incidents, or real-capture ground truth.'}
               </p>
             </>
           ) : (

@@ -1,0 +1,9 @@
+{
+  "totalPacketsSent": 25,
+  "totalPayloadBytes": 4000,
+  "startSequence": 1500,
+  "endSequence": 1524,
+  "ssrc": 287454025,
+  "payloadSha256": "a370f51b911d52154ad74d2b08b28fa353ecbf8450b5c019e795d2506aae9917",
+  "durationSeconds": 0
+}

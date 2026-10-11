@@ -1,0 +1,14 @@
+{
+  "sessionId": "6d9e0ae4-9ae9-472f-af04-f3f8f5ce59dc",
+  "createdAt": "2026-10-10T02:47:24.130817+00:00",
+  "containerIds": {
+    "pc1": "68c0da1113cb9646ec329f5d470bc7a08b6350810deb0e968c0e2ae59ae3693b",
+    "pc2": "ef1f7407e7d5b2dc0871b0fd3f55ab207db0d468dce8eda8424872b1e1465a47"
+  },
+  "ipv4Addresses": {
+    "pc1": "172.20.0.2",
+    "pc2": "172.20.0.3"
+  },
+  "strongSwanVersion": "strongSwan swanctl 5.9.8",
+  "sessionIdSource": "locally generated UUIDv4 or caller-supplied UUIDv4 recorded by this collector"
+}

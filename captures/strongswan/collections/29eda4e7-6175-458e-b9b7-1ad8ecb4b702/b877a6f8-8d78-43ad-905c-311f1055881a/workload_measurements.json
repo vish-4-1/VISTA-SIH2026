@@ -1,0 +1,57 @@
+{
+  "experimentId": "b877a6f8-8d78-43ad-905c-311f1055881a",
+  "sessionId": "29eda4e7-6175-458e-b9b7-1ad8ecb4b702",
+  "startedAt": "2026-10-10T05:54:49.463499+00:00",
+  "captureStartedAt": "2026-10-10T05:54:50.262638+00:00",
+  "captureEndedAt": "2026-10-10T05:54:53.654281+00:00",
+  "requestedProfiles": [
+    {
+      "count": 2,
+      "interval_seconds": 0.35,
+      "path": "/data/event",
+      "method": "POST",
+      "payload_bytes": 512,
+      "expected_status": 200
+    }
+  ],
+  "senderMeasurements": {
+    "totalRequestsSent": 2,
+    "totalBytesSent": 1280,
+    "totalBytesReceived": 158,
+    "requests": [
+      {
+        "index": 0,
+        "path": "/data/event",
+        "method": "POST",
+        "statusCode": 200,
+        "statusLine": "HTTP/1.1 200 OK",
+        "responseBytes": 64,
+        "responseSha256": "07f7b5ad53c2b4da16917a533c3969d892cdbe75c3b0e53b4b6c060501171e68",
+        "durationSeconds": 0
+      },
+      {
+        "index": 1,
+        "path": "/data/event",
+        "method": "POST",
+        "statusCode": 200,
+        "statusLine": "HTTP/1.1 200 OK",
+        "responseBytes": 64,
+        "responseSha256": "b4690cdf44f21111cc4be5fad46414bcce4645331f68b843e3f442d95da57211",
+        "durationSeconds": 0
+      }
+    ]
+  },
+  "independentReceiverEvidence": {
+    "serverEvidencePath": "server_evidence.json",
+    "serverEvidenceSha256": "21275972624fe0cae59b68f3f9fff3d7d3348adc6393b82f0c98d2b1b43677cd",
+    "totalRequestsReceived": 2,
+    "pcapPath": "pc2_receiver_http.pcap",
+    "pcapSha256": "8bbf6e53984920454b49a9127d35d42941a932832364208d50ef0f97a0cf146a",
+    "capturedTcpPackets": 12
+  },
+  "pc1OuterCaptureEvidence": {
+    "pcapPath": "pc1_outer_http.pcap",
+    "pcapSha256": "1474d701120ce3a7274d92d1e3674b5a5fd0215b8b8f9474e3f0aba36094d9fc",
+    "espPackets": 22
+  }
+}

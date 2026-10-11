@@ -31,6 +31,7 @@ from sklearn.ensemble import RandomForestClassifier
 
 from vista_ml.models.xgboost_model import LabelMappedXGBClassifier, save_model_bundle
 from vista_ml.evaluation.evaluate import plot_confusion_matrix
+from vista_ml.utils.artifacts import create_candidate_run_dirs
 from vista_ml.utils.reproducibility import set_random_seed
 
 FEATURE_COLUMNS = [
@@ -146,11 +147,8 @@ def train_and_evaluate():
     print(classification_report(y_test, y_pred, labels=classes, digits=4))
 
     # Save artifacts
-    models_dir = ROOT / "models"
-    reports_dir = ROOT / "reports" / "metrics"
-    figures_dir = ROOT / "reports" / "figures"
-    models_dir.mkdir(parents=True, exist_ok=True)
-    reports_dir.mkdir(parents=True, exist_ok=True)
+    models_dir, reports_dir = create_candidate_run_dirs(ROOT, "synthetic-traffic")
+    figures_dir = reports_dir / "figures"
     figures_dir.mkdir(parents=True, exist_ok=True)
 
     metadata = {
@@ -163,6 +161,9 @@ def train_and_evaluate():
         "feature_count": len(FEATURE_COLUMNS),
         "training_dataset": "DATASET/ipsec_traffic_classification_v2.csv",
         "training_data_scope": "VISTA IPsec benign synthetic testbed sessions",
+        "validated_for_inference": False,
+        "feature_schema_version": "vista-flow-v1",
+        "validation_status": "synthetic-development-only",
         "split_strategy": "Session-aware GroupShuffleSplit on session_id (0% group leakage)",
         "train_samples": len(train_data),
         "test_samples": len(test_data),
@@ -195,7 +196,7 @@ def train_and_evaluate():
         json.dump(eval_summary, f, indent=2, default=str)
 
     plot_confusion_matrix(y_test, y_pred, classes, figures_dir / "traffic_confusion_matrix.png")
-    print(f"Artifacts saved to {models_dir / 'traffic_classifier.joblib'} and {reports_dir / 'traffic_classifier_metrics.json'}")
+    print(f"Candidate artifacts saved to {models_dir / 'traffic_classifier.joblib'} and {reports_dir / 'traffic_classifier_metrics.json'}")
     return eval_summary
 
 

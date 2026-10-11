@@ -1,0 +1,47 @@
+{
+  "totalRequestsSent": 4,
+  "totalBytesSent": 1020,
+  "totalBytesReceived": 312,
+  "requests": [
+    {
+      "index": 0,
+      "path": "/log/event",
+      "method": "POST",
+      "statusCode": 200,
+      "statusLine": "HTTP/1.1 200 OK",
+      "responseBytes": 63,
+      "responseSha256": "898a5f520e4822db265b22bf1a6552980460cc13d06ea52c54c30cb3dd6d4d4b",
+      "durationSeconds": 0
+    },
+    {
+      "index": 1,
+      "path": "/log/event",
+      "method": "POST",
+      "statusCode": 200,
+      "statusLine": "HTTP/1.1 200 OK",
+      "responseBytes": 63,
+      "responseSha256": "2b1a08d83f4e14ce8a6fa2e7189fc133d2fb3a16d0d7fbfd5223bd8c3dc9c347",
+      "durationSeconds": 0
+    },
+    {
+      "index": 2,
+      "path": "/log/event",
+      "method": "POST",
+      "statusCode": 200,
+      "statusLine": "HTTP/1.1 200 OK",
+      "responseBytes": 63,
+      "responseSha256": "64b21c1be25ad1211a28d7742788549bce267c829fd2c3b361c75da94f9f54ec",
+      "durationSeconds": 0
+    },
+    {
+      "index": 3,
+      "path": "/log/event",
+      "method": "POST",
+      "statusCode": 200,
+      "statusLine": "HTTP/1.1 200 OK",
+      "responseBytes": 63,
+      "responseSha256": "49883cd5dcd424fb7e2147ee27001d41638f50686c4812bd165fb33d8ffc5211",
+      "durationSeconds": 0
+    }
+  ]
+}

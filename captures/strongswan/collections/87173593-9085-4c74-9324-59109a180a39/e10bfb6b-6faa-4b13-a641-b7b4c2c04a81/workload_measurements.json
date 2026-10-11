@@ -1,0 +1,67 @@
+{
+  "experimentId": "e10bfb6b-6faa-4b13-a641-b7b4c2c04a81",
+  "sessionId": "87173593-9085-4c74-9324-59109a180a39",
+  "startedAt": "2026-10-10T06:32:44.893623+00:00",
+  "captureStartedAt": "2026-10-10T06:32:45.684883+00:00",
+  "captureEndedAt": "2026-10-10T06:32:49.132572+00:00",
+  "requestedProfiles": [
+    {
+      "count": 3,
+      "interval_seconds": 0.25,
+      "path": "/log/event",
+      "method": "POST",
+      "payload_bytes": 64,
+      "expected_status": 200
+    }
+  ],
+  "senderMeasurements": {
+    "totalRequestsSent": 3,
+    "totalBytesSent": 570,
+    "totalBytesReceived": 231,
+    "requests": [
+      {
+        "index": 0,
+        "path": "/log/event",
+        "method": "POST",
+        "statusCode": 200,
+        "statusLine": "HTTP/1.1 200 OK",
+        "responseBytes": 62,
+        "responseSha256": "fe25ffcc6a20ba7790a0c071bf9bfba311810e7ee0c5812a85d37a1c0508025b",
+        "durationSeconds": 0
+      },
+      {
+        "index": 1,
+        "path": "/log/event",
+        "method": "POST",
+        "statusCode": 200,
+        "statusLine": "HTTP/1.1 200 OK",
+        "responseBytes": 62,
+        "responseSha256": "7c4b4a1b15c9466c82a59dd3b3c028e28a4a026b7b4696701df94f2942bab64b",
+        "durationSeconds": 0
+      },
+      {
+        "index": 2,
+        "path": "/log/event",
+        "method": "POST",
+        "statusCode": 200,
+        "statusLine": "HTTP/1.1 200 OK",
+        "responseBytes": 62,
+        "responseSha256": "a37dd748ff6848cb8514dbf16d4cde19d4867780a7c53989eb702db5bc58d175",
+        "durationSeconds": 0
+      }
+    ]
+  },
+  "independentReceiverEvidence": {
+    "serverEvidencePath": "server_evidence.json",
+    "serverEvidenceSha256": "72d488aa53c9e16faf520c57ad97ea4e30e0284b9c0b9a58fbcf08f33ab2a989",
+    "totalRequestsReceived": 3,
+    "pcapPath": "pc2_receiver_http.pcap",
+    "pcapSha256": "c5bc4ef30eb7d53732692f051aecaf3dc95de7c35da88ad4843b1802d4b53671",
+    "capturedTcpPackets": 18
+  },
+  "pc1OuterCaptureEvidence": {
+    "pcapPath": "pc1_outer_http.pcap",
+    "pcapSha256": "a69bcd5cfad4944b4bb916948658366ac38109264c50386a35bab25f60b9578e",
+    "espPackets": 33
+  }
+}

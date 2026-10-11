@@ -1,0 +1,41 @@
+{
+  "experimentId": "aa1208a7-f5fa-4e88-9461-6d7ed7728d1a",
+  "sessionId": "74e7f394-dd14-4410-8e7e-1edd0fab4a6d",
+  "startedAt": "2026-10-10T06:41:13.755279+00:00",
+  "captureStartedAt": "2026-10-10T06:41:14.550411+00:00",
+  "captureEndedAt": "2026-10-10T06:41:21.577092+00:00",
+  "requestedProfiles": [
+    {
+      "count": 7,
+      "interval_seconds": 0.8,
+      "payload_bytes": 512
+    }
+  ],
+  "senderMeasurements": [
+    {
+      "requested": {
+        "count": 7,
+        "interval_seconds": 0.8,
+        "payload_bytes": 512
+      },
+      "packetsSent": 7,
+      "packetsReceived": 7,
+      "durationSeconds": 5.077999999979511,
+      "exitCode": 0,
+      "stdout": "PING 172.20.0.3 (172.20.0.3) 512(540) bytes of data.\n520 bytes from 172.20.0.3: icmp_seq=1 ttl=64 time=0.336 ms\n520 bytes from 172.20.0.3: icmp_seq=2 ttl=64 time=0.601 ms\n520 bytes from 172.20.0.3: icmp_seq=3 ttl=64 time=0.615 ms\n520 bytes from 172.20.0.3: icmp_seq=4 ttl=64 time=0.811 ms\n520 bytes from 172.20.0.3: icmp_seq=5 ttl=64 time=0.506 ms\n520 bytes from 172.20.0.3: icmp_seq=6 ttl=64 time=0.328 ms\n520 bytes from 172.20.0.3: icmp_seq=7 ttl=64 time=0.576 ms\n\n--- 172.20.0.3 ping statistics ---\n7 packets transmitted, 7 received, 0% packet loss, time 4959ms\nrtt min/avg/max/mdev = 0.328/0.539/0.811/0.156 ms\n",
+      "stderr": ""
+    }
+  ],
+  "independentReceiverEvidence": {
+    "pcapPath": "pc2_receiver_icmp.pcap",
+    "pcapSha256": "f3219dd215a2a95a8a2b9102e20bb6ba16d77c7865b299675c28391f61662a9d",
+    "echoRequests": 7,
+    "echoReplies": 0
+  },
+  "pc1OuterCaptureEvidence": {
+    "pcapPath": "pc1_outer_icmp.pcap",
+    "pcapSha256": "6f25dc0f56315417ba278a0e1c8665a0023226268f43390894da39413a159d13",
+    "icmpPackets": 0,
+    "espPackets": 14
+  }
+}

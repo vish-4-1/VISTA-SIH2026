@@ -1,0 +1,456 @@
+{
+  "run_id": "20261010T015847Z-a3a53820",
+  "status": "candidate_evaluated_not_approved_for_inference",
+  "task": "benign_outer_esp_icmp_vs_tcp",
+  "scope": "benign ICMP-vs-TCP workload classification from outer ESP metadata",
+  "dataset_provenance": "Existing controlled VISTA StrongSwan captures; no external dataset used.",
+  "source_files": {
+    "20261005T155313Z": {
+      "label_index_path": "data\\processed\\strongswan\\20261005T155313Z\\normal_traffic_features.parquet",
+      "label_index_sha256": "1fdc9d53c03f4b8ddafc5487e9748d84a3046afdfe5e6a741bf7d81033018b94",
+      "rows": 8,
+      "class_distribution": {
+        "ICMP_NORMAL": 4,
+        "TCP_NORMAL": 4
+      },
+      "packet_captures": [
+        {
+          "path": "data\\processed\\strongswan\\20261005T155313Z\\packets\\icmp_normal_00.csv",
+          "sha256": "b80297357fa80c5ce9ffa66ce44d60e941220632d32e452c9b2c4551879d9f05"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155313Z\\packets\\icmp_normal_01.csv",
+          "sha256": "594b7156fe3639e5814b6190ec3a9008715e739bf39683b8f568d5bf3db7c444"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155313Z\\packets\\icmp_normal_02.csv",
+          "sha256": "deda4c0e7e68d87dffb2ff9b742c43e6edcbed8c741d02db294cd29cfb641a84"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155313Z\\packets\\icmp_normal_03.csv",
+          "sha256": "45a7e4a8de9ede1e37aab70f8bd520c277d0dc76f29f3ab77aaa9754448769e5"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155313Z\\packets\\tcp_normal_00.csv",
+          "sha256": "9d277e3f57e99f174445d41dff6151f816558f8ed6d04fedbc1cc51c087a8ddc"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155313Z\\packets\\tcp_normal_01.csv",
+          "sha256": "5931b4ee5985af643f71e35cb6cf135fe09945a13032b0970510b1affdb73ff5"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155313Z\\packets\\tcp_normal_02.csv",
+          "sha256": "ed2462513b81e9c9cd552d5ac7120fe36867325474f4950a7cdf294d450344d0"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155313Z\\packets\\tcp_normal_03.csv",
+          "sha256": "8f942460264a3ec12edc05eb639c5d48050e0f917ec9fba5cc9d7ab9bc762372"
+        }
+      ]
+    },
+    "20261005T155356Z": {
+      "label_index_path": "data\\processed\\strongswan\\20261005T155356Z\\normal_traffic_features.parquet",
+      "label_index_sha256": "aa49967fa8361a325b9d7921fe00457b37f7e5d80c705dc3b08dfee737793599",
+      "rows": 50,
+      "class_distribution": {
+        "ICMP_NORMAL": 25,
+        "TCP_NORMAL": 25
+      },
+      "packet_captures": [
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\icmp_normal_00.csv",
+          "sha256": "b3648ab65e2e0eddf4ec68f5af2bb04c10106165a3c2fa9513ce3c3fcf0fece0"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\icmp_normal_01.csv",
+          "sha256": "2f3a778c455c5bf2125040aa27b4588f575ba1c8484bbdef8dc8d2225774f329"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\icmp_normal_02.csv",
+          "sha256": "67fb96f02aee40c29c47b1a3f6118850a42bff6b64ff0342394946a88b5e649e"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\icmp_normal_03.csv",
+          "sha256": "86efea5307faf3cb904c779501c35227e74cc6b0d1fe661d93bd7f2e2d2ca95c"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\icmp_normal_04.csv",
+          "sha256": "bb7114189335194a8d588bdd5527f05db5b7878021d35f1931787adecd2b63be"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\icmp_normal_05.csv",
+          "sha256": "f484059816f9243d5bf6996b3ef5cd8be8c665ada5eabfbae223e4a33cc015ae"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\icmp_normal_06.csv",
+          "sha256": "360a8ace47adf8b7b40840ebfc467ca6f57dab7134e7f8cb47f2889ae604991f"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\icmp_normal_07.csv",
+          "sha256": "8024a9b44d7dc8fb1de2f4b7fa9a7bea93f1f5ef26ca585954031c38550cc3e6"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\icmp_normal_08.csv",
+          "sha256": "c3c3c0d971d92755c8749ac232b46bbb08b9387ed1d1636189e4a4edfaf0069c"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\icmp_normal_09.csv",
+          "sha256": "e79561a4d923a5534abdd276c74843baf1a047a268c4582ea5f93db870554c78"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\icmp_normal_10.csv",
+          "sha256": "70446d6c307fae86fd2c1cafbbf3da62401d15a22b4d0e33b8eb187f40db120d"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\icmp_normal_11.csv",
+          "sha256": "9ad3045823154e4a69becae224098d6bd9bb3d5a13a9f200397985ce2eb0c87b"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\icmp_normal_12.csv",
+          "sha256": "42de9fe87724bcd2392735a676b4884a6221dbd1f809fa50f390237fc1ae604c"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\icmp_normal_13.csv",
+          "sha256": "77e99d24e51f1d4a000d0b5cd23dd9027f160c5176c5935504d8016c31c202e5"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\icmp_normal_14.csv",
+          "sha256": "4e706b56315481a67015b2d7a565b7f9c8e33d36f1bbf92dcc741aa960abc8e5"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\icmp_normal_15.csv",
+          "sha256": "2a4032c50972fb87a96240d72753c240c5a49de6db4a6ca762c7ddb601501606"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\icmp_normal_16.csv",
+          "sha256": "4b2808f6b51d7fefef46abe5a8c9aba6babe3110010c240bff95794a84b6448f"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\icmp_normal_17.csv",
+          "sha256": "4c4487b9d7bb7d50684caad8b786ad75cba65917c9225857989ab8a05f52d654"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\icmp_normal_18.csv",
+          "sha256": "c64e14e652515d2f92419cb540e7a84faebfe5a7d619370f185e562e66d34a08"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\icmp_normal_19.csv",
+          "sha256": "c7371cdc197d1f9eb1f722f4b6d9b92083142f4540a92b9d856b820030e2c88c"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\icmp_normal_20.csv",
+          "sha256": "70d992d2463b48a5c9b26d8a7c18141fc8fc5c3204f69009ffee9a31c109a14b"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\icmp_normal_21.csv",
+          "sha256": "ca4707bc26ab6ef947d13a6a93ef9e08c3a960f256806bf6dfd0424099d4caef"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\icmp_normal_22.csv",
+          "sha256": "4e41b3a6c8180dcb06d35765aeacaa07d412df868121f08b95a90270b3e9f8df"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\icmp_normal_23.csv",
+          "sha256": "9ca3eae4a3d31d65f60ad9678c052956d0b8b8a11640f7f5885d6fc3b4a722fd"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\icmp_normal_24.csv",
+          "sha256": "1c120a6207e4bdeac5230377c83f53b583445ff6c1c3526f5d80cdc3ead7c0c9"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\tcp_normal_00.csv",
+          "sha256": "15dde5f683e090902950efaaf6941c2e6ee8b7a8d65382a76f245d9f1a78fec4"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\tcp_normal_01.csv",
+          "sha256": "ab861c3e55dbb49081ef1144db775eee25e18e4952eb4be05009edf461a2ea71"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\tcp_normal_02.csv",
+          "sha256": "2c9a9248452c95fa13052ab2fe6ee07412fd0c5a2c48990017ccb055773a0324"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\tcp_normal_03.csv",
+          "sha256": "fe4f91505acc60b445a7c16a633c14cc3e7614b7b01bc834bfbf610be0e82c33"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\tcp_normal_04.csv",
+          "sha256": "b0692e9e3f07b764c38d9a7e0a1fab2dacab5050b199e0fa260479f502c94985"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\tcp_normal_05.csv",
+          "sha256": "b486b4d92ed990751441ba1e87fa95da2235e88c3ea5b5716023940355c4ad14"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\tcp_normal_06.csv",
+          "sha256": "097e37e73bb1d15b3827afb70e1118d18742f7c69bc59310879ae8564da5d79a"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\tcp_normal_07.csv",
+          "sha256": "4c01b22fb6fca20bb81cdaac61225fff656f2b4491da8c30a8b82cd11006e1b7"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\tcp_normal_08.csv",
+          "sha256": "5f5bc629e6e608e875d341ef3225ea14cf0f28ffe1cb3fba5bfe247efb77d596"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\tcp_normal_09.csv",
+          "sha256": "b5ac7945c9818a33f700e42ed6be376cd51df9076a6d793e507cbfa4ad3e8223"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\tcp_normal_10.csv",
+          "sha256": "2658fd27032ec5bc4d3859328ca820815cbf55cda201641b37406e5b62fbd717"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\tcp_normal_11.csv",
+          "sha256": "6a9bbe1788c4755e7046f49d61e6ea9c558e3fd773fb5ca05e3386030e74a322"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\tcp_normal_12.csv",
+          "sha256": "4a4eb60f7d3c10662e2888b7ac00e896f3116522ba5abbcb4d3674114ad26d2e"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\tcp_normal_13.csv",
+          "sha256": "c11c97116832a5032397dbce10e0382778a505f221d0012feb0f6d6ac3d1db97"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\tcp_normal_14.csv",
+          "sha256": "42f432969895a146f10b9ae156f81d274850bb8bc9c514334691e7adb5fe3214"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\tcp_normal_15.csv",
+          "sha256": "819b5aa0c575675f3c5d8d424b60f029bbc7fbd125e7eabedbccbd71cb3492e5"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\tcp_normal_16.csv",
+          "sha256": "ceb9de29280c17022930c755c767c23487920b6aa0599a07c7ed5d3fc6542235"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\tcp_normal_17.csv",
+          "sha256": "2a1ad3c9e74b48e60a2c3e85ffbedf4f597dde9a74b141200481ca45ddd902d4"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\tcp_normal_18.csv",
+          "sha256": "aa8e0f06713e6c64aa2255eace21fc9299ace0f6cc1ebb0fe133f15d1e6e77ef"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\tcp_normal_19.csv",
+          "sha256": "94766966bfff6c949bd439106bd270ea2237c47fcea10f538f4ae8b642174de5"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\tcp_normal_20.csv",
+          "sha256": "8307237d4a289e7f2460b21bc0bbaa4f6a4ad7b136f88ebabdaf987255e5815a"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\tcp_normal_21.csv",
+          "sha256": "977439a911304bbe78f3ecf8689f986ea2316049db5b6432bc63fd88ef61432c"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\tcp_normal_22.csv",
+          "sha256": "3bf431cc62600d74c614120bcc83dbdf300b97c96e4b421ed5ad6420e3184385"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\tcp_normal_23.csv",
+          "sha256": "ae952b7c196233abadce1ad9d8818fa4ca25ad9ab680662c66c12db30c3b4476"
+        },
+        {
+          "path": "data\\processed\\strongswan\\20261005T155356Z\\packets\\tcp_normal_24.csv",
+          "sha256": "e80ad11d31bca1d024668bf0bb4ea7eb1227acfa626c8c504864797067ec488d"
+        }
+      ]
+    }
+  },
+  "row_counts": {
+    "train": 6,
+    "validation": 2,
+    "held_out_test": 50
+  },
+  "feature_schema_version": "vista-flow-v1",
+  "feature_columns": [
+    "packet_count",
+    "byte_count",
+    "flow_duration",
+    "mean_packet_size",
+    "std_packet_size",
+    "min_packet_size",
+    "max_packet_size",
+    "mean_inter_arrival_time",
+    "std_inter_arrival_time",
+    "min_inter_arrival_time",
+    "max_inter_arrival_time",
+    "packets_per_second",
+    "bytes_per_second",
+    "forward_packet_count",
+    "backward_packet_count",
+    "forward_bytes",
+    "backward_bytes",
+    "direction_ratio"
+  ],
+  "feature_leakage_review": "Only vista-flow-v1 packet/timing/direction features were used; target, scenario, capture, and experiment identifiers were excluded. No exact feature vectors overlap between splits. However packet_count is a perfect proxy for these generated workload labels: all ICMP captures share one count and all TCP captures share another. This reflects a controlled-recipe shortcut, not general traffic-classification generalization.",
+  "missing_data_policy": "Reject; no imputations or default values.",
+  "exact_duplicate_feature_vector_overlap_between_splits": {
+    "train_validation": 0,
+    "train_test": 0,
+    "validation_test": 0
+  },
+  "packet_count_by_label": {
+    "ICMP_NORMAL": [
+      12
+    ],
+    "TCP_NORMAL": [
+      5
+    ]
+  },
+  "packet_count_is_perfect_label_proxy": true,
+  "selection": {
+    "metric": "validation macro F1",
+    "tie_break": "validation accuracy, then Random Forest baseline",
+    "candidates": {
+      "random_forest": {
+        "sample_count": 2,
+        "class_distribution": {
+          "ICMP_NORMAL": 1,
+          "TCP_NORMAL": 1
+        },
+        "accuracy": 1.0,
+        "macro_precision": 1.0,
+        "macro_recall": 1.0,
+        "macro_f1": 1.0,
+        "per_class": {
+          "ICMP_NORMAL": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 1.0
+          },
+          "TCP_NORMAL": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 1.0
+          }
+        },
+        "confusion_matrix": {
+          "labels": [
+            "ICMP_NORMAL",
+            "TCP_NORMAL"
+          ],
+          "values": [
+            [
+              1,
+              0
+            ],
+            [
+              0,
+              1
+            ]
+          ]
+        },
+        "tcp_normal_roc_auc": 1.0,
+        "tcp_normal_average_precision": 1.0,
+        "probability_calibration": "not evaluated; raw classifier probabilities only"
+      },
+      "xgboost": {
+        "sample_count": 2,
+        "class_distribution": {
+          "ICMP_NORMAL": 1,
+          "TCP_NORMAL": 1
+        },
+        "accuracy": 0.5,
+        "macro_precision": 0.25,
+        "macro_recall": 0.5,
+        "macro_f1": 0.3333333333333333,
+        "per_class": {
+          "ICMP_NORMAL": {
+            "precision": 0.5,
+            "recall": 1.0,
+            "f1-score": 0.6666666666666666,
+            "support": 1.0
+          },
+          "TCP_NORMAL": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 1.0
+          }
+        },
+        "confusion_matrix": {
+          "labels": [
+            "ICMP_NORMAL",
+            "TCP_NORMAL"
+          ],
+          "values": [
+            [
+              1,
+              0
+            ],
+            [
+              1,
+              0
+            ]
+          ]
+        },
+        "tcp_normal_roc_auc": 0.5,
+        "tcp_normal_average_precision": 0.5,
+        "probability_calibration": "not evaluated; raw classifier probabilities only"
+      }
+    },
+    "selected": "random_forest"
+  },
+  "held_out_test": {
+    "sample_count": 50,
+    "class_distribution": {
+      "ICMP_NORMAL": 25,
+      "TCP_NORMAL": 25
+    },
+    "accuracy": 1.0,
+    "macro_precision": 1.0,
+    "macro_recall": 1.0,
+    "macro_f1": 1.0,
+    "per_class": {
+      "ICMP_NORMAL": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 25.0
+      },
+      "TCP_NORMAL": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 25.0
+      }
+    },
+    "confusion_matrix": {
+      "labels": [
+        "ICMP_NORMAL",
+        "TCP_NORMAL"
+      ],
+      "values": [
+        [
+          25,
+          0
+        ],
+        [
+          0,
+          25
+        ]
+      ]
+    },
+    "tcp_normal_roc_auc": 1.0,
+    "tcp_normal_average_precision": 1.0,
+    "probability_calibration": "not evaluated; raw classifier probabilities only"
+  },
+  "feature_importance": [],
+  "held_out_predictions": "reports\\candidates\\benign_outer_esp_icmp_vs_tcp\\20261010T015847Z-a3a53820\\held_out_predictions.csv",
+  "held_out_predictions_sha256": "5876cb6bda5054034f4d9ccc79480003368cff1f00e5bd982159b14e8dab9265",
+  "model_candidate": "models\\candidates\\benign_outer_esp_icmp_vs_tcp\\20261010T015847Z-a3a53820\\random_forest.joblib",
+  "limitations": [
+    "Only two controlled benign workload recipes (ICMP echo and a TCP marker) are represented.",
+    "Packet count alone perfectly separates these labels because capture recipes have fixed packet counts.",
+    "Captures share one controlled StrongSwan topology and crypto configuration.",
+    "The test set is a separate collection run but the same runtime/topology; it is not external validation.",
+    "This experiment does not support attack detection, application identification, cipher/DH/PFS detection, or production inference.",
+    "No probability calibration was evaluated."
+  ]
+}

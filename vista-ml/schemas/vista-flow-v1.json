@@ -1,0 +1,35 @@
+{
+  "schema_version": "vista-flow-v1",
+  "runtime_feature_compatible": true,
+  "task_scope": "Numeric packet and timing statistics for one bidirectional flow within the analyzed capture.",
+  "aggregation_window": "All packets in the uploaded capture with the same protocol-family and canonical endpoint tuple; no idle timeout or sub-flow window.",
+  "protocol_applicability": {
+    "feature_math": "Protocol-neutral for packets with the same observed network-layer length, timestamps, flow key, and direction.",
+    "runtime_inference": "The current backend excludes ESP and IKE from model inference. IPv6 packet-length handling differs from IPv4 and is not covered by this contract."
+  },
+  "directionality": "Forward means packet source equals the lexicographically first (IP, port) endpoint; backward means the reverse. Ports are zero for protocols without transport ports.",
+  "preprocessing": "No learned transforms; features are returned in the declared order using the runtime's aggregation and rounding rules.",
+  "missing_value_policy": "Reject non-finite mandatory model inputs as insufficient_data; do not impute or zero-fill. A single-packet flow has undefined IAT values, and a zero-duration flow has undefined rates.",
+  "capture_point": "Derived from packets in the uploaded capture; this contract specifies IPv4 network-layer packet lengths. The experiment report must record the capture interface and protocol.",
+  "missing_value_policy": "Reject non-finite mandatory model inputs as insufficient_data; do not impute or zero-fill. A single-packet flow has undefined IAT values, and a zero-duration flow has undefined rates.",
+  "features": [
+    {"name":"packet_count","order":0,"type":"integer","units":"packets","definition":"Number of observed packets in the bidirectional flow.","aggregation":"Count all packets in the capture flow key."},
+    {"name":"byte_count","order":1,"type":"integer","units":"bytes","definition":"Sum of IPv4 network-layer packet lengths; includes the IPv4 header and packet payload, excludes link-layer framing.","aggregation":"Sum packet IP length across the flow."},
+    {"name":"flow_duration","order":2,"type":"number","units":"seconds","definition":"Elapsed time from the earliest to latest packet timestamp.","aggregation":"Maximum timestamp minus minimum timestamp, rounded to four decimal places."},
+    {"name":"mean_packet_size","order":3,"type":"number","units":"bytes","definition":"Arithmetic mean of IPv4 network-layer packet lengths.","aggregation":"Mean across flow packets, rounded to one decimal place."},
+    {"name":"std_packet_size","order":4,"type":"number","units":"bytes","definition":"Population standard deviation of IPv4 network-layer packet lengths.","aggregation":"NumPy population standard deviation (ddof=0), rounded to one decimal place; zero for one packet."},
+    {"name":"min_packet_size","order":5,"type":"integer","units":"bytes","definition":"Smallest observed IPv4 network-layer packet length.","aggregation":"Minimum across flow packets."},
+    {"name":"max_packet_size","order":6,"type":"integer","units":"bytes","definition":"Largest observed IPv4 network-layer packet length.","aggregation":"Maximum across flow packets."},
+    {"name":"mean_inter_arrival_time","order":7,"type":"number","units":"seconds","definition":"Mean interval between successive packet timestamps, independent of packet direction.","aggregation":"Sort timestamps, difference adjacent values, arithmetic mean rounded to five decimal places; undefined for one packet."},
+    {"name":"std_inter_arrival_time","order":8,"type":"number","units":"seconds","definition":"Population standard deviation of successive packet time intervals.","aggregation":"Sort timestamps, difference adjacent values, NumPy population standard deviation (ddof=0), rounded to five decimal places; undefined for one packet."},
+    {"name":"min_inter_arrival_time","order":9,"type":"number","units":"seconds","definition":"Shortest interval between successive packet timestamps.","aggregation":"Sort timestamps, difference adjacent values, minimum rounded to five decimal places; undefined for one packet."},
+    {"name":"max_inter_arrival_time","order":10,"type":"number","units":"seconds","definition":"Longest interval between successive packet timestamps.","aggregation":"Sort timestamps, difference adjacent values, maximum rounded to five decimal places; undefined for one packet."},
+    {"name":"packets_per_second","order":11,"type":"number","units":"packets/second","definition":"Packet count divided by flow duration.","aggregation":"Calculated from packet_count and the four-decimal flow_duration; undefined for zero duration."},
+    {"name":"bytes_per_second","order":12,"type":"number","units":"bytes/second","definition":"Byte count divided by flow duration.","aggregation":"Calculated from byte_count and the four-decimal flow_duration; undefined for zero duration."},
+    {"name":"forward_packet_count","order":13,"type":"integer","units":"packets","definition":"Packets from the canonical first endpoint to the second endpoint.","aggregation":"Count packets whose source is the canonical first endpoint."},
+    {"name":"backward_packet_count","order":14,"type":"integer","units":"packets","definition":"Packets from the canonical second endpoint to the first endpoint.","aggregation":"Count packets whose source is the canonical second endpoint."},
+    {"name":"forward_bytes","order":15,"type":"integer","units":"bytes","definition":"Sum of IPv4 network-layer packet lengths in the forward direction.","aggregation":"Sum packet IP length for forward packets."},
+    {"name":"backward_bytes","order":16,"type":"integer","units":"bytes","definition":"Sum of IPv4 network-layer packet lengths in the backward direction.","aggregation":"Sum packet IP length for backward packets."},
+    {"name":"direction_ratio","order":17,"type":"number","units":"ratio","definition":"Fraction of packets in the forward direction, not a byte ratio.","aggregation":"forward_packet_count divided by packet_count, rounded to three decimal places."}
+  ]
+}

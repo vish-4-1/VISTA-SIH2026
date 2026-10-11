@@ -1,0 +1,28 @@
+{
+  "totalRequestsReceived": 2,
+  "serverPort": 58250,
+  "requests": [
+    {
+      "index": 0,
+      "method": "POST",
+      "path": "/api/v1/telemetry",
+      "clientIp": "172.20.0.2",
+      "requestBodyBytes": 128,
+      "responseStatus": 200,
+      "responseBytes": 70,
+      "responseSha256": "74f1b6a783c561b0e78a11b6afccd547912a7bdad916e3ce6828229646753f5f",
+      "timestamp": 1791610926
+    },
+    {
+      "index": 1,
+      "method": "POST",
+      "path": "/api/v1/telemetry",
+      "clientIp": "172.20.0.2",
+      "requestBodyBytes": 128,
+      "responseStatus": 200,
+      "responseBytes": 70,
+      "responseSha256": "4506fe5a54dbcc74e4e2a6e43c27df9ff40e90724ba5d57198f95500e0cd1cbd",
+      "timestamp": 1791610926
+    }
+  ]
+}

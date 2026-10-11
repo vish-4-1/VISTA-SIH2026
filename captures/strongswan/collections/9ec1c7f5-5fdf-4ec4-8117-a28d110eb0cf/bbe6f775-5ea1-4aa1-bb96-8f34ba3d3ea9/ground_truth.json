@@ -1,0 +1,18 @@
+{
+  "label": "controlled_http",
+  "labelSchemaVersion": "vista-target-label-schema-v1",
+  "workloadSubtype": "http_get",
+  "method": "Bounded HTTP/1.1 client/server exchange generated between pc1 and pc2 over IPsec tunnel; independently verified by pc2 server-side access evidence and pc1 outer ESP capture.",
+  "experimentId": "bbe6f775-5ea1-4aa1-bb96-8f34ba3d3ea9",
+  "sessionId": "9ec1c7f5-5fdf-4ec4-8117-a28d110eb0cf",
+  "requestsRequested": 3,
+  "requestsCompleted": 3,
+  "senderBytesSent": 309,
+  "senderBytesReceived": 222,
+  "serverEvidenceSha256": "34e7a6a249c5af9f39eabdf24cc387a09b5e861c7a1cba66b2f89bba590e7046",
+  "statusCodes": [
+    200,
+    200,
+    200
+  ]
+}

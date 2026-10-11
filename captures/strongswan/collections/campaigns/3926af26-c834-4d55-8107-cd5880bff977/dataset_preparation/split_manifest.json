@@ -1,0 +1,46 @@
+{
+  "strategy": "deterministic nested GroupShuffleSplit by verified IKE_SA lifecycle identity",
+  "random_state": 42,
+  "session_ids": {
+    "train": [
+      "ab79afe5-26fe-43da-8d0e-0d32cd9d40ef"
+    ],
+    "validation": [],
+    "test": []
+  },
+  "independent_session_keys": {
+    "train": [
+      "80ef29c1dd0663740f11aa224693afea4574bccc50cd8ad6ff93c63665a15929"
+    ],
+    "validation": [],
+    "test": []
+  },
+  "experiment_ids": {
+    "train": [
+      "pcap_experiment"
+    ],
+    "validation": [],
+    "test": []
+  },
+  "row_counts": {
+    "train": 1,
+    "validation": 0,
+    "test": 0
+  },
+  "class_distributions": {
+    "train": {
+      "controlled_suspicious": 1
+    },
+    "validation": {
+      "controlled_suspicious": 0
+    },
+    "test": {
+      "controlled_suspicious": 0
+    }
+  },
+  "overlap": {
+    "train_validation": 0,
+    "train_test": 0,
+    "validation_test": 0
+  }
+}

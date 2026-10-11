@@ -1,0 +1,28 @@
+{
+  "totalRequestsReceived": 2,
+  "serverPort": 41556,
+  "requests": [
+    {
+      "index": 0,
+      "method": "POST",
+      "path": "/data/event",
+      "clientIp": "172.20.0.2",
+      "requestBodyBytes": 512,
+      "responseStatus": 200,
+      "responseBytes": 64,
+      "responseSha256": "07f7b5ad53c2b4da16917a533c3969d892cdbe75c3b0e53b4b6c060501171e68",
+      "timestamp": 1791611692
+    },
+    {
+      "index": 1,
+      "method": "POST",
+      "path": "/data/event",
+      "clientIp": "172.20.0.2",
+      "requestBodyBytes": 512,
+      "responseStatus": 200,
+      "responseBytes": 64,
+      "responseSha256": "b4690cdf44f21111cc4be5fad46414bcce4645331f68b843e3f442d95da57211",
+      "timestamp": 1791611693
+    }
+  ]
+}

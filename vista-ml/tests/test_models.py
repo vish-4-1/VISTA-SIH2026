@@ -3,9 +3,10 @@ from __future__ import annotations
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
 from vista_ml.evaluation.evaluate import evaluate_classifier
-from vista_ml.explainability.shap_analysis import explain_xgboost
+from vista_ml.explainability.shap_analysis import explain_xgboost, explain_xgboost_flow
 from vista_ml.models.random_forest import train_random_forest_classifier
 from vista_ml.models.xgboost_model import predict_binary, train_xgboost_classifier
 
@@ -42,6 +43,28 @@ def test_xgboost_training_and_shap(tmp_path: Path) -> None:
     assert isinstance(summary["top_features"], list)
     assert len(summary["top_features"]) > 0
     assert (tmp_path / "top_features.json").exists()
+
+
+def test_shap_checks_feature_order_and_explains_the_selected_row() -> None:
+    X, y = _make_training_data()
+    model = train_xgboost_classifier(X, y, random_state=42, n_estimators=12)
+
+    with pytest.raises(ValueError, match="feature order"):
+        explain_xgboost(model, X[["feature_b", "feature_a", "feature_c"]])
+
+    explanation = explain_xgboost_flow(
+        model,
+        X.iloc[[3]],
+        model_version="unit-model-v1",
+        feature_schema_version="unit-schema-v1",
+    )
+    assert explanation["scope"] == "per_flow"
+    assert explanation["predicted_class"] == str(model.predict(X.iloc[[3]])[0])
+    assert explanation["model_version"] == "unit-model-v1"
+    assert explanation["feature_order"] == list(X.columns)
+    assert list(explanation["class_explanations"]) == [str(model.classes_[-1])]
+    for feature_values in explanation["class_explanations"].values():
+        assert {item["feature"] for item in feature_values} == set(X.columns)
 
 
 def test_multiclass_probabilities_can_be_thresholded_to_binary() -> None:

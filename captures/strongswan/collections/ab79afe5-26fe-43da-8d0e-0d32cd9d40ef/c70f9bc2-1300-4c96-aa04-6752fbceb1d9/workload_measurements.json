@@ -1,0 +1,47 @@
+{
+  "experimentId": "c70f9bc2-1300-4c96-aa04-6752fbceb1d9",
+  "sessionId": "ab79afe5-26fe-43da-8d0e-0d32cd9d40ef",
+  "scanResults": {
+    "probes": [
+      {
+        "port": 80,
+        "status": "OPEN",
+        "duration": 0
+      },
+      {
+        "port": 443,
+        "status": "CLOSED",
+        "duration": 0
+      },
+      {
+        "port": 8000,
+        "status": "CLOSED",
+        "duration": 0
+      },
+      {
+        "port": 8080,
+        "status": "CLOSED",
+        "duration": 0
+      },
+      {
+        "port": 2222,
+        "status": "CLOSED",
+        "duration": 0
+      }
+    ]
+  },
+  "probedPorts": [
+    80,
+    443,
+    8000,
+    8080,
+    2222
+  ],
+  "openPort": 80,
+  "ebpfTelemetry": {
+    "path": "C:\\vista\\captures\\strongswan\\collections\\ab79afe5-26fe-43da-8d0e-0d32cd9d40ef\\c70f9bc2-1300-4c96-aa04-6752fbceb1d9\\ebpf_telemetry.json",
+    "sha256": "846efa66904968d1d27a953e8ac8b1954df36a47b99f765dd14503980ce76acc",
+    "mode": "NATIVE_KERNEL_EBPF",
+    "eventCount": 150
+  }
+}

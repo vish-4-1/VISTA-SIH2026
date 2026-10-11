@@ -1,0 +1,263 @@
+{
+  "report_version": 1,
+  "status": "READY_FOR_REVIEW",
+  "dataset_id": "9f3f1f2b-7a6e-468c-b86d-1f9bee65d8bf",
+  "manifest_path": "C:\\vista\\captures\\strongswan\\collections\\campaigns\\9f3f1f2b-7a6e-468c-b86d-1f9bee65d8bf\\campaign_manifest.json",
+  "manifest_sha256": "665191abfbdf3d5f6d15a2089a33f8f253e76333ecd6a10c0f7d5e9ad272c376",
+  "manifest_schema": "schemas\\strongswan-experiment-manifest-v2.schema.json",
+  "feature_schema_version": "vista-flow-v1",
+  "extractor_version": "vista-ml-pcap-features-v1",
+  "feature_columns": [
+    "packet_count",
+    "byte_count",
+    "flow_duration",
+    "mean_packet_size",
+    "std_packet_size",
+    "min_packet_size",
+    "max_packet_size",
+    "mean_inter_arrival_time",
+    "std_inter_arrival_time",
+    "min_inter_arrival_time",
+    "max_inter_arrival_time",
+    "packets_per_second",
+    "bytes_per_second",
+    "forward_packet_count",
+    "backward_packet_count",
+    "forward_bytes",
+    "backward_bytes",
+    "direction_ratio"
+  ],
+  "source_observations": 15,
+  "accepted_observations": 15,
+  "quarantined_observations": 0,
+  "independent_session_count": 15,
+  "class_distribution": {
+    "controlled_rtp_voip": 15
+  },
+  "missingness_by_feature": {
+    "packet_count": 0,
+    "byte_count": 0,
+    "flow_duration": 0,
+    "mean_packet_size": 0,
+    "std_packet_size": 0,
+    "min_packet_size": 0,
+    "max_packet_size": 0,
+    "mean_inter_arrival_time": 0,
+    "std_inter_arrival_time": 0,
+    "min_inter_arrival_time": 0,
+    "max_inter_arrival_time": 0,
+    "packets_per_second": 0,
+    "bytes_per_second": 0,
+    "forward_packet_count": 0,
+    "backward_packet_count": 0,
+    "forward_bytes": 0,
+    "backward_bytes": 0,
+    "direction_ratio": 0
+  },
+  "feature_ranges": {
+    "packet_count": {
+      "minimum": 10.0,
+      "maximum": 25.0
+    },
+    "byte_count": {
+      "minimum": 2560.0,
+      "maximum": 6400.0
+    },
+    "flow_duration": {
+      "minimum": 0.1859,
+      "maximum": 0.5043
+    },
+    "mean_packet_size": {
+      "minimum": 256.0,
+      "maximum": 336.0
+    },
+    "std_packet_size": {
+      "minimum": 0.0,
+      "maximum": 0.0
+    },
+    "min_packet_size": {
+      "minimum": 256.0,
+      "maximum": 336.0
+    },
+    "max_packet_size": {
+      "minimum": 256.0,
+      "maximum": 336.0
+    },
+    "mean_inter_arrival_time": {
+      "minimum": 0.02066,
+      "maximum": 0.03098
+    },
+    "std_inter_arrival_time": {
+      "minimum": 0.00012,
+      "maximum": 0.00117
+    },
+    "min_inter_arrival_time": {
+      "minimum": 0.02044,
+      "maximum": 0.03059
+    },
+    "max_inter_arrival_time": {
+      "minimum": 0.02083,
+      "maximum": 0.03303
+    },
+    "packets_per_second": {
+      "minimum": 34.58611943739913,
+      "maximum": 53.79236148466917
+    },
+    "bytes_per_second": {
+      "minimum": 11620.936130966107,
+      "maximum": 13770.844540075308
+    },
+    "forward_packet_count": {
+      "minimum": 10.0,
+      "maximum": 25.0
+    },
+    "backward_packet_count": {
+      "minimum": 0.0,
+      "maximum": 0.0
+    },
+    "forward_bytes": {
+      "minimum": 2560.0,
+      "maximum": 6400.0
+    },
+    "backward_bytes": {
+      "minimum": 0.0,
+      "maximum": 0.0
+    },
+    "direction_ratio": {
+      "minimum": 1.0,
+      "maximum": 1.0
+    }
+  },
+  "duplicate_and_near_duplicate_pairs": [],
+  "exclusions": [],
+  "split_manifest": {
+    "strategy": "deterministic nested GroupShuffleSplit by verified IKE_SA lifecycle identity",
+    "random_state": 42,
+    "fractions": {
+      "validation": 0.2,
+      "test": 0.2
+    },
+    "session_ids": {
+      "train": [
+        "12e3b476-91d6-4d44-a5ce-19d9cf731939",
+        "2b3f07e5-3327-49da-b3b7-933065ebf14a",
+        "7957afdb-4f27-44c8-a32e-62425f597535",
+        "8f4ec4ee-4d9d-4e0e-b23a-6ef858b156bb",
+        "9fcea1b4-2e55-474c-b858-4d06a56eb9e0",
+        "a3804d24-3e39-4253-a462-3d20bf4ca9b3",
+        "e01a074f-39c2-40cb-b06b-a1757f96d391",
+        "ea4bb917-29a1-4d80-9161-b8e8a29037bf",
+        "ecade4e9-e05e-4573-8006-d5b8e019fc2b"
+      ],
+      "validation": [
+        "68ff586c-3b1a-48ac-8c8e-84d42f073858",
+        "a40c19a2-c71f-4550-be50-0fb11301b755",
+        "c6cca790-2341-43e2-8a50-0f77c916d316"
+      ],
+      "test": [
+        "4c20a7d3-443f-48de-9707-2cef098d32e2",
+        "81fb7704-2a1e-4577-936a-48df850f8988",
+        "e61b0386-22f5-40e3-a187-002df8b4d9a0"
+      ]
+    },
+    "independent_session_keys": {
+      "train": [
+        "1b9f0860a49fcc53d4c22dddd58c76f4766ba90485a0d7b12fed818529fe3dd5",
+        "1f7dc42763c8288ebe92fc0894fbed558f2b02ca0d4e8ae83c9f1533ff87aa16",
+        "221a54f98269df0e3433e4ad899e40c0bea1492c7e901433a991e6a0a647d809",
+        "2b9443e32b8f5fb4a83c5e1c3c66901e595cc665194c80b78a6c4c711f38e420",
+        "405e0ff03c6d7d224aebf5d6c332e80bd334e2ced5d3350b50e30cbb61b20e7f",
+        "5520d0a20f80ee27535a0b94b274637e552bb9f0247f3ecf52a8308d64d2730b",
+        "e2f9a0da3e66c1b6c5e7b89e538738cf672d566cf4a00bb109e55538bbf83a1a",
+        "ef2179f0071f4873306b3f883b0ab2ac417774ae5258ad8580cecc107b1cae6c",
+        "f1d7b285d6dba834dbd223cb394143036ed977a48292d1e7e8a55934be661450"
+      ],
+      "validation": [
+        "6c9782e148314d3eaca095f56754b5e56bcca7e5ef154c18f361a3383e75623c",
+        "ac8c53106dafb74043547355d4cf5b2cf54fdb25e9a158f2000e5403d15469f8",
+        "f7d543e96441ca0317736555251a4c54692c462b7d59e757d400df08726a3158"
+      ],
+      "test": [
+        "0170532b107389a6fed8cf8e4427921c1baae2134c4fc4e69672aeea50af2c4a",
+        "c9bb2c2101d49417d38d3dce5b9adab052b2daf688ff12612c56a1744e38a32d",
+        "e431126c0b181b30224193b157b2d90981b6b0050d642ca040232f0f87430dd0"
+      ]
+    },
+    "experiment_ids": {
+      "train": [
+        "2627d5df-544f-4660-b91c-a317ac32706d",
+        "51dbe457-8ab7-4d86-bd53-2ba498727438",
+        "5fac5bef-abcd-4884-a2e2-30de42073890",
+        "8e3c5924-0a92-4e62-b1e7-43b1164975c5",
+        "c1ae3f7b-42e0-40e9-839d-8857c8375376",
+        "c52f4fdc-f3a9-4735-9620-188d852509db",
+        "cad8c22e-d3f4-4fc0-8345-cd348619ed40",
+        "cc054d76-593a-4f33-b84f-8b5a134b15ff",
+        "de5c1ff6-537d-420f-bd59-0efe5e508631"
+      ],
+      "validation": [
+        "448d8b4c-9a6e-49a4-be83-acc0e7083bf2",
+        "915a9a9e-1806-45bc-ba73-b81d80eacbdb",
+        "b47b02e3-6313-4333-b069-03702324bee9"
+      ],
+      "test": [
+        "263cf68d-5de5-4756-8e49-f6f64080abc3",
+        "492632fa-380f-49ff-a272-205efd7fb146",
+        "9870c4f3-6127-4efe-b661-fe62a5713d21"
+      ]
+    },
+    "row_counts": {
+      "train": 9,
+      "validation": 3,
+      "test": 3
+    },
+    "class_distributions": {
+      "train": {
+        "controlled_rtp_voip": 9
+      },
+      "validation": {
+        "controlled_rtp_voip": 3
+      },
+      "test": {
+        "controlled_rtp_voip": 3
+      }
+    },
+    "overlap": {
+      "train_validation": 0,
+      "train_test": 0,
+      "validation_test": 0
+    }
+  },
+  "blocker": null,
+  "feature_target_separation": {
+    "target_column": "label",
+    "metadata_columns_excluded_from_features": [
+      "experiment_id",
+      "session_id",
+      "capture_path",
+      "capture_sha256"
+    ],
+    "model_features": [
+      "packet_count",
+      "byte_count",
+      "flow_duration",
+      "mean_packet_size",
+      "std_packet_size",
+      "min_packet_size",
+      "max_packet_size",
+      "mean_inter_arrival_time",
+      "std_inter_arrival_time",
+      "min_inter_arrival_time",
+      "max_inter_arrival_time",
+      "packets_per_second",
+      "bytes_per_second",
+      "forward_packet_count",
+      "backward_packet_count",
+      "forward_bytes",
+      "backward_bytes",
+      "direction_ratio"
+    ]
+  },
+  "prepared_dataset_path": "prepared_dataset.csv",
+  "prepared_dataset_sha256": "430e04dd09648b43da5515513c847a08d104ae09f32b56bba7037e37d98c7e4b"
+}

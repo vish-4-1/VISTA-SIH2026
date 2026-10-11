@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { 
   AlertCircle, 
   Download, 
@@ -8,7 +8,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { usePcapAnalysis } from '../../context/usePcapAnalysis';
-import { fetchSampleCaptureBlob } from '../../utils/apiClient';
+import { fetchSampleCaptureBlob, fetchSampleCaptures } from '../../utils/apiClient';
 
 const fieldLabels = {
   id: 'Flow ID',
@@ -49,7 +49,22 @@ export default function TrafficAnalysisView() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isDragging, setIsDragging] = useState(false);
   const [sampleLoading, setSampleLoading] = useState(false);
+  const [sampleCaptures, setSampleCaptures] = useState([]);
+  const [samplesLoading, setSamplesLoading] = useState(true);
+  const [sampleListError, setSampleListError] = useState('');
+  const [sampleError, setSampleError] = useState('');
   const isAnalyzing = status === 'analyzing';
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchSampleCaptures()
+      .then((captures) => { if (!cancelled) setSampleCaptures(captures); })
+      .catch((requestError) => {
+        if (!cancelled) setSampleListError(requestError instanceof Error ? requestError.message : String(requestError));
+      })
+      .finally(() => { if (!cancelled) setSamplesLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
 
   const columns = useMemo(
     () => Object.entries(fieldLabels).filter(([field]) => flows.some((flow) => flow[field] != null)),
@@ -86,11 +101,13 @@ export default function TrafficAnalysisView() {
   const handleLoadSample = async (sampleName) => {
     try {
       setSampleLoading(true);
+      setSampleError('');
       const sampleFile = await fetchSampleCaptureBlob(sampleName);
       setSearchQuery('');
       await analyzeFile(sampleFile);
     } catch (err) {
       console.error('Failed to load sample capture:', err);
+      setSampleError(err instanceof Error ? err.message : String(err));
     } finally {
       setSampleLoading(false);
     }
@@ -127,7 +144,7 @@ export default function TrafficAnalysisView() {
             </p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-            <label className="header-refresh-btn" style={{ cursor: isAnalyzing || sampleLoading ? 'wait' : 'pointer', background: 'var(--cyan-subtle)', borderColor: 'rgba(56, 189, 248, 0.4)', color: '#7dd3fc' }}>
+            <label className="header-refresh-btn" style={{ cursor: isAnalyzing || sampleLoading ? 'wait' : 'pointer', background: 'var(--accent-sage-subtle)', borderColor: 'var(--accent-sage-border)', color: 'var(--accent-sage)' }}>
               <UploadCloud size={15} />
               <span>{isAnalyzing ? 'Analyzing…' : 'Upload Capture'}</span>
               <input
@@ -154,36 +171,41 @@ export default function TrafficAnalysisView() {
           </div>
         </div>
 
-        {/* Quick Sample Presets Bar */}
+        {/* Samples are enumerated from the backend capture inventory. */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginTop: '16px', paddingTop: '14px', borderTop: '1px solid var(--border-subtle)' }}>
           <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>
             <Sparkles size={12} color="var(--cyan)" />
-            Quick Test Presets:
+            Repository PCAP Samples:
           </span>
-          <button
-            type="button"
-            className="nav-connection-pill"
-            style={{ cursor: isAnalyzing || sampleLoading ? 'wait' : 'pointer' }}
-            disabled={isAnalyzing || sampleLoading}
-            onClick={() => handleLoadSample('ikev2_s2s_ipsec_vpn_aes_gcm.pcapng')}
-          >
-            <FileCode size={12} />
-            <span style={{ fontFamily: 'var(--font-mono)' }}>ikev2_s2s_ipsec_vpn_aes_gcm.pcapng</span>
-            <span style={{ color: 'var(--cyan)', fontSize: '10px' }}>Site-to-Site</span>
-          </button>
-          <button
-            type="button"
-            className="nav-connection-pill"
-            style={{ cursor: isAnalyzing || sampleLoading ? 'wait' : 'pointer' }}
-            disabled={isAnalyzing || sampleLoading}
-            onClick={() => handleLoadSample('vista-outer-esp-probe.pcap')}
-          >
-            <FileCode size={12} />
-            <span style={{ fontFamily: 'var(--font-mono)' }}>vista-outer-esp-probe.pcap</span>
-            <span style={{ color: 'var(--cyan)', fontSize: '10px' }}>ESP Probe</span>
-          </button>
+          {samplesLoading ? <span>Loading inventory…</span> : sampleListError
+            ? <span role="alert">Sample inventory unavailable: {sampleListError}</span>
+            : sampleCaptures.length === 0
+              ? <span>No repository PCAP samples are available.</span>
+              : sampleCaptures.map((capture) => (
+                <button
+                  key={capture.name}
+                  type="button"
+                  className="nav-connection-pill"
+                  style={{ cursor: isAnalyzing || sampleLoading ? 'wait' : 'pointer' }}
+                  disabled={isAnalyzing || sampleLoading}
+                  onClick={() => handleLoadSample(capture.name)}
+                  title={`${capture.sizeBytes} bytes · repository sample`}
+                >
+                  <FileCode size={12} />
+                  <span style={{ fontFamily: 'var(--font-mono)' }}>{capture.name}</span>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>{Number(capture.sizeBytes).toLocaleString()} B</span>
+                </button>
+              ))}
         </div>
       </section>
+
+      {sampleError && <div className="dashboard-empty" role="alert">Unable to load selected repository capture: {sampleError}</div>}
+
+      {status === 'success' && analysisResult && (
+        <div className="dashboard-empty" role="note">
+          Source: {file?.name || analysisResult.filename || 'uploaded file'} · {file?.size ?? analysisResult.sourceCaptureSizeBytes ?? '—'} bytes · SHA-256: {analysisResult.sourceCaptureSha256 || 'not returned by backend'}
+        </div>
+      )}
 
       {error && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '14px 16px', borderRadius: '8px', background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.35)', color: 'var(--danger)', fontSize: '13px' }}>
@@ -215,8 +237,8 @@ export default function TrafficAnalysisView() {
           style={{
             padding: '48px 24px',
             textAlign: 'center',
-            border: isDragging ? '2px dashed var(--cyan)' : '2px dashed var(--border-medium)',
-            background: isDragging ? 'rgba(56, 189, 248, 0.04)' : 'var(--bg-card)',
+            border: isDragging ? '2px dashed var(--accent-sage)' : '2px dashed var(--border-medium)',
+            background: isDragging ? 'var(--accent-sage-subtle)' : 'var(--bg-card)',
             borderRadius: '10px',
             transition: 'all 0.2s ease',
             cursor: 'pointer'
@@ -231,7 +253,7 @@ export default function TrafficAnalysisView() {
             style={{ display: 'none' }}
           />
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }}>
-            <div style={{ width: '56px', height: '56px', borderRadius: '14px', background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--cyan)' }}>
+            <div style={{ width: '56px', height: '56px', borderRadius: '14px', background: 'var(--accent-sage-subtle)', border: '1px solid var(--accent-sage-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-sage)' }}>
               <UploadCloud size={26} />
             </div>
             <div>

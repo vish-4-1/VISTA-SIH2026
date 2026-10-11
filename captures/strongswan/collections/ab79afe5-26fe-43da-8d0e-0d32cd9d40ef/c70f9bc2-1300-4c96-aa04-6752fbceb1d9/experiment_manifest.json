@@ -1,0 +1,90 @@
+{
+  "manifest_version": "vista-strongswan-experiment-v2",
+  "dataset_id": "collection-ab79afe5-26fe-43da-8d0e-0d32cd9d40ef",
+  "feature_schema_version": "vista-flow-v1",
+  "extractor_version": "vista-ml-pcap-features-v1",
+  "observations": [
+    {
+      "experiment_id": "c70f9bc2-1300-4c96-aa04-6752fbceb1d9",
+      "session_id": "ab79afe5-26fe-43da-8d0e-0d32cd9d40ef",
+      "scenario_name": "controlled_port_scan",
+      "scenario_subtype": "tcp_connect_probe",
+      "capture": {
+        "path": "packets.csv",
+        "format": "packet_table_csv",
+        "sha256": "02273a7d4106ef446387eece3b57a16f0032d41bfb9215214ee9eed10b6ab18a",
+        "started_at": "2026-10-10T21:25:05.336929+00:00",
+        "completed_at": "2026-10-10T21:25:08.902735+00:00",
+        "interface": "eth0",
+        "capture_point": "outer",
+        "ip_version": 4,
+        "protocol_family": "ESP",
+        "raw_pcap_path": "pc1_outer_scan.pcap",
+        "raw_pcap_format": "pcap",
+        "raw_pcap_sha256": "4475e60cd708000d03adfb3893a183b7e64c58fc21f21689ac55c6db64f230c5",
+        "raw_pcap_size_bytes": 2408
+      },
+      "ground_truth": {
+        "label": "controlled_suspicious",
+        "broad_category": "suspicious",
+        "scenario_name": "controlled_port_scan",
+        "scenario_subtype": "tcp_connect_probe",
+        "record_path": "ground_truth.json",
+        "record_sha256": "bdcf6d5d1e2388cea33cdc0ad6a712cf3966868e12f3b247c059d89955c44666",
+        "independently_verified": true
+      },
+      "workload": {
+        "type": "controlled_port_scan",
+        "subtype": "tcp_connect_probe",
+        "measurement_path": "workload_measurements.json",
+        "measurement_sha256": "18385113580f22ff02eb89f95adb4c4358e60c18ad6c5c0fe679a2865e11efce"
+      },
+      "telemetry": {
+        "ebpf": {
+          "path": "C:\\vista\\captures\\strongswan\\collections\\ab79afe5-26fe-43da-8d0e-0d32cd9d40ef\\c70f9bc2-1300-4c96-aa04-6752fbceb1d9\\ebpf_telemetry.json",
+          "sha256": "846efa66904968d1d27a953e8ac8b1954df36a47b99f765dd14503980ce76acc",
+          "mode": "NATIVE_KERNEL_EBPF",
+          "eventCount": 150
+        }
+      },
+      "vpn": {
+        "requested_configuration": {
+          "source": "existing live testbed SA",
+          "ipVersion": "IPv4",
+          "mode": "tunnel"
+        },
+        "effective_configuration": {
+          "ike": {
+            "version": 2,
+            "encryption": "AES_CBC",
+            "encryptionKeySize": 256,
+            "integrity": "HMAC_SHA2_256_128",
+            "prf": "PRF_HMAC_SHA2_256",
+            "dhGroup": 14,
+            "dhGroupName": "MODP_2048"
+          },
+          "child": {
+            "name": "pc-tunnel",
+            "state": "INSTALLED",
+            "mode": "TUNNEL",
+            "protocol": "ESP",
+            "encryption": "AES_GCM_16",
+            "encryptionKeySize": 256,
+            "integrity": null,
+            "pfsGroup": 14,
+            "pfsGroupName": "MODP_2048",
+            "localTrafficSelector": "172.20.0.2/32",
+            "remoteTrafficSelector": "172.20.0.3/32",
+            "bytesIn": 0,
+            "bytesOut": 0,
+            "packetsIn": 0,
+            "packetsOut": 0,
+            "spiIn": "cf2928cf",
+            "spiOut": "c9d8a25a"
+          },
+          "xfrmMode": "TUNNEL"
+        }
+      }
+    }
+  ]
+}
