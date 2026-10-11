@@ -1,0 +1,117 @@
+{
+  "plan_version": "vista-strongswan-collection-plan-v1",
+  "readiness": "LIVE_SMOKE_TESTS_PASS_DATASET_BLOCKED",
+  "inference_scope": "Controlled-workload recognition from IPv4 outer-ESP flow metadata only; not inner application identification.",
+  "current_testbed_workload_evidence": {
+    "icmpv4": {
+      "implementation": "backend/services/workload_collection.py::collect_icmp_workload",
+      "behavior": "Bounded count-terminated ICMPv4 profile sequences; captures PC1 outer-interface ESP and PC2 receiver ICMP, checks ping counts and CHILD_SA counters, hashes raw PCAPs, and validates a v2 manifest.",
+      "status": "live_verified_smoke_profiles"
+    },
+    "tcp_marker": {
+      "implementation": "backend/services/workload_collection.py::collect_tcp_marker_workload",
+      "behavior": "One bounded TCP connection carries a deterministic sequence of variable-sized marker messages to a temporary pc2 netcat receiver; receiver byte count and SHA-256 must match the sender.",
+      "status": "live_verified_smoke_profiles",
+      "note": "This is a controlled TCP marker stream, not a TCP echo service or an application implementation."
+    },
+    "udp_rtp_http_https_smtp_whatsapp_video": {
+      "status": "synthetic_or_unverified",
+      "note": "Current runner returns fixed synthetic summaries for these categories rather than verifying actual endpoint traffic; exclude from operational training."
+    }
+  },
+  "proposed_matrix": {
+    "status": "generators_live_smoke_verified_full_matrix_not_executed",
+    "collection_unit": "one experiment capture with an opaque experiment_id, nested in an independently initiated collection session",
+    "split_unit": "collection session; the same session must never appear in multiple splits",
+    "target_independent_sessions": 15,
+    "target_captures_per_workload_per_session": 6,
+    "workload_conditions": [
+      {
+        "workload": "ICMPv4 echo",
+        "parameters_to_balance": {
+          "duration_seconds": [10, 30, 60],
+          "target_packets_per_second": [1, 5, 10],
+          "payload_bytes": [32, 256, 1024]
+        },
+        "target_label": "controlled_icmpv4_workload",
+        "generator_status": "bounded configurable generator implemented and smoke-tested; multi-session balanced study remains unexecuted"
+      },
+      {
+        "workload": "TCP local marker stream",
+        "parameters_to_balance": {
+          "duration_seconds": [10, 30, 60],
+          "target_segments_per_second": [1, 5, 10],
+          "application_payload_bytes": [32, 256, 1024]
+        },
+        "target_label": "controlled_tcp_marker",
+        "generator_status": "temporary bounded receiver and sender byte/hash verification implemented and smoke-tested"
+      }
+    ],
+    "balancing": "A pre-registered schedule generator and the 15-session matrix are still required. Profile sequences are recorded exactly; the current smoke examples are not training evidence.",
+    "split_plan": {
+      "strategy": "assign whole sessions to train/validation/test before feature inspection",
+      "fractions": {"train": 0.6, "validation": 0.2, "test": 0.2},
+      "minimum_sessions_per_split": 3,
+      "class_support_required_in_every_split": true,
+      "seed": "record in the immutable collection plan and resulting split manifest"
+    },
+    "live_smoke_evidence": {
+      "session_id": "3dd0983a-d751-491b-8a02-6855b988bddd",
+      "testbed_independence": "Both experiments reused the same running containers and IKE/CHILD SA; they count as one session only.",
+      "icmpv4": {
+        "experiment_id": "fa7b06aa-1736-4915-86b6-8fd28eefdd8b",
+        "status": "PASS",
+        "profiles": [
+          {"count": 4, "interval_seconds": 0.2, "payload_bytes": 64},
+          {"count": 3, "interval_seconds": 0.4, "payload_bytes": 128}
+        ],
+        "sent": 7,
+        "received": 7,
+        "receiver_echo_requests": 7,
+        "outer_esp_packets": 13,
+        "pc1_pcap": "captures/strongswan/collections/3dd0983a-d751-491b-8a02-6855b988bddd/fa7b06aa-1736-4915-86b6-8fd28eefdd8b/pc1_outer_icmp.pcap",
+        "pc1_pcap_sha256": "c407d41b38b2ee9dbfd3b5c1f19a7c4d33d581dbb15ffc4490bcdead0c25a62b"
+      },
+      "tcp_marker": {
+        "experiment_id": "7a80087d-a635-467d-ad4a-c1860daf3c4c",
+        "status": "PASS",
+        "profiles": [
+          {"count": 4, "interval_seconds": 0.2, "payload_bytes": 64},
+          {"count": 3, "interval_seconds": 0.4, "payload_bytes": 128}
+        ],
+        "messages_sent": 7,
+        "bytes_sent_and_received": 640,
+        "receiver_payload_sha256": "78eee1329472e4a8835e37d0f132b03de03a139acddf6b1f92f1dca1c5e23fd3",
+        "achieved_throughput_bytes_per_second": 445.37230339920177,
+        "receiver_captured_tcp_packets": 10,
+        "outer_esp_packets": 18,
+        "pc1_pcap": "captures/strongswan/collections/3dd0983a-d751-491b-8a02-6855b988bddd/7a80087d-a635-467d-ad4a-c1860daf3c4c/pc1_outer_tcp.pcap",
+        "pc1_pcap_sha256": "72c8e247150bb9bd6ca38c7881797eaa7dde0a7d4c3bf122193fbaf6acad3e06"
+      },
+      "dataset_preparation": {
+        "status": "BLOCKED",
+        "accepted_observations": 2,
+        "quarantined_observations": 0,
+        "independent_sessions": 1,
+        "blocker": "At least 15 independent session IDs are required for a session-disjoint 60/20/20 split."
+      }
+    },
+    "per_observation_evidence": [
+      "raw PCAP path, SHA-256, capture start/end time, interface, inner/outer capture point and IP family",
+      "opaque experiment/session IDs and source-control version of generator",
+      "independent ground-truth JSON record and how the label was established",
+      "requested/effective VPN configuration and machine-readable negotiated IKE/CHILD SA evidence",
+      "workload command/configuration, client/server sent and received counts, duration and payload/rate settings",
+      "feature schema/extractor versions and data-quality/exclusion result"
+    ]
+  },
+  "excluded_until_genuinely_implemented_and_verified": [
+    "VoIP/RTP application traffic",
+    "HTTP and HTTPS browsing",
+    "SMTP email",
+    "WhatsApp-like messaging/media",
+    "sustained video streaming",
+    "IPv6 workloads",
+    "attack and anomaly labels"
+  ]
+}

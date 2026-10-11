@@ -1,0 +1,96 @@
+{
+  "schema_version": "vista-dataset-audit-v1",
+  "phase": "Phase 9 \u2014 Independent Dataset Audit and Baseline Eligibility",
+  "audited_campaign_id": "76adc766-ef41-45f5-b677-1d950c7ff052",
+  "audited_at": "2026-10-10T06:42:24.439366+00:00",
+  "overall_eligibility_status": "PASS",
+  "scope_boundary": "Qualified solely for exploratory baseline ML experiments. Model promotion, production deployment, and operational inference remain BLOCKED.",
+  "gates": {
+    "artifact_integrity": {
+      "status": "PASS",
+      "evidence": "60/60 raw PCAPs readable with outer ESP/NAT-T frames; 60/60 packet CSVs verified; 60/60 session records verified; all SHA-256 hashes match."
+    },
+    "ground_truth_integrity": {
+      "status": "PASS",
+      "evidence": "60/60 experiments verified with 100% endpoint agreement (ICMP reply counters, TCP payload hashes, HTTP 200 status codes with response body SHA-256 digests)."
+    },
+    "label_integrity": {
+      "status": "PASS",
+      "evidence": "3 canonical target classes defined in vista-target-label-schema-v1.json; HTTP GET and POST maintained as metadata subtypes; no label-bearing tokens in identifiers or filenames."
+    },
+    "feature_integrity": {
+      "status": "PASS",
+      "evidence": "18/18 flow features in vista-flow-v1.json reproduce exactly (60/60 matches); extractor operates strictly on outer IPv4 ESP metadata without inner payload inspection."
+    },
+    "leakage_controls": {
+      "status": "PASS",
+      "evidence": "Zero session, IKE_SA identity, or SPI overlap across splits; zero exact duplicate feature vectors; zero near-duplicate vectors within 1e-6 relative tolerance."
+    },
+    "class_coverage": {
+      "status": "PASS",
+      "evidence": "All 3 target classes are represented in train (18 HTTP, 9 ICMP, 9 TCP), validation (6 HTTP, 3 ICMP, 3 TCP), and test (6 HTTP, 3 ICMP, 3 TCP) splits."
+    },
+    "split_validity": {
+      "status": "PASS",
+      "evidence": "Deterministic nested GroupShuffleSplit (seed 42) partitions strictly by independent session/IKE_SA lifecycle identity (9/3/3 sessions; 36/12/12 observations)."
+    },
+    "independent_campaign_validation": {
+      "status": "BLOCKED",
+      "evidence": "Dataset is drawn from a single 15-session campaign (76adc766-ef41-45f5-b677-1d950c7ff052) on one direct PC1-PC2 testbed. Cross-campaign, multi-day, or multi-host validation has not been performed."
+    },
+    "baseline_eligibility": {
+      "status": "PASS",
+      "evidence": "All 7 prerequisite integrity and leakage gates pass. Dataset is authorized solely for an explicitly scoped exploratory baseline experiment specification; NOT authorized for production promotion or operational deployment."
+    }
+  },
+  "dataset_metrics": {
+    "total_observations": 60,
+    "independent_sessions": 15,
+    "distinct_ike_identities": 15,
+    "target_classes": {
+      "controlled_http": 30,
+      "controlled_tcp_marker": 15,
+      "controlled_icmpv4": 15
+    },
+    "workload_subtypes": {
+      "http_post": 15,
+      "tcp_marker": 15,
+      "icmpv4_echo": 15,
+      "http_get": 15
+    },
+    "split_row_counts": {
+      "train": 36,
+      "validation": 12,
+      "test": 12
+    },
+    "split_class_distributions": {
+      "train": {
+        "controlled_http": 18,
+        "controlled_icmpv4": 9,
+        "controlled_tcp_marker": 9
+      },
+      "validation": {
+        "controlled_http": 6,
+        "controlled_icmpv4": 3,
+        "controlled_tcp_marker": 3
+      },
+      "test": {
+        "controlled_http": 6,
+        "controlled_icmpv4": 3,
+        "controlled_tcp_marker": 3
+      }
+    },
+    "duplicate_vectors_count": 0,
+    "near_duplicate_vectors_count": 0
+  },
+  "recomputed_evidence": {
+    "verified_raw_pcaps": 60,
+    "verified_packet_csvs": 60,
+    "verified_outer_esp_pcaps": 60,
+    "re_extracted_feature_matches": 60,
+    "verified_ground_truth_records": 60,
+    "verified_session_records": 60,
+    "verified_endpoint_agreements": 60
+  },
+  "discrepancies": []
+}

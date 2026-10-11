@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vista.invalid/schemas/strongswan-experiment-manifest-v1.schema.json",
+  "title": "VISTA StrongSwan Experiment Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "manifest_version",
+    "dataset_id",
+    "feature_schema_version",
+    "extractor_version",
+    "observations"
+  ],
+  "properties": {
+    "manifest_version": {"const": "vista-strongswan-experiment-v1"},
+    "dataset_id": {"type": "string", "minLength": 1},
+    "feature_schema_version": {"const": "vista-flow-v1"},
+    "extractor_version": {"type": "string", "minLength": 1},
+    "observations": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/observation"}
+    }
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "relative_path": {
+      "type": "string",
+      "minLength": 1,
+      "not": {"pattern": "^(?:[A-Za-z]:|/|\\\\)"}
+    },
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "experiment_id",
+        "session_id",
+        "capture",
+        "ground_truth",
+        "workload",
+        "vpn",
+        "data_quality"
+      ],
+      "properties": {
+        "experiment_id": {"type": "string", "minLength": 1},
+        "session_id": {"type": "string", "minLength": 1},
+        "capture": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "format",
+            "sha256",
+            "started_at",
+            "interface",
+            "capture_point",
+            "ip_version",
+            "protocol_family"
+          ],
+          "properties": {
+            "path": {"$ref": "#/$defs/relative_path"},
+            "format": {"const": "packet_table_csv"},
+            "sha256": {"$ref": "#/$defs/sha256"},
+            "started_at": {"type": "string", "format": "date-time"},
+            "interface": {"type": ["string", "null"]},
+            "capture_point": {"enum": ["outer", "inner", null]},
+            "ip_version": {"enum": [4, 6, null]},
+            "protocol_family": {"type": ["string", "null"]}
+          }
+        },
+        "ground_truth": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "label",
+            "record_path",
+            "record_sha256",
+            "record_field",
+            "method",
+            "independently_verified"
+          ],
+          "properties": {
+            "label": {"type": "string", "minLength": 1},
+            "record_path": {"$ref": "#/$defs/relative_path"},
+            "record_sha256": {"$ref": "#/$defs/sha256"},
+            "record_field": {"type": "string", "minLength": 1},
+            "method": {"type": "string", "minLength": 1},
+            "independently_verified": {"type": "boolean"}
+          }
+        },
+        "workload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "configuration"],
+          "properties": {
+            "type": {"type": "string", "minLength": 1},
+            "configuration": {"type": "object"}
+          }
+        },
+        "vpn": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "requested_configuration",
+            "effective_configuration",
+            "negotiated_sa_evidence_path",
+            "negotiated_sa_evidence_sha256"
+          ],
+          "properties": {
+            "requested_configuration": {"type": "object"},
+            "effective_configuration": {"type": ["object", "null"]},
+            "negotiated_sa_evidence_path": {"$ref": "#/$defs/relative_path"},
+            "negotiated_sa_evidence_sha256": {"$ref": "#/$defs/sha256"}
+          }
+        },
+        "data_quality": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "reasons"],
+          "properties": {
+            "status": {"enum": ["accepted", "quarantined"]},
+            "reasons": {"type": "array", "items": {"type": "string"}}
+          }
+        }
+      }
+    }
+  }
+}

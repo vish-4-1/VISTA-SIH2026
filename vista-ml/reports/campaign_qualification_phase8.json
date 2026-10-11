@@ -1,0 +1,170 @@
+{
+  "report_version": 1,
+  "campaign_id": "76adc766-ef41-45f5-b677-1d950c7ff052",
+  "phase": "Phase 8 — Unified Multi-Workload Dataset and Label Qualification",
+  "generated_at": "2026-10-10T06:45:00+00:00",
+  "qualification_status": "READY_FOR_REVIEW",
+  "summary": {
+    "workload_set": "unified",
+    "seed": 26160,
+    "requested_sessions": 15,
+    "completed_sessions": 15,
+    "failed_sessions": 0,
+    "blocked_sessions": 0,
+    "independently_verified_sessions": 15,
+    "total_observations": 60,
+    "accepted_observations": 60,
+    "quarantined_observations": 0,
+    "independent_session_count": 15,
+    "target_classes_count": 3,
+    "target_class_distribution": {
+      "controlled_http": 30,
+      "controlled_icmpv4": 15,
+      "controlled_tcp_marker": 15
+    },
+    "workload_subtype_distribution": {
+      "http_get": 15,
+      "http_post": 15,
+      "icmpv4_echo": 15,
+      "tcp_marker": 15
+    }
+  },
+  "label_ontology": {
+    "schema_file": "vista-ml/schemas/vista-target-label-schema-v1.json",
+    "schema_version": "vista-target-label-schema-v1",
+    "intended_prediction_target": "Controlled benign workload classification from encrypted IPv4 outer-ESP metadata (vista-flow-v1).",
+    "domain_boundary": "Outer ESP/NAT-T packet metadata only. Encrypted inner payload, HTTP URLs, headers, and plaintexts are unobservable in outer ESP and are never model inputs.",
+    "target_classes": [
+      {
+        "class": "controlled_icmpv4",
+        "description": "Controlled IPv4 ICMP echo request/reply workload over StrongSwan IPsec tunnel.",
+        "allowed_subtypes": ["icmpv4_echo"]
+      },
+      {
+        "class": "controlled_tcp_marker",
+        "description": "Controlled single-connection TCP marker sequence over StrongSwan IPsec tunnel.",
+        "allowed_subtypes": ["tcp_marker"]
+      },
+      {
+        "class": "controlled_http",
+        "description": "Controlled HTTP/1.1 client/server transaction workload over StrongSwan IPsec tunnel.",
+        "allowed_subtypes": ["http_get", "http_post"]
+      }
+    ]
+  },
+  "dataset_splits": {
+    "strategy": "deterministic nested GroupShuffleSplit by verified IKE_SA lifecycle identity",
+    "random_state": 42,
+    "fractions": {
+      "train": 0.6,
+      "validation": 0.2,
+      "test": 0.2
+    },
+    "session_counts": {
+      "train": 9,
+      "validation": 3,
+      "test": 3
+    },
+    "observation_counts": {
+      "train": 36,
+      "validation": 12,
+      "test": 12
+    },
+    "class_representation_by_split": {
+      "train": {
+        "controlled_http": 18,
+        "controlled_icmpv4": 9,
+        "controlled_tcp_marker": 9
+      },
+      "validation": {
+        "controlled_http": 6,
+        "controlled_icmpv4": 3,
+        "controlled_tcp_marker": 3
+      },
+      "test": {
+        "controlled_http": 6,
+        "controlled_icmpv4": 3,
+        "controlled_tcp_marker": 3
+      }
+    },
+    "session_ids": {
+      "train": [
+        "1a7a2809-ca06-41e3-9983-8807578f6055",
+        "28771b29-aca6-4779-83c2-bab37b7fcf8c",
+        "56925026-3f72-481f-a36a-80345a2af3d1",
+        "74e7f394-dd14-4410-8e7e-1edd0fab4a6d",
+        "7aa1cc56-719b-4be1-9664-65c39c1e63bd",
+        "88c06ae5-0998-40fc-9ebd-714b7582db68",
+        "9f366f05-cea9-47ad-af47-00b6b4b2d18c",
+        "e0ca5ecf-3642-4f93-8103-d4a72e3fc238",
+        "f538932d-432b-479f-963f-dcc9a21b2d1a"
+      ],
+      "validation": [
+        "1c2317f9-2e82-4b74-ad28-d68aae599cbf",
+        "87173593-9085-4c74-9324-59109a180a39",
+        "d6515ad5-c4f9-4729-bca4-7a624aa23f2c"
+      ],
+      "test": [
+        "139363bc-4b47-4a7c-b353-8d5005abec82",
+        "72215fee-164b-4e7f-ae42-65eaf209d234",
+        "9ec1c7f5-5fdf-4ec4-8117-a28d110eb0cf"
+      ]
+    },
+    "leakage_audit": {
+      "train_validation_session_overlap": 0,
+      "train_test_session_overlap": 0,
+      "validation_test_session_overlap": 0,
+      "train_validation_ike_sa_overlap": 0,
+      "train_test_ike_sa_overlap": 0,
+      "validation_test_ike_sa_overlap": 0,
+      "exact_duplicate_feature_vectors": 0,
+      "near_duplicate_feature_vectors": 0,
+      "identifier_contains_target_label": 0
+    }
+  },
+  "artifact_integrity": {
+    "manifest_path": "captures/strongswan/collections/campaigns/76adc766-ef41-45f5-b677-1d950c7ff052/campaign_manifest.json",
+    "manifest_sha256": "1986d9cbf303671b1c35e6537fcf534bf288134b0a197e774d36e0cdb812b6a3",
+    "prepared_dataset_path": "captures/strongswan/collections/campaigns/76adc766-ef41-45f5-b677-1d950c7ff052/dataset_preparation/prepared_dataset.csv",
+    "prepared_dataset_sha256": "01b5ff389e55c9a9fb93493c7314b992a50ef9b6f7c9f54d07942eea0d6b0f74",
+    "verified_raw_pcaps": 60,
+    "verified_packet_csvs": 60,
+    "verified_ground_truth_records": 60,
+    "verified_negotiated_sas": 60,
+    "verified_session_records": 60,
+    "verified_outer_esp_captures": 60,
+    "endpoint_agreement_verified": 60,
+    "quarantine_reasons": []
+  },
+  "feature_contract": {
+    "feature_schema_version": "vista-flow-v1",
+    "feature_count": 18,
+    "features": [
+      "packet_count",
+      "byte_count",
+      "flow_duration",
+      "mean_packet_size",
+      "std_packet_size",
+      "min_packet_size",
+      "max_packet_size",
+      "mean_inter_arrival_time",
+      "std_inter_arrival_time",
+      "min_inter_arrival_time",
+      "max_inter_arrival_time",
+      "packets_per_second",
+      "bytes_per_second",
+      "forward_packet_count",
+      "backward_packet_count",
+      "forward_bytes",
+      "backward_bytes",
+      "direction_ratio"
+    ],
+    "target_column": "label",
+    "excluded_metadata_columns": [
+      "experiment_id",
+      "session_id",
+      "capture_path",
+      "capture_sha256"
+    ]
+  }
+}

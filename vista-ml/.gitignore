@@ -22,8 +22,7 @@ models/*.joblib
 reports/**/*.png
 reports/**/*.json
 reports/**/*.csv
-!schemas/vista-testbed-extractor-v1.json
-!schemas/vista-flow-v1.json
-!reports/ml_capability_report.json
+!schemas/*.json
+!reports/*.json
 !models/candidates/benign_outer_esp_icmp_vs_tcp/**/random_forest.metadata.json
 !reports/candidates/benign_outer_esp_icmp_vs_tcp/**

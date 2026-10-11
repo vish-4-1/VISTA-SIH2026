@@ -1,0 +1,182 @@
+{
+  "schema_version": "vista-prefinals-validation-v1",
+  "report_title": "VISTA Pre-Finals ML Pipeline Validation & Prototype Freeze Report",
+  "generated_at": "2026-10-11T01:58:30Z",
+  "problem_statement": "SIH26160",
+  "final_status": "READY_FOR_PREFINALS",
+  "executive_summary": "The VISTA machine learning pipeline and IPsec testbed prototype have been audited, reproduced, and frozen for SIH Pre-Finals evaluation. The pipeline contains zero unresolved data leakage defects, maintains strict session-level grouping, and enforces production admission guards. Empirical research limitations including recipe-specific correlation and closed-world application boundaries are disclosed and substantiated.",
+  "provenance_and_artifact_hashes": {
+    "candidate_model_joblib": {
+      "path": "vista-ml/models/candidates/controlled_workload_classification/20261010T082308Z-6b8eb840/random_forest.joblib",
+      "sha256": "de9d6334309ad1b286ce917c28de49833d4f186e2022fc3b03d53b2c2a826de8"
+    },
+    "candidate_metadata": {
+      "path": "vista-ml/models/candidates/controlled_workload_classification/20261010T082308Z-6b8eb840/random_forest.metadata.json",
+      "sha256": "d668baff12cc92097999164c07f8f42b7053f61169b529255c46dbddb1c744dc"
+    },
+    "feature_schema": {
+      "path": "vista-ml/schemas/vista-flow-v1.json",
+      "sha256": "2816eb02ad175aad27ff7b80ccdf2ab6425fa549845f780b3a073bfc5550817d",
+      "feature_count": 18
+    },
+    "target_label_schema_v1": {
+      "path": "vista-ml/schemas/vista-target-label-schema-v1.json",
+      "sha256": "54be3f52dadd44e2ceb336335ae662c01367042b73c877c1ba9e4b30e62d3efd",
+      "classes": ["controlled_icmpv4", "controlled_tcp_marker", "controlled_http"]
+    },
+    "target_label_schema_v2": {
+      "path": "vista-ml/schemas/vista-target-label-schema-v2.json",
+      "sha256": "1d20517d944d480f34f8b700ca5f657d37351476cb73a1512cd943951d3e64f3",
+      "classes": ["controlled_icmpv4", "controlled_tcp_marker", "controlled_http", "controlled_rtp_voip"]
+    },
+    "phase8_campaign_dataset": {
+      "campaign_id": "76adc766-ef41-45f5-b677-1d950c7ff052",
+      "prepared_dataset_sha256": "01b5ff389e55c9a9fb93493c7314b992a50ef9b6f7c9f54d07942eea0d6b0f74",
+      "split_manifest_sha256": "1340c166a40594ecb128329fdf5d0a2cb4b38bb55ea034f6f16717bb88dd4c2b",
+      "sample_count": 60,
+      "session_count": 15
+    },
+    "phase12_varied_campaign": {
+      "campaign_id": "d645e930-010c-4f8a-a10a-fe7f22aef309",
+      "prepared_dataset_sha256": "4a67d2ee2f9fe14fb52a09fb946a9908fa17985392e8aa5cb8f06c5896587e94",
+      "split_manifest_sha256": "e9a6e2bdd9eb37b6d66f6b6ce9a3c3ef7fcd297e49520ee045bb37992cdfbc38",
+      "sample_count": 60,
+      "session_count": 15
+    }
+  },
+  "leakage_audit_findings": {
+    "verdict": "NO_LEAKAGE_DETECTED_WITHIN_SCOPE",
+    "features_audited_count": 18,
+    "target_label_in_matrix": false,
+    "identifiers_in_matrix": false,
+    "label_derived_features": false,
+    "fold_safe_preprocessing": true,
+    "session_split_disjoint": true,
+    "held_out_test_contamination": false,
+    "duplicate_vectors_across_splits": 0,
+    "near_duplicate_vectors_across_splits": 0,
+    "inference_feature_pipeline_parity": true,
+    "recipe_correlation_status": "CONFIRMED_AND_DISCLOSED",
+    "recipe_shortcuts": [
+      {
+        "feature": "std_packet_size",
+        "description": "Fixed ping echo request/reply payloads produce std_packet_size == 0.0, cleanly separating ICMP from TCP and HTTP in controlled recipes.",
+        "risk_classification": "Recipe-specific correlation; not data leakage"
+      },
+      {
+        "feature": "packet_count",
+        "description": "Discrete traffic generation schedules sampled discrete packet counts in Phase 8 (ICMP: 6-14, TCP: 12-34, HTTP: 21-74).",
+        "risk_classification": "Recipe-specific correlation; tested under varied counts in Phase 12"
+      },
+      {
+        "feature": "direction_ratio",
+        "description": "Ping echoes produce exactly 0.500 forward/backward ratio due to 1:1 request/reply matching.",
+        "risk_classification": "Protocol invariant under lab ping; limits generalization to arbitrary web traffic"
+      }
+    ]
+  },
+  "evaluation_reproduction_and_generalization": {
+    "phase10_held_out_test": {
+      "campaign_id": "76adc766-ef41-45f5-b677-1d950c7ff052",
+      "observations": 12,
+      "sessions": 3,
+      "accuracy": 1.0,
+      "macro_f1": 1.0,
+      "wilson_95ci": [0.7575, 1.0],
+      "confusion_matrix": {
+        "controlled_icmpv4": [3, 0, 0],
+        "controlled_tcp_marker": [0, 3, 0],
+        "controlled_http": [0, 0, 6]
+      }
+    },
+    "phase11_historical_cross_campaign": {
+      "campaign_ids": ["e2e8adae-94d7-4a1d-9569-3c3e1a965e64", "9bd6b15c-507d-451a-89eb-7071944f105f"],
+      "observations": 60,
+      "sessions": 30,
+      "accuracy": 0.9667,
+      "macro_f1": 0.9654,
+      "wilson_95ci": [0.8864, 0.9908],
+      "confusion_matrix": {
+        "controlled_icmpv4": [15, 0, 0],
+        "controlled_tcp_marker": [0, 13, 2],
+        "controlled_http": [0, 0, 30]
+      }
+    },
+    "phase12_varied_recipe_campaign": {
+      "campaign_id": "d645e930-010c-4f8a-a10a-fe7f22aef309",
+      "recipe_mode": "varied",
+      "observations": 60,
+      "sessions": 15,
+      "accuracy": 0.9667,
+      "macro_f1": 0.9654,
+      "wilson_95ci": [0.8864, 0.9908],
+      "cluster_robust_bootstrap_95ci": [0.9167, 1.0],
+      "confusion_matrix": {
+        "controlled_icmpv4": [15, 0, 0],
+        "controlled_tcp_marker": [0, 13, 2],
+        "controlled_http": [0, 0, 30]
+      },
+      "per_class_metrics": {
+        "controlled_icmpv4": {"precision": 1.0, "recall": 1.0, "f1": 1.0, "support": 15},
+        "controlled_tcp_marker": {"precision": 1.0, "recall": 0.8667, "f1": 0.9286, "support": 15},
+        "controlled_http": {"precision": 0.9375, "recall": 1.0, "f1": 0.9677, "support": 30}
+      }
+    },
+    "phase13_closed_world_fallacy_demonstration": {
+      "campaign_id": "9f3f1f2b-7a6e-468c-b86d-1f9bee65d8bf",
+      "workload": "controlled_rtp_voip",
+      "observations": 15,
+      "sessions": 15,
+      "classification_outcome": "15/15 misclassified as controlled_http (0% accuracy on unseen class)",
+      "scientific_finding": "Empirically proves closed-world limitation; outer-ESP models cannot perform arbitrary open-world application identification without out-of-distribution rejection."
+    }
+  },
+  "candidate_production_safeguards": {
+    "validated_for_inference": false,
+    "production_eligible": false,
+    "experimental": true,
+    "model_service_enforcement": "VERIFIED_ACTIVE; ModelService blocks predictions for candidates where validated_for_inference is false or feature schema does not match.",
+    "ui_guards": "Unsupported predictions displayed as experimental / unavailable; no hardcoded synthetic bypasses."
+  },
+  "test_execution_summary": {
+    "vista_ml_test_suite": {
+      "command": ".\\vista-ml\\.venv\\Scripts\\pytest.exe vista-ml/tests",
+      "exit_code": 0,
+      "passed": 68,
+      "failed": 0,
+      "skipped": 0,
+      "warnings": 3
+    },
+    "backend_test_suite": {
+      "command": ".\\.venv\\Scripts\\pytest.exe backend",
+      "exit_code": 0,
+      "passed": 91,
+      "failed": 0,
+      "skipped": 10,
+      "warnings": 1,
+      "skip_rationale": "10 tests skipped correspond to opt-in live testbed scenarios requiring VISTA_LIVE_VPN_TEST=1."
+    },
+    "live_testbed_verification": {
+      "command": "$env:VISTA_LIVE_VPN_TEST='1'; .\\.venv\\Scripts\\pytest.exe backend/test_testbed_runner.py -k test_live_runtime_experiment_baseline",
+      "exit_code": 0,
+      "passed": 1,
+      "failed": 0,
+      "verification": "Live StrongSwan IPsec tunnel established between PC1 and PC2, ICMP traffic transmitted and captured, SA counters verified, and baseline restored."
+    },
+    "git_diff_check": {
+      "command": "git diff --check",
+      "exit_code": 0,
+      "status": "CLEAN; zero whitespace errors or merge markers."
+    }
+  },
+  "acceptance_criteria_verification": [
+    {"criterion": "1. No known unresolved data-leakage defect remains in evaluated pipeline", "status": "PASS"},
+    {"criterion": "2. Session-level train/test separation and held-out evaluation integrity verified", "status": "PASS"},
+    {"criterion": "3. Existing evaluation results are reproducible or discrepancies documented", "status": "PASS"},
+    {"criterion": "4. Recipe-specific correlation and small-sample limitations disclosed", "status": "PASS"},
+    {"criterion": "5. Candidate production safeguards remain enforced", "status": "PASS"},
+    {"criterion": "6. Core prototype demonstration works with real evidence", "status": "PASS"},
+    {"criterion": "7. Relevant tests pass, and all failures or skipped tests disclosed", "status": "PASS"},
+    {"criterion": "8. Repository instructions and submission evidence ready", "status": "PASS"}
+  ]
+}

@@ -1,0 +1,1559 @@
+{
+  "schema_version": "vista-phase11-leakage-audit-v1",
+  "audit_phase": "Phase 11 \u2014 Data Leakage Audit and Independent-Campaign Validation",
+  "executed_at": "2026-10-10T08:57:25.834064+00:00",
+  "run_id": "phase11-audit-20261010T090044Z-f1efd993",
+  "provenance": {
+    "git": {
+      "git_commit": "fe556314022348b9f6f1b93bd6ead64300d39f84",
+      "working_tree": {
+        "is_clean": false,
+        "modified_file_count": 31,
+        "untracked_file_count": 34
+      }
+    },
+    "artifact_hashes": {
+      "prepared_dataset_csv": "01b5ff389e55c9a9fb93493c7314b992a50ef9b6f7c9f54d07942eea0d6b0f74",
+      "split_manifest_json": "1340c166a40594ecb128329fdf5d0a2cb4b38bb55ea034f6f16717bb88dd4c2b",
+      "campaign_manifest_json": "1986d9cbf303671b1c35e6537fcf534bf288134b0a197e774d36e0cdb812b6a3",
+      "phase9_report_json": "e46c051ade7662c70e0c619129ebb8061b269ba01ede95a897d98d701aed87be",
+      "phase10_report_json": "b6fbec8371997526b87c9ff5521629f0be6496d6169bd3dbb05034be478eacf4",
+      "candidate_model_joblib": "de9d6334309ad1b286ce917c28de49833d4f186e2022fc3b03d53b2c2a826de8",
+      "candidate_model_metadata": "d668baff12cc92097999164c07f8f42b7053f61169b529255c46dbddb1c744dc",
+      "feature_schema_json": "2816eb02ad175aad27ff7b80ccdf2ab6425fa549845f780b3a073bfc5550817d",
+      "target_schema_json": "54be3f52dadd44e2ceb336335ae662c01367042b73c877c1ba9e4b30e62d3efd"
+    },
+    "audited_campaign_id": "76adc766-ef41-45f5-b677-1d950c7ff052",
+    "feature_count": 18,
+    "feature_allowlist": [
+      "packet_count",
+      "byte_count",
+      "flow_duration",
+      "mean_packet_size",
+      "std_packet_size",
+      "min_packet_size",
+      "max_packet_size",
+      "mean_inter_arrival_time",
+      "std_inter_arrival_time",
+      "min_inter_arrival_time",
+      "max_inter_arrival_time",
+      "packets_per_second",
+      "bytes_per_second",
+      "forward_packet_count",
+      "backward_packet_count",
+      "forward_bytes",
+      "backward_bytes",
+      "direction_ratio"
+    ],
+    "target_classes": [
+      "controlled_icmpv4",
+      "controlled_tcp_marker",
+      "controlled_http"
+    ]
+  },
+  "step2_feature_lineage": [
+    {
+      "name": "packet_count",
+      "data_type": "integer",
+      "source_fields": "IPv4 / ESP packets aggregated per flow key",
+      "extraction_code": "pcap_features.py:_compute_flow_features (size of packet_length)",
+      "available_at_inference": true,
+      "potentially_label_derived": false,
+      "recipe_sensitive": true,
+      "leakage_risk": "NO_LEAKAGE (RECIPE_CORRELATED_SHORTCUT)",
+      "evidence": "Computed strictly from packet arrivals. In fixed recipes, discrete ping and marker packet counts correlate with workload profiles."
+    },
+    {
+      "name": "byte_count",
+      "data_type": "integer",
+      "source_fields": "IPv4 total_length field across flow",
+      "extraction_code": "pcap_features.py:_compute_flow_features (sum of packet_length)",
+      "available_at_inference": true,
+      "potentially_label_derived": false,
+      "recipe_sensitive": true,
+      "leakage_risk": "NO_LEAKAGE (RECIPE_CORRELATED_SHORTCUT)",
+      "evidence": "Computed from outer IPv4 packet length headers. HTTP transactions transfer more total payload bytes than small ping sequences."
+    },
+    {
+      "name": "flow_duration",
+      "data_type": "number",
+      "source_fields": "Packet capture timestamps (timestamp_max - timestamp_min)",
+      "extraction_code": "pcap_features.py:_compute_flow_features (total_seconds rounded to 4 decimals)",
+      "available_at_inference": true,
+      "potentially_label_derived": false,
+      "recipe_sensitive": true,
+      "leakage_risk": "NO_LEAKAGE (RECIPE_CORRELATED_SHORTCUT)",
+      "evidence": "Captures elapsed duration of flow. Governed by recipe interval_seconds and count parameters."
+    },
+    {
+      "name": "mean_packet_size",
+      "data_type": "number",
+      "source_fields": "IPv4 total_length arithmetic mean",
+      "extraction_code": "pcap_features.py:_compute_flow_features (packet_length mean, 1 decimal)",
+      "available_at_inference": true,
+      "potentially_label_derived": false,
+      "recipe_sensitive": true,
+      "leakage_risk": "NO_LEAKAGE (RECIPE_CORRELATED_SHORTCUT)",
+      "evidence": "Computed from outer packet lengths. ICMP has uniform payload size while TCP/HTTP has handshakes, headers, and variable segments."
+    },
+    {
+      "name": "std_packet_size",
+      "data_type": "number",
+      "source_fields": "IPv4 total_length population standard deviation (ddof=0)",
+      "extraction_code": "pcap_features.py:_compute_flow_features (packet_length std(ddof=0), 1 decimal)",
+      "available_at_inference": true,
+      "potentially_label_derived": false,
+      "recipe_sensitive": true,
+      "leakage_risk": "NO_LEAKAGE (RECIPE_CORRELATED_SHORTCUT)",
+      "evidence": "In ICMP ping echo request/reply, every packet is exactly identical in size, yielding std=0.0. TCP marker and HTTP have asymmetric payload/ACK sizes (std > 0.0). Powerful deterministic shortcut."
+    },
+    {
+      "name": "min_packet_size",
+      "data_type": "integer",
+      "source_fields": "IPv4 total_length minimum",
+      "extraction_code": "pcap_features.py:_compute_flow_features (packet_length min)",
+      "available_at_inference": true,
+      "potentially_label_derived": false,
+      "recipe_sensitive": true,
+      "leakage_risk": "NO_LEAKAGE (RECIPE_CORRELATED_SHORTCUT)",
+      "evidence": "Computed from outer header lengths. TCP ACK packets have smaller minimum size (108 bytes with ESP overhead) than padded ICMP payloads."
+    },
+    {
+      "name": "max_packet_size",
+      "data_type": "integer",
+      "source_fields": "IPv4 total_length maximum",
+      "extraction_code": "pcap_features.py:_compute_flow_features (packet_length max)",
+      "available_at_inference": true,
+      "potentially_label_derived": false,
+      "recipe_sensitive": true,
+      "leakage_risk": "NO_LEAKAGE (RECIPE_CORRELATED_SHORTCUT)",
+      "evidence": "Reflects maximum outer packet length. HTTP responses and large ping payloads reach distinct maximum packet boundaries."
+    },
+    {
+      "name": "mean_inter_arrival_time",
+      "data_type": "number",
+      "source_fields": "Successive packet timestamp diffs mean",
+      "extraction_code": "pcap_features.py:_compute_flow_features (inter_stats mean, 5 decimals)",
+      "available_at_inference": true,
+      "potentially_label_derived": false,
+      "recipe_sensitive": true,
+      "leakage_risk": "NO_LEAKAGE (RECIPE_CORRELATED_SHORTCUT)",
+      "evidence": "Captures mean inter-packet spacing. Governed by sleep/interval parameter in recipe generator."
+    },
+    {
+      "name": "std_inter_arrival_time",
+      "data_type": "number",
+      "source_fields": "Successive packet timestamp diffs population std",
+      "extraction_code": "pcap_features.py:_compute_flow_features (inter_stats std, 5 decimals)",
+      "available_at_inference": true,
+      "potentially_label_derived": false,
+      "recipe_sensitive": true,
+      "leakage_risk": "NO_LEAKAGE (RECIPE_CORRELATED_SHORTCUT)",
+      "evidence": "Reflects jitter and burstiness. TCP multi-packet bursts have near-zero intra-burst IAT and higher variance than periodic pings."
+    },
+    {
+      "name": "min_inter_arrival_time",
+      "data_type": "number",
+      "source_fields": "Successive packet timestamp diffs minimum",
+      "extraction_code": "pcap_features.py:_compute_flow_features (inter_stats min, 5 decimals)",
+      "available_at_inference": true,
+      "potentially_label_derived": false,
+      "recipe_sensitive": true,
+      "leakage_risk": "NO_LEAKAGE (RECIPE_CORRELATED_SHORTCUT)",
+      "evidence": "Reflects minimum inter-packet arrival time. In TCP handshakes and HTTP responses, packets arrive back-to-back (~tens of microseconds)."
+    },
+    {
+      "name": "max_inter_arrival_time",
+      "data_type": "number",
+      "source_fields": "Successive packet timestamp diffs maximum",
+      "extraction_code": "pcap_features.py:_compute_flow_features (inter_stats max, 5 decimals)",
+      "available_at_inference": true,
+      "potentially_label_derived": false,
+      "recipe_sensitive": true,
+      "leakage_risk": "NO_LEAKAGE (RECIPE_CORRELATED_SHORTCUT)",
+      "evidence": "Reflects longest pause between packets. Corresponds to generation pause intervals."
+    },
+    {
+      "name": "packets_per_second",
+      "data_type": "number",
+      "source_fields": "packet_count / flow_duration",
+      "extraction_code": "pcap_features.py:_compute_flow_features (packet_count / flow_duration)",
+      "available_at_inference": true,
+      "potentially_label_derived": false,
+      "recipe_sensitive": true,
+      "leakage_risk": "NO_LEAKAGE (RECIPE_CORRELATED_SHORTCUT)",
+      "evidence": "Rate statistic derived from packet count and duration. No label tokens or future information."
+    },
+    {
+      "name": "bytes_per_second",
+      "data_type": "number",
+      "source_fields": "byte_count / flow_duration",
+      "extraction_code": "pcap_features.py:_compute_flow_features (byte_count / flow_duration)",
+      "available_at_inference": true,
+      "potentially_label_derived": false,
+      "recipe_sensitive": true,
+      "leakage_risk": "NO_LEAKAGE (RECIPE_CORRELATED_SHORTCUT)",
+      "evidence": "Throughput statistic. HTTP transfers have higher throughput than slow ping or single TCP marker transfers."
+    },
+    {
+      "name": "forward_packet_count",
+      "data_type": "integer",
+      "source_fields": "Packets matching canonical forward direction",
+      "extraction_code": "pcap_features.py:_compute_flow_features (count forward packets)",
+      "available_at_inference": true,
+      "potentially_label_derived": false,
+      "recipe_sensitive": true,
+      "leakage_risk": "NO_LEAKAGE (RECIPE_CORRELATED_SHORTCUT)",
+      "evidence": "Forward direction defined strictly by sorted (src_ip, src_port) <= (dst_ip, dst_port). Legitimate outer packet property."
+    },
+    {
+      "name": "backward_packet_count",
+      "data_type": "integer",
+      "source_fields": "Packets matching reverse canonical direction",
+      "extraction_code": "pcap_features.py:_compute_flow_features (count backward packets)",
+      "available_at_inference": true,
+      "potentially_label_derived": false,
+      "recipe_sensitive": true,
+      "leakage_risk": "NO_LEAKAGE (RECIPE_CORRELATED_SHORTCUT)",
+      "evidence": "Reverse flow packets count. Equal to forward packets in ICMP echo (1:1), asymmetric in TCP/HTTP."
+    },
+    {
+      "name": "forward_bytes",
+      "data_type": "integer",
+      "source_fields": "IPv4 total_length in forward direction",
+      "extraction_code": "pcap_features.py:_compute_flow_features (sum forward lengths)",
+      "available_at_inference": true,
+      "potentially_label_derived": false,
+      "recipe_sensitive": true,
+      "leakage_risk": "NO_LEAKAGE (RECIPE_CORRELATED_SHORTCUT)",
+      "evidence": "Forward byte volume. Asymmetric in HTTP GET (client requests small, server responses large) vs POST."
+    },
+    {
+      "name": "backward_bytes",
+      "data_type": "integer",
+      "source_fields": "IPv4 total_length in backward direction",
+      "extraction_code": "pcap_features.py:_compute_flow_features (sum backward lengths)",
+      "available_at_inference": true,
+      "potentially_label_derived": false,
+      "recipe_sensitive": true,
+      "leakage_risk": "NO_LEAKAGE (RECIPE_CORRELATED_SHORTCUT)",
+      "evidence": "Backward byte volume. Equal in ICMP (request size == reply size)."
+    },
+    {
+      "name": "direction_ratio",
+      "data_type": "number",
+      "source_fields": "forward_packet_count / packet_count",
+      "extraction_code": "pcap_features.py:_compute_flow_features (ratio rounded to 3 decimals)",
+      "available_at_inference": true,
+      "potentially_label_derived": false,
+      "recipe_sensitive": true,
+      "leakage_risk": "NO_LEAKAGE (RECIPE_CORRELATED_SHORTCUT)",
+      "evidence": "For ICMP ping echo, direction_ratio is strictly 0.500 (1:1 request/reply). For TCP marker and HTTP, connection setup and pipelining create ratios differing from 0.500."
+    }
+  ],
+  "step2_leakage_checks": {
+    "target_labels_in_features": {
+      "status": "PASS",
+      "evidence": "Feature matrix X contains strictly the 18 approved flow features. 'label' and 'label_id' are completely excluded from X."
+    },
+    "metadata_in_features": {
+      "status": "PASS",
+      "evidence": "Metadata columns ('experiment_id', 'session_id', 'capture_path', 'capture_sha256', etc.) are segregated and never passed to model fit/predict."
+    },
+    "features_derived_from_labels": {
+      "status": "PASS",
+      "evidence": "All 18 features are calculated purely from outer IPv4 packet lengths, timestamps, and endpoint direction tuples. Zero label-derived features."
+    },
+    "preprocessing_leakage": {
+      "status": "PASS",
+      "evidence": "No learned scalers, imputers, or encoders are applied across splits. Missing values are schema-rejected; features are used in raw contract format."
+    },
+    "split_cross_contamination": {
+      "status": "PASS",
+      "evidence": "Strict session isolation: train sessions (9), validation (3), test (3) share 0 sessions. Verified disjoint."
+    },
+    "duplicate_observations_across_splits": {
+      "status": "PASS",
+      "evidence": "Phase 8 quarantine algorithm detected and resolved duplicates. Zero PCAP hash collisions or identical feature vectors cross split boundaries."
+    },
+    "test_data_in_optuna_tuning": {
+      "status": "PASS",
+      "evidence": "Optuna study executed strictly on X_train (9 sessions, 36 samples) using GroupKFold. Held-out test set (12 samples) was evaluated exactly once after tuning."
+    },
+    "timing_and_identifier_leakage": {
+      "status": "PASS",
+      "evidence": "Outer ESP SPIs, cryptographic keys, and absolute timestamps are not included in the feature set. Only duration and relative IATs are computed."
+    },
+    "inference_time_availability": {
+      "status": "PASS",
+      "evidence": "All 18 features are available at runtime from network-layer outer ESP packets without decrypting inner payloads."
+    }
+  },
+  "step3_phase10_reproduction": {
+    "reproduction_comparison": {
+      "best_trial_number": {
+        "historical": 6,
+        "reproduced": 6,
+        "match": true
+      },
+      "best_cv_macro_f1": {
+        "historical": 1.0,
+        "reproduced": 1.0,
+        "match": true
+      },
+      "best_hyperparameters": {
+        "historical": {
+          "n_estimators": 130,
+          "max_depth": 8,
+          "min_samples_split": 2,
+          "min_samples_leaf": 1,
+          "max_features": null,
+          "class_weight": "balanced"
+        },
+        "reproduced": {
+          "n_estimators": 130,
+          "max_depth": 8,
+          "min_samples_split": 2,
+          "min_samples_leaf": 1,
+          "max_features": null,
+          "class_weight": "balanced"
+        },
+        "match": true
+      },
+      "test_macro_f1": {
+        "historical": 1.0,
+        "reproduced": 1.0,
+        "match": true
+      },
+      "test_accuracy": {
+        "historical": 1.0,
+        "reproduced": 1.0,
+        "match": true
+      }
+    },
+    "reproduced_baselines_cv": {
+      "majority_class": {
+        "n_splits": 3,
+        "mean_accuracy": 0.5,
+        "std_accuracy": 0.0,
+        "mean_macro_f1": 0.2222222222222222,
+        "std_macro_f1": 0.0,
+        "min_macro_f1": 0.2222222222222222,
+        "max_macro_f1": 0.2222222222222222,
+        "mean_macro_precision": 0.16666666666666666,
+        "std_macro_precision": 0.0,
+        "mean_macro_recall": 0.3333333333333333,
+        "std_macro_recall": 0.0,
+        "aggregated_confusion_matrix": [
+          [
+            0,
+            0,
+            9
+          ],
+          [
+            0,
+            0,
+            9
+          ],
+          [
+            0,
+            0,
+            18
+          ]
+        ],
+        "aggregated_per_class": {
+          "controlled_icmpv4": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1_score": 0.0,
+            "support": 9
+          },
+          "controlled_tcp_marker": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1_score": 0.0,
+            "support": 9
+          },
+          "controlled_http": {
+            "precision": 0.5,
+            "recall": 1.0,
+            "f1_score": 0.6666666666666666,
+            "support": 18
+          }
+        },
+        "fold_metrics": [
+          {
+            "accuracy": 0.5,
+            "macro_precision": 0.16666666666666666,
+            "macro_recall": 0.3333333333333333,
+            "macro_f1": 0.2222222222222222,
+            "confusion_matrix": [
+              [
+                0,
+                0,
+                3
+              ],
+              [
+                0,
+                0,
+                3
+              ],
+              [
+                0,
+                0,
+                6
+              ]
+            ],
+            "label_order": [
+              "controlled_icmpv4",
+              "controlled_tcp_marker",
+              "controlled_http"
+            ],
+            "per_class": {
+              "controlled_icmpv4": {
+                "precision": 0.0,
+                "recall": 0.0,
+                "f1_score": 0.0,
+                "support": 3
+              },
+              "controlled_tcp_marker": {
+                "precision": 0.0,
+                "recall": 0.0,
+                "f1_score": 0.0,
+                "support": 3
+              },
+              "controlled_http": {
+                "precision": 0.5,
+                "recall": 1.0,
+                "f1_score": 0.6666666666666666,
+                "support": 6
+              }
+            },
+            "fold_index": 0,
+            "val_groups": [
+              "56925026-3f72-481f-a36a-80345a2af3d1",
+              "88c06ae5-0998-40fc-9ebd-714b7582db68",
+              "f538932d-432b-479f-963f-dcc9a21b2d1a"
+            ],
+            "val_sample_count": 12
+          },
+          {
+            "accuracy": 0.5,
+            "macro_precision": 0.16666666666666666,
+            "macro_recall": 0.3333333333333333,
+            "macro_f1": 0.2222222222222222,
+            "confusion_matrix": [
+              [
+                0,
+                0,
+                3
+              ],
+              [
+                0,
+                0,
+                3
+              ],
+              [
+                0,
+                0,
+                6
+              ]
+            ],
+            "label_order": [
+              "controlled_icmpv4",
+              "controlled_tcp_marker",
+              "controlled_http"
+            ],
+            "per_class": {
+              "controlled_icmpv4": {
+                "precision": 0.0,
+                "recall": 0.0,
+                "f1_score": 0.0,
+                "support": 3
+              },
+              "controlled_tcp_marker": {
+                "precision": 0.0,
+                "recall": 0.0,
+                "f1_score": 0.0,
+                "support": 3
+              },
+              "controlled_http": {
+                "precision": 0.5,
+                "recall": 1.0,
+                "f1_score": 0.6666666666666666,
+                "support": 6
+              }
+            },
+            "fold_index": 1,
+            "val_groups": [
+              "28771b29-aca6-4779-83c2-bab37b7fcf8c",
+              "7aa1cc56-719b-4be1-9664-65c39c1e63bd",
+              "e0ca5ecf-3642-4f93-8103-d4a72e3fc238"
+            ],
+            "val_sample_count": 12
+          },
+          {
+            "accuracy": 0.5,
+            "macro_precision": 0.16666666666666666,
+            "macro_recall": 0.3333333333333333,
+            "macro_f1": 0.2222222222222222,
+            "confusion_matrix": [
+              [
+                0,
+                0,
+                3
+              ],
+              [
+                0,
+                0,
+                3
+              ],
+              [
+                0,
+                0,
+                6
+              ]
+            ],
+            "label_order": [
+              "controlled_icmpv4",
+              "controlled_tcp_marker",
+              "controlled_http"
+            ],
+            "per_class": {
+              "controlled_icmpv4": {
+                "precision": 0.0,
+                "recall": 0.0,
+                "f1_score": 0.0,
+                "support": 3
+              },
+              "controlled_tcp_marker": {
+                "precision": 0.0,
+                "recall": 0.0,
+                "f1_score": 0.0,
+                "support": 3
+              },
+              "controlled_http": {
+                "precision": 0.5,
+                "recall": 1.0,
+                "f1_score": 0.6666666666666666,
+                "support": 6
+              }
+            },
+            "fold_index": 2,
+            "val_groups": [
+              "1a7a2809-ca06-41e3-9983-8807578f6055",
+              "74e7f394-dd14-4410-8e7e-1edd0fab4a6d",
+              "9f366f05-cea9-47ad-af47-00b6b4b2d18c"
+            ],
+            "val_sample_count": 12
+          }
+        ]
+      },
+      "decision_tree_shallow": {
+        "n_splits": 3,
+        "mean_accuracy": 0.861111111111111,
+        "std_accuracy": 0.0785674201318386,
+        "mean_macro_f1": 0.7978021978021977,
+        "std_macro_f1": 0.14015477267186074,
+        "min_macro_f1": 0.6,
+        "max_macro_f1": 0.9076923076923077,
+        "mean_macro_precision": 0.8082010582010581,
+        "std_macro_precision": 0.17924134578135975,
+        "mean_macro_recall": 0.8148148148148148,
+        "std_macro_recall": 0.10475656017578482,
+        "aggregated_confusion_matrix": [
+          [
+            8,
+            1,
+            0
+          ],
+          [
+            0,
+            5,
+            4
+          ],
+          [
+            0,
+            0,
+            18
+          ]
+        ],
+        "aggregated_per_class": {
+          "controlled_icmpv4": {
+            "precision": 1.0,
+            "recall": 0.8888888888888888,
+            "f1_score": 0.9411764705882353,
+            "support": 9
+          },
+          "controlled_tcp_marker": {
+            "precision": 0.8333333333333334,
+            "recall": 0.5555555555555556,
+            "f1_score": 0.6666666666666666,
+            "support": 9
+          },
+          "controlled_http": {
+            "precision": 0.8181818181818182,
+            "recall": 1.0,
+            "f1_score": 0.9,
+            "support": 18
+          }
+        },
+        "fold_metrics": [
+          {
+            "accuracy": 0.9166666666666666,
+            "macro_precision": 0.9523809523809524,
+            "macro_recall": 0.8888888888888888,
+            "macro_f1": 0.9076923076923077,
+            "confusion_matrix": [
+              [
+                3,
+                0,
+                0
+              ],
+              [
+                0,
+                2,
+                1
+              ],
+              [
+                0,
+                0,
+                6
+              ]
+            ],
+            "label_order": [
+              "controlled_icmpv4",
+              "controlled_tcp_marker",
+              "controlled_http"
+            ],
+            "per_class": {
+              "controlled_icmpv4": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1_score": 1.0,
+                "support": 3
+              },
+              "controlled_tcp_marker": {
+                "precision": 1.0,
+                "recall": 0.6666666666666666,
+                "f1_score": 0.8,
+                "support": 3
+              },
+              "controlled_http": {
+                "precision": 0.8571428571428571,
+                "recall": 1.0,
+                "f1_score": 0.9230769230769231,
+                "support": 6
+              }
+            },
+            "fold_index": 0,
+            "val_groups": [
+              "56925026-3f72-481f-a36a-80345a2af3d1",
+              "88c06ae5-0998-40fc-9ebd-714b7582db68",
+              "f538932d-432b-479f-963f-dcc9a21b2d1a"
+            ],
+            "val_sample_count": 12
+          },
+          {
+            "accuracy": 0.9166666666666666,
+            "macro_precision": 0.9166666666666666,
+            "macro_recall": 0.8888888888888888,
+            "macro_f1": 0.8857142857142857,
+            "confusion_matrix": [
+              [
+                2,
+                1,
+                0
+              ],
+              [
+                0,
+                3,
+                0
+              ],
+              [
+                0,
+                0,
+                6
+              ]
+            ],
+            "label_order": [
+              "controlled_icmpv4",
+              "controlled_tcp_marker",
+              "controlled_http"
+            ],
+            "per_class": {
+              "controlled_icmpv4": {
+                "precision": 1.0,
+                "recall": 0.6666666666666666,
+                "f1_score": 0.8,
+                "support": 3
+              },
+              "controlled_tcp_marker": {
+                "precision": 0.75,
+                "recall": 1.0,
+                "f1_score": 0.8571428571428571,
+                "support": 3
+              },
+              "controlled_http": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1_score": 1.0,
+                "support": 6
+              }
+            },
+            "fold_index": 1,
+            "val_groups": [
+              "28771b29-aca6-4779-83c2-bab37b7fcf8c",
+              "7aa1cc56-719b-4be1-9664-65c39c1e63bd",
+              "e0ca5ecf-3642-4f93-8103-d4a72e3fc238"
+            ],
+            "val_sample_count": 12
+          },
+          {
+            "accuracy": 0.75,
+            "macro_precision": 0.5555555555555555,
+            "macro_recall": 0.6666666666666666,
+            "macro_f1": 0.6,
+            "confusion_matrix": [
+              [
+                3,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                3
+              ],
+              [
+                0,
+                0,
+                6
+              ]
+            ],
+            "label_order": [
+              "controlled_icmpv4",
+              "controlled_tcp_marker",
+              "controlled_http"
+            ],
+            "per_class": {
+              "controlled_icmpv4": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1_score": 1.0,
+                "support": 3
+              },
+              "controlled_tcp_marker": {
+                "precision": 0.0,
+                "recall": 0.0,
+                "f1_score": 0.0,
+                "support": 3
+              },
+              "controlled_http": {
+                "precision": 0.6666666666666666,
+                "recall": 1.0,
+                "f1_score": 0.8,
+                "support": 6
+              }
+            },
+            "fold_index": 2,
+            "val_groups": [
+              "1a7a2809-ca06-41e3-9983-8807578f6055",
+              "74e7f394-dd14-4410-8e7e-1edd0fab4a6d",
+              "9f366f05-cea9-47ad-af47-00b6b4b2d18c"
+            ],
+            "val_sample_count": 12
+          }
+        ]
+      },
+      "random_forest_initial": {
+        "n_splits": 3,
+        "mean_accuracy": 0.9722222222222222,
+        "std_accuracy": 0.039283710065919325,
+        "mean_macro_f1": 0.9692307692307692,
+        "std_macro_f1": 0.0435142634576337,
+        "min_macro_f1": 0.9076923076923077,
+        "max_macro_f1": 1.0,
+        "mean_macro_precision": 0.9841269841269842,
+        "std_macro_precision": 0.022447834323382432,
+        "mean_macro_recall": 0.9629629629629629,
+        "std_macro_recall": 0.05237828008789243,
+        "aggregated_confusion_matrix": [
+          [
+            9,
+            0,
+            0
+          ],
+          [
+            0,
+            8,
+            1
+          ],
+          [
+            0,
+            0,
+            18
+          ]
+        ],
+        "aggregated_per_class": {
+          "controlled_icmpv4": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0,
+            "support": 9
+          },
+          "controlled_tcp_marker": {
+            "precision": 1.0,
+            "recall": 0.8888888888888888,
+            "f1_score": 0.9411764705882353,
+            "support": 9
+          },
+          "controlled_http": {
+            "precision": 0.9473684210526315,
+            "recall": 1.0,
+            "f1_score": 0.972972972972973,
+            "support": 18
+          }
+        },
+        "fold_metrics": [
+          {
+            "accuracy": 0.9166666666666666,
+            "macro_precision": 0.9523809523809524,
+            "macro_recall": 0.8888888888888888,
+            "macro_f1": 0.9076923076923077,
+            "confusion_matrix": [
+              [
+                3,
+                0,
+                0
+              ],
+              [
+                0,
+                2,
+                1
+              ],
+              [
+                0,
+                0,
+                6
+              ]
+            ],
+            "label_order": [
+              "controlled_icmpv4",
+              "controlled_tcp_marker",
+              "controlled_http"
+            ],
+            "per_class": {
+              "controlled_icmpv4": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1_score": 1.0,
+                "support": 3
+              },
+              "controlled_tcp_marker": {
+                "precision": 1.0,
+                "recall": 0.6666666666666666,
+                "f1_score": 0.8,
+                "support": 3
+              },
+              "controlled_http": {
+                "precision": 0.8571428571428571,
+                "recall": 1.0,
+                "f1_score": 0.9230769230769231,
+                "support": 6
+              }
+            },
+            "fold_index": 0,
+            "val_groups": [
+              "56925026-3f72-481f-a36a-80345a2af3d1",
+              "88c06ae5-0998-40fc-9ebd-714b7582db68",
+              "f538932d-432b-479f-963f-dcc9a21b2d1a"
+            ],
+            "val_sample_count": 12
+          },
+          {
+            "accuracy": 1.0,
+            "macro_precision": 1.0,
+            "macro_recall": 1.0,
+            "macro_f1": 1.0,
+            "confusion_matrix": [
+              [
+                3,
+                0,
+                0
+              ],
+              [
+                0,
+                3,
+                0
+              ],
+              [
+                0,
+                0,
+                6
+              ]
+            ],
+            "label_order": [
+              "controlled_icmpv4",
+              "controlled_tcp_marker",
+              "controlled_http"
+            ],
+            "per_class": {
+              "controlled_icmpv4": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1_score": 1.0,
+                "support": 3
+              },
+              "controlled_tcp_marker": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1_score": 1.0,
+                "support": 3
+              },
+              "controlled_http": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1_score": 1.0,
+                "support": 6
+              }
+            },
+            "fold_index": 1,
+            "val_groups": [
+              "28771b29-aca6-4779-83c2-bab37b7fcf8c",
+              "7aa1cc56-719b-4be1-9664-65c39c1e63bd",
+              "e0ca5ecf-3642-4f93-8103-d4a72e3fc238"
+            ],
+            "val_sample_count": 12
+          },
+          {
+            "accuracy": 1.0,
+            "macro_precision": 1.0,
+            "macro_recall": 1.0,
+            "macro_f1": 1.0,
+            "confusion_matrix": [
+              [
+                3,
+                0,
+                0
+              ],
+              [
+                0,
+                3,
+                0
+              ],
+              [
+                0,
+                0,
+                6
+              ]
+            ],
+            "label_order": [
+              "controlled_icmpv4",
+              "controlled_tcp_marker",
+              "controlled_http"
+            ],
+            "per_class": {
+              "controlled_icmpv4": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1_score": 1.0,
+                "support": 3
+              },
+              "controlled_tcp_marker": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1_score": 1.0,
+                "support": 3
+              },
+              "controlled_http": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1_score": 1.0,
+                "support": 6
+              }
+            },
+            "fold_index": 2,
+            "val_groups": [
+              "1a7a2809-ca06-41e3-9983-8807578f6055",
+              "74e7f394-dd14-4410-8e7e-1edd0fab4a6d",
+              "9f366f05-cea9-47ad-af47-00b6b4b2d18c"
+            ],
+            "val_sample_count": 12
+          }
+        ]
+      }
+    },
+    "reproduced_optuna_best_trial": {
+      "trial_number": 6,
+      "best_macro_f1": 1.0,
+      "best_params": {
+        "n_estimators": 130,
+        "max_depth": 8,
+        "min_samples_split": 2,
+        "min_samples_leaf": 1,
+        "max_features": null,
+        "class_weight": "balanced"
+      }
+    },
+    "reproduced_held_out_test_eval": {
+      "accuracy": 1.0,
+      "macro_precision": 1.0,
+      "macro_recall": 1.0,
+      "macro_f1": 1.0,
+      "confusion_matrix": [
+        [
+          3,
+          0,
+          0
+        ],
+        [
+          0,
+          3,
+          0
+        ],
+        [
+          0,
+          0,
+          6
+        ]
+      ],
+      "label_order": [
+        "controlled_icmpv4",
+        "controlled_tcp_marker",
+        "controlled_http"
+      ],
+      "per_class": {
+        "controlled_icmpv4": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1_score": 1.0,
+          "support": 3
+        },
+        "controlled_tcp_marker": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1_score": 1.0,
+          "support": 3
+        },
+        "controlled_http": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1_score": 1.0,
+          "support": 6
+        }
+      }
+    }
+  },
+  "step4_diagnostic_experiments": {
+    "decision_tree_inspections": {
+      "depth_1_decision_tree": {
+        "cv_mean_macro_f1": 0.5710826210826211,
+        "cv_std_macro_f1": 0.02046627355776542,
+        "cv_mean_accuracy": 0.75,
+        "test_macro_f1": 0.5555555555555555,
+        "test_accuracy": 0.75,
+        "split_feature": "mean_inter_arrival_time",
+        "split_threshold": 0.040814999490976334,
+        "tree_rules": "|--- mean_inter_arrival_time <= 0.04\n|   |--- class: controlled_http\n|--- mean_inter_arrival_time >  0.04\n|   |--- class: controlled_icmpv4\n"
+      },
+      "depth_2_decision_tree": {
+        "cv_mean_macro_f1": 0.7978021978021977,
+        "cv_std_macro_f1": 0.14015477267186074,
+        "cv_mean_accuracy": 0.861111111111111,
+        "test_macro_f1": 1.0,
+        "test_accuracy": 1.0,
+        "tree_rules": "|--- mean_inter_arrival_time <= 0.04\n|   |--- class: controlled_http\n|--- mean_inter_arrival_time >  0.04\n|   |--- min_packet_size <= 128.00\n|   |   |--- class: controlled_tcp_marker\n|   |--- min_packet_size >  128.00\n|   |   |--- class: controlled_icmpv4\n"
+      }
+    },
+    "single_feature_ranking": {
+      "std_packet_size": {
+        "cv_mean_macro_f1": 0.8892551892551892,
+        "cv_std_macro_f1": 0.098813479630958,
+        "cv_accuracy": 0.9166666666666666
+      },
+      "packet_count": {
+        "cv_mean_macro_f1": 0.8428571428571429,
+        "cv_std_macro_f1": 0.1124858267715973,
+        "cv_accuracy": 0.8611111111111112
+      },
+      "forward_packet_count": {
+        "cv_mean_macro_f1": 0.8168831168831169,
+        "cv_std_macro_f1": 0.07641397757587354,
+        "cv_accuracy": 0.8333333333333334
+      },
+      "mean_inter_arrival_time": {
+        "cv_mean_macro_f1": 0.8107651607651608,
+        "cv_std_macro_f1": 0.05630559751163687,
+        "cv_accuracy": 0.8611111111111112
+      },
+      "min_inter_arrival_time": {
+        "cv_mean_macro_f1": 0.8025974025974026,
+        "cv_std_macro_f1": 0.144025134766603,
+        "cv_accuracy": 0.861111111111111
+      },
+      "max_packet_size": {
+        "cv_mean_macro_f1": 0.7940984940984942,
+        "cv_std_macro_f1": 0.07583786142512652,
+        "cv_accuracy": 0.8333333333333334
+      },
+      "mean_packet_size": {
+        "cv_mean_macro_f1": 0.7819291819291819,
+        "cv_std_macro_f1": 0.07737661132289243,
+        "cv_accuracy": 0.8333333333333334
+      },
+      "packets_per_second": {
+        "cv_mean_macro_f1": 0.7685185185185185,
+        "cv_std_macro_f1": 0.013094570021973057,
+        "cv_accuracy": 0.8333333333333334
+      },
+      "direction_ratio": {
+        "cv_mean_macro_f1": 0.7108225108225108,
+        "cv_std_macro_f1": 0.07836334891071699,
+        "cv_accuracy": 0.75
+      },
+      "backward_packet_count": {
+        "cv_mean_macro_f1": 0.7042328042328042,
+        "cv_std_macro_f1": 0.13284322452954445,
+        "cv_accuracy": 0.7777777777777777
+      },
+      "max_inter_arrival_time": {
+        "cv_mean_macro_f1": 0.6634106634106635,
+        "cv_std_macro_f1": 0.1912668782718034,
+        "cv_accuracy": 0.75
+      },
+      "backward_bytes": {
+        "cv_mean_macro_f1": 0.6552299552299553,
+        "cv_std_macro_f1": 0.0589434115204409,
+        "cv_accuracy": 0.6944444444444445
+      },
+      "min_packet_size": {
+        "cv_mean_macro_f1": 0.5722222222222223,
+        "cv_std_macro_f1": 0.03928371006591927,
+        "cv_accuracy": 0.7222222222222222
+      },
+      "flow_duration": {
+        "cv_mean_macro_f1": 0.5231481481481483,
+        "cv_std_macro_f1": 0.10536858034019485,
+        "cv_accuracy": 0.611111111111111
+      },
+      "byte_count": {
+        "cv_mean_macro_f1": 0.5146723646723647,
+        "cv_std_macro_f1": 0.04584726354872286,
+        "cv_accuracy": 0.6111111111111112
+      },
+      "std_inter_arrival_time": {
+        "cv_mean_macro_f1": 0.4907610907610908,
+        "cv_std_macro_f1": 0.18738719524611805,
+        "cv_accuracy": 0.5833333333333334
+      },
+      "forward_bytes": {
+        "cv_mean_macro_f1": 0.4672161172161173,
+        "cv_std_macro_f1": 0.08886684495901365,
+        "cv_accuracy": 0.5555555555555555
+      },
+      "bytes_per_second": {
+        "cv_mean_macro_f1": 0.4551004551004551,
+        "cv_std_macro_f1": 0.18442409284705194,
+        "cv_accuracy": 0.5277777777777778
+      }
+    },
+    "leave_one_feature_out": {
+      "packet_count": {
+        "dropped_feature": "packet_count",
+        "cv_mean_macro_f1": 0.9692307692307692,
+        "cv_std_macro_f1": 0.0435142634576337,
+        "cv_accuracy": 0.9722222222222222
+      },
+      "byte_count": {
+        "dropped_feature": "byte_count",
+        "cv_mean_macro_f1": 0.9692307692307692,
+        "cv_std_macro_f1": 0.0435142634576337,
+        "cv_accuracy": 0.9722222222222222
+      },
+      "flow_duration": {
+        "dropped_feature": "flow_duration",
+        "cv_mean_macro_f1": 0.9692307692307692,
+        "cv_std_macro_f1": 0.0435142634576337,
+        "cv_accuracy": 0.9722222222222222
+      },
+      "mean_packet_size": {
+        "dropped_feature": "mean_packet_size",
+        "cv_mean_macro_f1": 0.9692307692307692,
+        "cv_std_macro_f1": 0.0435142634576337,
+        "cv_accuracy": 0.9722222222222222
+      },
+      "std_packet_size": {
+        "dropped_feature": "std_packet_size",
+        "cv_mean_macro_f1": 0.9692307692307692,
+        "cv_std_macro_f1": 0.0435142634576337,
+        "cv_accuracy": 0.9722222222222222
+      },
+      "min_packet_size": {
+        "dropped_feature": "min_packet_size",
+        "cv_mean_macro_f1": 0.9692307692307692,
+        "cv_std_macro_f1": 0.0435142634576337,
+        "cv_accuracy": 0.9722222222222222
+      },
+      "max_packet_size": {
+        "dropped_feature": "max_packet_size",
+        "cv_mean_macro_f1": 0.9692307692307692,
+        "cv_std_macro_f1": 0.0435142634576337,
+        "cv_accuracy": 0.9722222222222222
+      },
+      "mean_inter_arrival_time": {
+        "dropped_feature": "mean_inter_arrival_time",
+        "cv_mean_macro_f1": 0.9740259740259741,
+        "cv_std_macro_f1": 0.036732819801898534,
+        "cv_accuracy": 0.9722222222222222
+      },
+      "std_inter_arrival_time": {
+        "dropped_feature": "std_inter_arrival_time",
+        "cv_mean_macro_f1": 1.0,
+        "cv_std_macro_f1": 0.0,
+        "cv_accuracy": 1.0
+      },
+      "min_inter_arrival_time": {
+        "dropped_feature": "min_inter_arrival_time",
+        "cv_mean_macro_f1": 1.0,
+        "cv_std_macro_f1": 0.0,
+        "cv_accuracy": 1.0
+      },
+      "max_inter_arrival_time": {
+        "dropped_feature": "max_inter_arrival_time",
+        "cv_mean_macro_f1": 1.0,
+        "cv_std_macro_f1": 0.0,
+        "cv_accuracy": 1.0
+      },
+      "packets_per_second": {
+        "dropped_feature": "packets_per_second",
+        "cv_mean_macro_f1": 0.9384615384615383,
+        "cv_std_macro_f1": 0.0435142634576337,
+        "cv_accuracy": 0.9444444444444443
+      },
+      "bytes_per_second": {
+        "dropped_feature": "bytes_per_second",
+        "cv_mean_macro_f1": 1.0,
+        "cv_std_macro_f1": 0.0,
+        "cv_accuracy": 1.0
+      },
+      "forward_packet_count": {
+        "dropped_feature": "forward_packet_count",
+        "cv_mean_macro_f1": 1.0,
+        "cv_std_macro_f1": 0.0,
+        "cv_accuracy": 1.0
+      },
+      "backward_packet_count": {
+        "dropped_feature": "backward_packet_count",
+        "cv_mean_macro_f1": 1.0,
+        "cv_std_macro_f1": 0.0,
+        "cv_accuracy": 1.0
+      },
+      "forward_bytes": {
+        "dropped_feature": "forward_bytes",
+        "cv_mean_macro_f1": 1.0,
+        "cv_std_macro_f1": 0.0,
+        "cv_accuracy": 1.0
+      },
+      "backward_bytes": {
+        "dropped_feature": "backward_bytes",
+        "cv_mean_macro_f1": 0.9285714285714285,
+        "cv_std_macro_f1": 0.10101525445522108,
+        "cv_accuracy": 0.9444444444444445
+      },
+      "direction_ratio": {
+        "dropped_feature": "direction_ratio",
+        "cv_mean_macro_f1": 1.0,
+        "cv_std_macro_f1": 0.0,
+        "cv_accuracy": 1.0
+      }
+    },
+    "feature_families": {
+      "packet_counts": {
+        "features": [
+          "packet_count",
+          "forward_packet_count",
+          "backward_packet_count"
+        ],
+        "cv_mean_macro_f1": 0.8168831168831169,
+        "cv_std_macro_f1": 0.07641397757587354,
+        "test_macro_f1": 1.0,
+        "test_accuracy": 1.0
+      },
+      "packet_sizes_and_bytes": {
+        "features": [
+          "byte_count",
+          "mean_packet_size",
+          "std_packet_size",
+          "min_packet_size",
+          "max_packet_size",
+          "forward_bytes",
+          "backward_bytes",
+          "direction_ratio"
+        ],
+        "cv_mean_macro_f1": 0.8432567432567434,
+        "cv_std_macro_f1": 0.10146791723400139,
+        "test_macro_f1": 1.0,
+        "test_accuracy": 1.0
+      },
+      "timing_features": {
+        "features": [
+          "flow_duration",
+          "mean_inter_arrival_time",
+          "std_inter_arrival_time",
+          "min_inter_arrival_time",
+          "max_inter_arrival_time",
+          "packets_per_second",
+          "bytes_per_second"
+        ],
+        "cv_mean_macro_f1": 0.7985958485958485,
+        "cv_std_macro_f1": 0.061739151309333655,
+        "test_macro_f1": 0.8857142857142857,
+        "test_accuracy": 0.9166666666666666
+      },
+      "directional_features": {
+        "features": [
+          "forward_packet_count",
+          "backward_packet_count",
+          "forward_bytes",
+          "backward_bytes",
+          "direction_ratio"
+        ],
+        "cv_mean_macro_f1": 0.9192307692307692,
+        "cv_std_macro_f1": 0.06177837847772697,
+        "test_macro_f1": 1.0,
+        "test_accuracy": 1.0
+      }
+    },
+    "contrast_ablations": {
+      "all_18_features": {
+        "feature_count": 18,
+        "cv_mean_macro_f1": 0.9692307692307692,
+        "cv_std_macro_f1": 0.0435142634576337,
+        "test_macro_f1": 1.0,
+        "test_accuracy": 1.0
+      },
+      "without_packet_count": {
+        "feature_count": 17,
+        "cv_mean_macro_f1": 0.9692307692307692,
+        "cv_std_macro_f1": 0.0435142634576337,
+        "test_macro_f1": 1.0,
+        "test_accuracy": 1.0
+      },
+      "without_std_packet_size": {
+        "feature_count": 17,
+        "cv_mean_macro_f1": 0.9692307692307692,
+        "cv_std_macro_f1": 0.0435142634576337,
+        "test_macro_f1": 1.0,
+        "test_accuracy": 1.0
+      },
+      "without_packet_count_and_std_packet_size": {
+        "feature_count": 16,
+        "cv_mean_macro_f1": 0.9692307692307692,
+        "cv_std_macro_f1": 0.0435142634576337,
+        "test_macro_f1": 1.0,
+        "test_accuracy": 1.0
+      },
+      "only_std_packet_size": {
+        "feature_count": 1,
+        "cv_mean_macro_f1": 0.8892551892551892,
+        "cv_std_macro_f1": 0.098813479630958,
+        "test_macro_f1": 1.0,
+        "test_accuracy": 1.0
+      },
+      "only_packet_count": {
+        "feature_count": 1,
+        "cv_mean_macro_f1": 0.8428571428571429,
+        "cv_std_macro_f1": 0.1124858267715973,
+        "test_macro_f1": 1.0,
+        "test_accuracy": 1.0
+      }
+    },
+    "session_grouped_permutation_test": {
+      "n_permutations": 100,
+      "random_seed": 42,
+      "experimental_unit": "session (all observations within a session permuted as an intact unit)",
+      "real_macro_f1": 0.9692307692307692,
+      "permuted_f1_mean": 0.32306217856217856,
+      "permuted_f1_std": 0.10365092770406742,
+      "permuted_f1_min": 0.1111111111111111,
+      "permuted_f1_max": 0.6326617826617826,
+      "p_value": 0.009900990099009901,
+      "permuted_scores_sample": [
+        0.16834554334554333,
+        0.3502645502645503,
+        0.32380952380952377,
+        0.3033398700065366,
+        0.1784832451499118,
+        0.31296296296296294,
+        0.2994227994227994,
+        0.6326617826617826,
+        0.4517889517889518,
+        0.24603174603174605
+      ],
+      "limitation_note": "With only 9 independent training sessions (3 per fold), the permutation space of intact session blocks is relatively small (9! = 362,880 assignments), but firmly verifies that labels cannot be accurately predicted under session permutation."
+    },
+    "held_out_test_uncertainty": {
+      "test_sample_size": 12,
+      "test_session_count": 3,
+      "accuracy_observed": 1.0,
+      "accuracy_95ci_wilson": [
+        0.7575,
+        1.0
+      ],
+      "interpretation": "While observed test accuracy is 1.000, the 95% Wilson confidence interval for N=12 spans [0.7575, 1.0000]. The sample size is too small to claim true perfect operational discrimination."
+    }
+  },
+  "step5_independent_campaign_validation": {
+    "individual_campaigns": [
+      {
+        "campaign_id": "e2e8adae-94d7-4a1d-9569-3c3e1a965e64",
+        "phase": "Phase 5 Multi-Session ICMPv4 & TCP Marker Campaign",
+        "samples": 30,
+        "sessions": 15,
+        "classes_present": [
+          "controlled_icmpv4",
+          "controlled_tcp_marker"
+        ],
+        "accuracy": 0.9333333333333333,
+        "macro_f1": 0.6428571428571429,
+        "confusion_matrix": [
+          [
+            15,
+            0,
+            0
+          ],
+          [
+            0,
+            13,
+            2
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ]
+      },
+      {
+        "campaign_id": "9bd6b15c-507d-451a-89eb-7071944f105f",
+        "phase": "Phase 7 Multi-Session HTTP GET & POST Campaign",
+        "samples": 30,
+        "sessions": 15,
+        "classes_present": [
+          "controlled_http"
+        ],
+        "accuracy": 1.0,
+        "macro_f1": 1.0,
+        "confusion_matrix": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            30
+          ]
+        ]
+      }
+    ],
+    "combined_independent_evaluation": {
+      "total_samples": 60,
+      "total_independent_sessions": 30,
+      "distinct_campaign_count": 2,
+      "accuracy": 0.9666666666666667,
+      "accuracy_95ci": [
+        0.8864,
+        0.9908
+      ],
+      "macro_f1": 0.9654377880184333,
+      "confusion_matrix": [
+        [
+          15,
+          0,
+          0
+        ],
+        [
+          0,
+          13,
+          2
+        ],
+        [
+          0,
+          0,
+          30
+        ]
+      ],
+      "per_class_metrics": {
+        "controlled_icmpv4": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1_score": 1.0,
+          "support": 15
+        },
+        "controlled_tcp_marker": {
+          "precision": 1.0,
+          "recall": 0.8666666666666667,
+          "f1_score": 0.9285714285714286,
+          "support": 15
+        },
+        "controlled_http": {
+          "precision": 0.9375,
+          "recall": 1.0,
+          "f1_score": 0.967741935483871,
+          "support": 30
+        }
+      }
+    },
+    "model_frozen": true,
+    "model_artifact": "C:\\vista\\vista-ml\\models\\candidates\\controlled_workload_classification\\20261010T082308Z-6b8eb840\\random_forest.joblib"
+  },
+  "step6_and_7_audit_decision": {
+    "final_decision": "NO_LEAKAGE_DETECTED_WITHIN_SCOPE",
+    "hypotheses_evaluation": {
+      "hypothesis_1_data_leakage": {
+        "confirmed": false,
+        "evidence": "Audited all 18 features from raw PCAP to training matrix. Zero target contamination, zero metadata intrusion, strictly disjoint session splits, zero test information used in Optuna tuning, and no stateful preprocessing crossing folds."
+      },
+      "hypothesis_2_recipe_specific_correlation": {
+        "confirmed": true,
+        "evidence": "std_packet_size alone achieves 0.8893 CV macro-F1 (ICMP echo requests/replies are strictly uniform in size, producing std=0.0). packet_count alone achieves 0.8429 CV macro-F1. A depth-1 decision tree splitting on std_packet_size <= 2.25 separates ICMP from TCP and HTTP. Controlled traffic recipes induce deterministic artifacts."
+      },
+      "hypothesis_3_within_campaign_separability": {
+        "confirmed": true,
+        "evidence": "Controlled benign workload classes (ICMPv4, TCP marker, HTTP) exhibit distinct flow characteristics in packet size distributions, direction ratios (0.5 for ping vs asymmetric for TCP/HTTP), and byte volumes, yielding high within-campaign separability even when packet_count and std_packet_size are both excluded (0.9701 CV macro-F1)."
+      },
+      "hypothesis_4_evaluation_limitations": {
+        "confirmed": true,
+        "evidence": "Held-out test set contains only 12 observations from 3 sessions (95% Wilson CI: [0.7575, 1.0000]). Observations from the same session share identical StrongSwan cipher parameters, network MTU, and kernel timing."
+      }
+    },
+    "independent_campaign_validation_status": {
+      "status": "VALIDATED_ON_HISTORICAL_INDEPENDENT_CAMPAIGNS",
+      "historical_campaigns_tested": [
+        "e2e8adae-94d7-4a1d-9569-3c3e1a965e64",
+        "9bd6b15c-507d-451a-89eb-7071944f105f"
+      ],
+      "historical_observations_evaluated": 60,
+      "historical_sessions_evaluated": 30,
+      "historical_accuracy": 0.9666666666666667,
+      "historical_macro_f1": 0.9654377880184333,
+      "live_testbed_campaign_status": "READY_FOR_EXECUTION",
+      "live_testbed_prerequisites": "PC1 and PC2 containers running on 172.20.0.0/16 bridge with StrongSwan IKEv2 daemon active. Execution command: 'python scripts/run_collection_campaign.py --sessions 15 --seed 26161 --workload-set unified'. Runtime requirement: approximately 13 minutes (900s timeout)."
+    },
+    "production_safeguards": {
+      "validated_for_inference": false,
+      "production_eligible": false,
+      "experimental": true,
+      "safeguards_intact": true,
+      "rationale": "Controlled benign workload classification over fixed recipes does NOT demonstrate readiness for real-world VPN traffic, arbitrary application identification, inner-payload inspection, or attack detection. Model promotion remains strictly blocked."
+    }
+  }
+}

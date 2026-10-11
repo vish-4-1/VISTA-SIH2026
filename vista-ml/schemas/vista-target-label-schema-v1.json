@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vista.invalid/schemas/vista-target-label-schema-v1.json",
+  "title": "VISTA Target Label Schema v1",
+  "schema_version": "vista-target-label-schema-v1",
+  "intended_prediction_target": "Controlled benign workload classification from encrypted IPv4 outer-ESP metadata (vista-flow-v1).",
+  "domain_boundary": "Outer ESP/NAT-T packet metadata only. Encrypted inner payload, HTTP URLs, headers, and plaintexts are unobservable in outer ESP and are never model inputs.",
+  "target_classes": {
+    "controlled_icmpv4": {
+      "description": "Controlled IPv4 ICMP echo request/reply workload over StrongSwan IPsec tunnel.",
+      "allowed_subtypes": ["icmpv4_echo"]
+    },
+    "controlled_tcp_marker": {
+      "description": "Controlled single-connection TCP marker sequence over StrongSwan IPsec tunnel.",
+      "allowed_subtypes": ["tcp_marker"]
+    },
+    "controlled_http": {
+      "description": "Controlled HTTP/1.1 client/server transaction workload over StrongSwan IPsec tunnel.",
+      "allowed_subtypes": ["http_get", "http_post"]
+    }
+  },
+  "workload_subtype_mapping": {
+    "icmpv4_echo": "controlled_icmpv4",
+    "tcp_marker": "controlled_tcp_marker",
+    "http_get": "controlled_http",
+    "http_post": "controlled_http"
+  }
+}
